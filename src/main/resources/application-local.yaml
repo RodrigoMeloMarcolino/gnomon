@@ -1,0 +1,12 @@
+# Profile local: defaults apontam para os containers do docker-compose no host.
+# Todas as propriedades são sobrescrevíveis por variável de ambiente (o serviço `api`
+# do compose injeta DB_HOST=postgres, REDIS_HOST=redis, ...).
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:gnomon}
+    username: ${DB_USER:gnomon}
+    password: ${DB_PASSWORD:gnomon}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}

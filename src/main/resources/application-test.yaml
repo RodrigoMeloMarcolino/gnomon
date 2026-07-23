@@ -1,0 +1,5 @@
+# Profile test: o datasource é efêmero, provido por Testcontainers (@ServiceConnection).
+# Nenhum container local de desenvolvimento é reutilizado ou alterado.
+logging:
+  level:
+    io.gnomon: debug

@@ -1,0 +1,13 @@
+target/
+.git/
+.gitignore
+docs/
+keycloak/
+*.md
+.env
+.env.example
+docker-compose*.yaml
+Dockerfile
+.dockerignore
+.idea/
+.vscode/
