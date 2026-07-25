@@ -1,6 +1,6 @@
 # PRD — Gnomon
 
-Versão: `0.1.0` (rascunho inicial)
+Versão: `0.2.1` (emendas da task 00.5 + decisão do frontend, ADR 0018 + nomenclatura Sun Catcher/Moonlight)
 Data: 2026-07-23
 Status: aprovado para início da implementação
 
@@ -8,10 +8,14 @@ Status: aprovado para início da implementação
 
 ## 1. Visão geral
 
-O **Gnomon** é um SaaS de agendamento **multi-tenant** para prestadores de serviço — salões,
+O **Sun Catcher** é um SaaS de agendamento **multi-tenant** para prestadores de serviço — salões,
 barbearias, tatuadores, clínicas pequenas, profissionais autônomos e negócios com equipe — no
 qual cada negócio (tenant) configura serviços, colaboradores e calendários, e compartilha um
 link público para que clientes finais marquem horários com o mínimo de atrito possível.
+
+> **Nomenclatura (2026-07-24)**: *Sun Catcher* é o produto; `gnomon` é este serviço de API;
+> `umbra` é o frontend. Este PRD usa "Gnomon" como abreviação do serviço. Registro central de
+> ativos: repo `ephemeris` (convenção em `docs/architecture/naming.md`).
 
 O Gnomon é a **recriação do Moira em stack Java** (Spring Boot 4 + Keycloak), evoluindo o modelo
 de provider único para um modelo de tenant com múltiplos calendários de colaboradores. O nome
@@ -159,9 +163,10 @@ Regras estruturais:
   transação curta.
 - **RF-14** Violação de `UNIQUE(calendar_id, slot_start_at)` faz rollback total e retorna
   `409 Conflict` com código de horário indisponível.
-- **RF-15** Booking público aceita header `Idempotency-Key`: mesma chave + mesmo payload →
-  replay do appointment original; mesma chave + payload diferente → conflito. Unicidade por
-  tenant: `UNIQUE(tenant_id, idempotency_key)`.
+- **RF-15** Booking público **exige** header `Idempotency-Key` (ADR 0014, emenda da task 00.5;
+  ausência → 422): mesma chave + mesmo payload → replay do appointment original; mesma chave +
+  payload diferente → conflito. Unicidade por tenant:
+  `UNIQUE(tenant_id, idempotency_key)`.
 - **RF-16** O appointment grava `duration_minutes_snapshot` e a timezone do calendário no
   momento da criação (histórico estável contra edições futuras).
 
@@ -226,7 +231,11 @@ Regras estruturais:
 - Convites por e-mail para membros do tenant.
 - Marketplace, pagamentos, billing, planos.
 - Camada de agente/IA, WhatsApp como canal, RAG por tenant (ver roadmap do livedoc original).
-- Frontend (decisão em aberto).
+- Frontend: decisão fechada (ADR 0018) — repo separado `umbra`, fora do escopo deste repo.
+- **Moonlight** (2026-07-24): produto futuro **cross-tenant** de métricas + integrações de
+  marketing — serviço separado consumindo eventos de domínio (nunca endpoints admin relaxados
+  nem analytics no OLTP). Ficha no repo `ephemeris` (`docs/products/moonlight.md`); semente:
+  envelope de eventos da fase 06.
 
 ---
 
@@ -240,7 +249,7 @@ Regras estruturais:
 | GET | `/v1/public/tenants/{slug}/calendars` | Calendários (colaboradores) ativos |
 | GET | `/v1/public/tenants/{slug}/offerings` | Catálogo de serviços do tenant |
 | GET | `/v1/public/tenants/{slug}/available-slots?calendar_id=&offering_id=&date=` | Horários disponíveis (UTC) |
-| POST | `/v1/public/tenants/{slug}/appointments` | Cria appointment (suporta `Idempotency-Key`) |
+| POST | `/v1/public/tenants/{slug}/appointments` | Cria appointment (exige `Idempotency-Key`) |
 
 ### Administrativos (Bearer JWT do Keycloak + membership)
 
@@ -340,18 +349,27 @@ Dois clientes podem ver o mesmo horário disponível; o primeiro commit vence, o
 | Checkpoint 37.12 Blueprint multi-tenancy | **Implementado** como fundação (ADRs 0003–0007). |
 
 Decisões novas sem equivalente no Moira: ADR 0005 (colaborador entidade + login opcional),
-ADR 0006 (calendário dono da agenda), ADR 0007 (serviços no tenant com atribuição).
+ADR 0006 (calendário dono da agenda), ADR 0007 (serviços no tenant com atribuição),
+ADR 0016 (validação simétrica + tradução determinística de constraints) e ADR 0017
+(disciplina de schema/DDL) — as duas últimas nascidas da auditoria de dívidas do Moira
+(task 00.5).
 
 ---
 
 ## 13. Decisões em aberto
 
-1. **Frontend**: React, Next.js ou outro — indefinido.
+1. ~~**Frontend**: React, Next.js ou outro — indefinido.~~ **Fechada (2026-07-23, ADR 0018)**:
+   frontend no repo separado `umbra` — Next.js 16 + React 19 + TypeScript, Tailwind v4 +
+   shadcn/ui, calendário próprio, OIDC via Keycloak; booking público em `/t/{slug}` e admin em
+   `/app/{slug}`. Follow-up para o backend: CORS para o dev server na fase 01.
 2. **Notificações**: provedor de e-mail/WhatsApp/SMS — indefinido.
 3. **Slug público por calendário**: link direto para um colaborador
    (`/t/{tenant}/{calendario}`) — provável sim, a detalhar na fase 02.
 4. **Versão do Java**: 21 LTS assumido; 25 LTS é opção trivial de configuração.
 5. **Sincronização do livedoc original** com a decisão Gnomon/Java — follow-up manual.
+6. **Antecedência mínima de booking**: o Moira permitia reservar slot a 1 minuto do início;
+   política de lead time mínimo (por tenant? por offering?) permanece em aberto — sem regra no
+   MVP (task 00.5).
 
 ---
 
@@ -360,6 +378,7 @@ ADR 0006 (calendário dono da agenda), ADR 0007 (serviços no tenant com atribui
 Ver `docs/tasks/README.md` para o detalhamento. Fases:
 
 0. Fundação técnica
+0.5. Hardening de nascimento: lições do Moira (docs-only)
 1. Identidade (Keycloak) e tenancy
 2. Catálogo (colaboradores, calendários, offerings, atribuição)
 3. Disponibilidade

@@ -1,8 +1,13 @@
 # Spec — Multi-tenancy e autorização
 
-Status: aprovada para implementação
-ADRs relacionados: 0003, 0004, 0005, 0006
+Status: aprovada para implementação (emendada na task 00.5 — ver notas "Emenda 00.5")
+ADRs relacionados: 0003, 0004, 0005, 0006, 0016, 0017
 Origem: livedoc Moira checkpoint 37.12 (blueprint) + decisões Gnomon (2026-07-23)
+
+> **Emenda 00.5 (ADR 0017):** toda coluna `updated_at` desta spec é mantida por trigger de
+> banco (não apenas `default now()`); toda FK recebe índice na mesma migration; colunas de
+> status/role usam `CHECK` com conjunto fechado. E-mail em `CITEXT` torna a unicidade
+> case-insensitive (dívida Moira: contas duplicadas por case).
 
 ---
 
@@ -59,7 +64,7 @@ Invariante: existe no máximo uma projeção por identidade do Keycloak (`keyclo
 | role | VARCHAR(16) | NOT NULL, IN ('owner','admin','staff') |
 | created_at / updated_at | TIMESTAMPTZ | NOT NULL |
 
-Constraints: `UNIQUE(tenant_id, user_id)`.
+Constraints: `UNIQUE(tenant_id, user_id)`; índice `(user_id)` (FK — ADR 0017).
 Invariantes: todo tenant tem pelo menos um owner (a última membership owner não pode ser
 removida nem rebaixada); `staff` deve corresponder a um `collaborators.user_id` vinculado.
 
@@ -74,7 +79,8 @@ removida nem rebaixada); `staff` deve corresponder a um `collaborators.user_id` 
 | is_active | BOOLEAN | NOT NULL, default true |
 | created_at / updated_at | TIMESTAMPTZ | NOT NULL |
 
-Constraints: `UNIQUE(tenant_id, user_id)` (parcial, quando `user_id IS NOT NULL`).
+Constraints: `UNIQUE(tenant_id, user_id)` (parcial, quando `user_id IS NOT NULL`); índice
+`(tenant_id)` (FK — ADR 0017).
 
 ### 3.5 `calendars`
 
@@ -88,7 +94,8 @@ Constraints: `UNIQUE(tenant_id, user_id)` (parcial, quando `user_id IS NOT NULL`
 | is_active | BOOLEAN | NOT NULL, default true |
 | created_at / updated_at | TIMESTAMPTZ | NOT NULL |
 
-Constraints: `UNIQUE(tenant_id, collaborator_id)` (1:1 no MVP).
+Constraints: `UNIQUE(tenant_id, collaborator_id)` (1:1 no MVP); índice `(collaborator_id)`
+(FK — ADR 0017).
 
 ## 4. Resolução de identidade (request pipeline)
 
@@ -142,6 +149,20 @@ Constraints: `UNIQUE(tenant_id, collaborator_id)` (1:1 no MVP).
 | `insufficient_role` | 403 | membership existe, role insuficiente |
 | `staff_calendar_mismatch` | 403 | staff tentando operar fora do próprio calendário |
 | `last_owner` | 409 | tentativa de remover/rebaixar o último owner |
+
+### 7.1 Tradução determinística de constraints (ADR 0016 — Emenda 00.5)
+
+| Constraint | Código | HTTP |
+| ---------- | ------ | ---- |
+| `UNIQUE(keycloak_sub)` (`users`) | retry de leitura no JIT provisioning (não vaza ao cliente) | — |
+| `UNIQUE(email)` (`users`, CITEXT) | conflito de projeção → retry no JIT; nunca exposto em escrita de cliente | — |
+| `UNIQUE(slug)` (`tenants`) | `tenant_slug_taken` | 409 |
+| `UNIQUE(tenant_id, user_id)` (`tenant_memberships`) | `membership_exists` | 409 |
+| `UNIQUE(tenant_id, user_id)` parcial (`collaborators`) | `collaborator_already_linked` | 409 |
+| `UNIQUE(tenant_id, collaborator_id)` (`calendars`) | `calendar_exists` | 409 |
+| `CHECK role IN ('owner','admin','staff')` | `validation_error` (`role`) | 422 |
+| `CHECK status IN ('active','suspended')` (`tenants`) | `validation_error` (`status`) | 422 |
+| FKs (`tenant_id`, `user_id`, `collaborator_id`) | `validation_error` ou 404 de escopo (IDs validados como pertencentes ao tenant antes da escrita) | 404 / 422 |
 
 ## 8. Testes obrigatórios
 

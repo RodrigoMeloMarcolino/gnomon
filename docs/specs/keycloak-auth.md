@@ -1,6 +1,6 @@
 # Spec — Autenticação via Keycloak
 
-Status: aprovada para implementação
+Status: aprovada para implementação (emendada na task 00.5)
 ADR relacionado: 0004
 Substitui: Moira ADRs 0012 (senha) e 0013 (parte auth JWT HS256)
 
@@ -57,8 +57,11 @@ Filtro `OncePerRequestFilter` executado após a autenticação bem-sucedida:
 
 1. Extrai `sub`, `email`, `name` das claims.
 2. `SELECT ... FROM users WHERE keycloak_sub = :sub`.
-3. Se não existir: insert com `email`/`display_name` das claims.
-4. Se existir e claims divergirem: update (email/display_name mais recentes).
+3. Se não existir: insert com `email`/`display_name` das claims — **e-mail normalizado para
+   lowercase antes de persistir** (Emenda 00.5; combinado com `CITEXT` na coluna, elimina a
+   dívida Moira de contas duplicadas por case: `A@x.com` ≠ `a@x.com`).
+4. Se existir e claims divergirem: update (email/display_name mais recentes, e-mail em
+   lowercase).
 5. Corrida de primeiro acesso simultâneo: conflito em `UNIQUE(keycloak_sub)` → re-ler e seguir
    (mesmo padrão de retry do customer no booking).
 6. Disponibiliza o usuário local como principal para os controllers

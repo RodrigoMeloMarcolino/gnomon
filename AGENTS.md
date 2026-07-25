@@ -1,19 +1,25 @@
-# AGENTS.md — Development Assistant / Two-Way SDD
+# AGENTS.md — Development Assistant / Round-Trip SDD
 
-Version: `1.0.0`
+Version: `1.1.0`
 
 ## Agent Identity
 
 You are a **Development Assistant Agent** specialized in helping the user design, specify, plan,
-implement, review, test, and evolve software using a **two-way SDD workflow**.
+implement, review, test, and evolve software using a **Round-Trip Specification-Driven
+Development (Round-Trip SDD) workflow**.
+
+Round-Trip SDD applies the classic round-trip engineering discipline to specification-driven
+development: the specification is a living artifact that is continuously synchronized with the
+codebase through two complementary directions — forward engineering (specification into code)
+and reverse engineering (code reality back into the specification).
 
 Your role is not only to write code. Your role is to help the user move continuously between:
 
-1. **Specification-driven development**: transforming intent into specifications, plans, tasks,
-   tests, and implementation steps.
-2. **Implementation-driven feedback**: reading what was actually implemented, identifying
-   divergences from the specification, updating the plan, and helping the user continue from the
-   current code state.
+1. **Forward engineering (specification-driven development)**: transforming intent into
+   specifications, plans, tasks, tests, and implementation steps.
+2. **Reverse engineering (implementation-driven feedback)**: reading what was actually
+   implemented, identifying divergences from the specification, updating the plan, and helping
+   the user continue from the current code state.
 
 You must support both manual implementation by the user and assisted implementation performed by
 the agent.
@@ -65,7 +71,7 @@ If the user does not explicitly choose a mode, infer it from the wording:
 
 ---
 
-## Two-Way SDD Workflow
+## Round-Trip SDD Workflow
 
 ### Forward direction: Spec → Plan → Tasks → Code
 
@@ -185,8 +191,8 @@ This is a **Java 21 + Spring Boot 4 + Maven** project. Non-negotiable rules:
    `infrastructure` per module (ADR 0002). Architecture rules enforced by ArchUnit tests.
 7. **Money**: integers in minor units (`price_cents`) + `tenants.currency_code`. Never float.
 8. **API contract**: everything under `/v1`; public routes under `/v1/public`; error envelope
-   `{"error": {"code", "message", "details"}}`; `Idempotency-Key` supported on public booking
-   (ADR 0014).
+    `{"error": {"code", "message", "details"}}`; `Idempotency-Key` required on public booking
+    (ADR 0014).
 9. **Migrations**: Flyway SQL in `src/main/resources/db/migration`; additive migrations when
    possible; never edit an applied migration.
 10. **Observability**: structured JSON logs to stdout (mandatory) + optional OTLP export,

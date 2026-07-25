@@ -20,6 +20,9 @@ quando herdada.
 | [0013](0013-moeda-tenant-price-cents.md) | Moeda do tenant e preços em centavos | Accepted | ADR 0011 |
 | [0014](0014-api-v1-envelope-erro-idempotencia.md) | Rotas `/v1`, envelope de erro e idempotência de booking | Accepted | ADRs 0013/0014 |
 | [0015](0015-observabilidade-vendor-neutral.md) | Logging estruturado vendor-neutral + OTLP | Accepted | ADR 0015 |
+| [0016](0016-validacao-simetrica-constraints.md) | Validação simétrica e tradução determinística de constraints | Accepted | Nova (dívida Moira, task 00.5) |
+| [0017](0017-disciplina-schema-ddl.md) | Disciplina de schema: índices de FK, `updated_at` real, status tipados, zero colunas mortas | Accepted | Nova (dívida Moira, task 00.5) |
+| [0018](0018-frontend-umbra-repo-stack.md) | Frontend em repo separado (`umbra`) e stack web | Accepted | Nova |
 
 ## Convenção
 

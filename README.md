@@ -1,13 +1,17 @@
 # Gnomon
 
-Backend do SaaS de agendamento multi-tenant Gnomon.
+Backend do **Sun Catcher**, o SaaS de agendamento multi-tenant. `gnomon` é o nome do serviço
+de API; o produto resultante da combinação gnomon + [umbra](../umbra) (frontend) é o Sun
+Catcher. Ver a convenção completa no repo central de documentação
+[ephemeris](../ephemeris).
 
-O Gnomon é a recriação do [Moira](https://github.com/RodrigoMeloMarcolino/moira) em stack Java,
+O Sun Catcher é a recriação do [Moira](https://github.com/RodrigoMeloMarcolino/moira) em stack Java,
 evoluindo o produto de provider único para **multi-tenancy com múltiplos calendários**: cada
 tenant (negócio) possui um ou mais calendários, cada calendário pertence a um colaborador, e o
 cliente final agenda com um calendário do tenant — sem precisar criar conta (guest booking).
 
-O nome vem do gnômon: a peça do relógio de sol que projeta a sombra para medir as horas.
+O nome do serviço vem do gnômon: a peça do relógio de sol que projeta a sombra para medir as
+horas.
 
 ## Stack
 

@@ -21,6 +21,9 @@ bootstrap de tenant e memberships com autorização por role.
 - Resolução de escopo: validação membership+role por operação; erros da spec
   (`tenant_not_found`, `membership_required`, `insufficient_role`, `last_owner`).
 - Tradução central de exceções (`@RestControllerAdvice`) com envelope padrão (ADR 0014).
+- CORS para o dev server do frontend `umbra` (`http://localhost:3000`) nas rotas `/v1/**`
+  (ADR 0018); client Keycloak `gnomon-web` configurado para o fluxo Auth Code + PKCE do
+  `umbra` (redirect URIs de dev).
 
 ## Fora de escopo
 

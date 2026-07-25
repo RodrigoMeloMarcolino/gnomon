@@ -15,7 +15,10 @@ público — sem persistir slots livres.
   injetável), conversão explícita via `ZoneId` do calendário (spec booking 4.2).
 - Use cases:
   - CRUD `availability_rules` (owner/admin; staff no próprio calendário), validando
-    `start_time < end_time` e `weekday` 1–7;
+    `start_time < end_time`, `weekday` 1–7 **e alinhamento de 15 min em `start_time`/`end_time`
+    (minuto ∈ {0,15,30,45}, segundos zerados) — validação simétrica na escrita + CHECKs na
+    migration (ADR 0016, spec booking seção 3). Nenhuma regra que quebraria o cálculo pode ser
+    persistida (regressão da dívida Moira do `09:07`)**;
   - `ListAvailableSlotsUseCase` (spec booking 5.1) com todas as validações de escopo/atribuição.
 - Endpoint público:
   `GET /v1/public/tenants/{slug}/available-slots?calendar_id=&offering_id=&date=`
@@ -29,13 +32,16 @@ público — sem persistir slots livres.
 ## Testes
 
 - Unit do domínio (bateria da spec booking seção 7, incluindo DST e clock injetável).
-- Integração: regras CRUD com autorização; available-slots com offering não atribuído → 404;
-  data local do calendário respeitada; resposta em UTC.
+- Integração: regras CRUD com autorização; **escrita com horário desalinhado (ex.: `09:07`) →
+  422 na borda e CHECK no banco, sem derrubar o available-slots**; available-slots com offering
+  não atribuído → 404; data local do calendário respeitada; resposta em UTC.
 
 ## Critérios de aceite
 
 - [ ] Domínio de disponibilidade 100% testado sem banco.
 - [ ] Endpoint público retorna apenas horários realmente livres e futuros.
+- [ ] Validação simétrica: escrita inválida rejeitada; tabela de tradução de constraints de
+  `availability_rules` (spec booking 6.1) implementada — nenhuma violação conhecida vira 500.
 
 ## Notas de implementação
 

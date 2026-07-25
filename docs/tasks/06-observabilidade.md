@@ -40,3 +40,11 @@ Conforme `docs/specs/structured-logging.md`:
 ## Notas de implementação
 
 (preencher ao concluir)
+
+## Follow-up registrado (2026-07-24 — semente do Moonlight)
+
+O catálogo de eventos P1 de agenda (`appointment.created/cancelled/completed/no_show`) deve
+ser desenhado como **contrato estável e sem PII** (payload: ids, instantes, tenant_id, status;
+nunca nome/telefone de customer). Motivo: esses eventos são os candidatos naturais a
+alimentar o produto futuro **Moonlight** (métricas cross-tenant) via outbox/CDC, sem
+analytics no OLTP. Ver `ephemeris/docs/products/moonlight.md`.

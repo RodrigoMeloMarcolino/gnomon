@@ -10,8 +10,8 @@ Cliente final cancela ou remarca sem login, autorizado por token seguro por appo
 
 - Geração de `cancel_token`/`reschedule_token` (aleatórios, longos, não previsíveis) na criação
   do appointment, persistidos apenas como hash (`cancel_token_hash`, `reschedule_token_hash` —
-  colunas já previstas na migration da fase 04); tokens entregues na resposta de booking e em
-  futuras notificações.
+  **migration aditiva desta fase**, ADR 0017: zero colunas mortas); tokens entregues na resposta
+  de booking e em futuras notificações.
 - `POST /v1/public/appointments/{id}/cancel` com token: valida hash, appointment `scheduled`;
   transação: `SELECT ... FOR UPDATE`, marca `cancelled`, remove `appointment_slots` (horário
   volta a ficar disponível), commit.

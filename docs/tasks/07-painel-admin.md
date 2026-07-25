@@ -12,8 +12,9 @@ Owner/admin acompanham a agenda do tenant; staff acompanha a própria agenda.
   `status` e paginação; staff recebe apenas o próprio calendário (filtro forçado).
 - `GET /v1/tenants/{tenantSlug}/appointments/{id}` (detalhe com customer e serviço).
 - Transições administrativas: `POST .../appointments/{id}/cancel`, `/complete`, `/no-show`
-  (apenas de `scheduled`; cancel libera os slots na mesma transação — antecipa a regra de
-  liberação de slots da fase 08 para o caminho admin).
+  (apenas de `scheduled`, conforme a máquina de estados da spec booking seção 3; transição
+  inválida → 409; cancel libera os slots na mesma transação — antecipa a regra de liberação de
+  slots da fase 08 para o caminho admin).
 - `GET /v1/tenants/{tenantSlug}/customers` e `/customers/{id}`: customers com appointments no
   tenant (inferência via appointments), campos globais mínimos.
 - Eventos admin P1 de logging (`appointment.cancelled/completed/no_show`).
@@ -32,6 +33,7 @@ Owner/admin acompanham a agenda do tenant; staff acompanha a própria agenda.
 
 - [ ] Matriz de autorização da spec multi-tenancy coberta para appointments/customers.
 - [ ] Cancelamento admin libera horário comprovadamente.
+- [ ] Listagens admin com paginação obrigatória (sem varredura completa — dívida Moira).
 
 ## Notas de implementação
 
