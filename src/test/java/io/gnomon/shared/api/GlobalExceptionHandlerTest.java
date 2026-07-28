@@ -17,7 +17,7 @@ class GlobalExceptionHandlerTest {
 
   @Test
   void bodyValidation_whenRequestIsInvalid_shouldReturn422Envelope() {
-    var target = new CreateTenantRequest("", "Invalid Slug", "");
+    var target = new CreateTenantRequest("", "Invalid Slug", "", "brl");
     var bindingResult = new BeanPropertyBindingResult(target, "createTenantRequest");
     bindingResult.rejectValue("timezone", "NotBlank", "must not be blank");
     bindingResult.rejectValue("name", "NotBlank", "must not be blank");
@@ -42,7 +42,9 @@ class GlobalExceptionHandlerTest {
   void dtoValidation_whenTenantFieldsAreInvalid_shouldReportAllContractFields() {
     try (var validatorFactory = Validation.buildDefaultValidatorFactory()) {
       var violations =
-          validatorFactory.getValidator().validate(new CreateTenantRequest("", "Invalid Slug", ""));
+          validatorFactory
+              .getValidator()
+              .validate(new CreateTenantRequest("", "Invalid Slug", "", "brl"));
 
       assertThat(violations)
           .extracting(violation -> violation.getPropertyPath().toString())
@@ -51,12 +53,12 @@ class GlobalExceptionHandlerTest {
   }
 
   @Test
-  void dtoValidation_whenStaffIsCreatedDirectly_shouldRejectRequest() {
+  void dtoValidation_whenMembershipRoleIsUnknown_shouldRejectRequest() {
     try (var validatorFactory = Validation.buildDefaultValidatorFactory()) {
       var violations =
           validatorFactory
               .getValidator()
-              .validate(new CreateMembershipRequest("staff@gnomon.local", "staff"));
+              .validate(new CreateMembershipRequest("staff@gnomon.local", "manager"));
 
       assertThat(violations)
           .singleElement()

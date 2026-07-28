@@ -7,8 +7,5 @@ import jakarta.validation.constraints.Size;
 
 public record CreateMembershipRequest(
     @NotBlank @Email @Size(max = 255) String email,
-    @NotBlank
-        @Pattern(
-            regexp = "owner|admin",
-            message = "must be owner or admin; staff is created by linking a collaborator")
+    @NotBlank @Pattern(regexp = "owner|admin|staff", message = "must be owner, admin, or staff")
         String role) {}

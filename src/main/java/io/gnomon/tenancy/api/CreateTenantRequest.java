@@ -12,4 +12,6 @@ public record CreateTenantRequest(
             regexp = "^[a-z0-9]+(?:-[a-z0-9]+)*$",
             message = "must contain lowercase letters, numbers, and single hyphens only")
         String slug,
-    @NotBlank @Size(max = 64) String timezone) {}
+    @NotBlank @Size(max = 64) String timezone,
+    @Pattern(regexp = "^[A-Z]{3}$", message = "must be a three-letter uppercase ISO 4217 code")
+        String currencyCode) {}
