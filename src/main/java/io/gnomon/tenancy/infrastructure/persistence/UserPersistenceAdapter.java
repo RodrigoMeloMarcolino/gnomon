@@ -24,7 +24,7 @@ class UserPersistenceAdapter implements UserRepository {
 
   @Override
   public Optional<User> findByEmail(String normalizedEmail) {
-    return repository.findByEmailIgnoreCase(normalizedEmail).map(UserPersistenceAdapter::toDomain);
+    return repository.findByEmail(normalizedEmail).map(UserPersistenceAdapter::toDomain);
   }
 
   @Override

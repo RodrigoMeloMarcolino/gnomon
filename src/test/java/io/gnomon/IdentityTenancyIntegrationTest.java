@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import io.gnomon.tenancy.application.port.UserRepository;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -43,6 +44,7 @@ class IdentityTenancyIntegrationTest {
 
   @Autowired private WebApplicationContext context;
   @Autowired private JdbcTemplate jdbcTemplate;
+  @Autowired private UserRepository userRepository;
 
   private MockMvc mockMvc;
 
@@ -99,6 +101,22 @@ class IdentityTenancyIntegrationTest {
         .perform(get("/v1/tenants/tenant-b").with(ownerA))
         .andExpect(status().isForbidden())
         .andExpect(jsonPath("$.error.code").value("membership_required"));
+
+    assertThat(userRepository.findByEmail("OWNER-B@GNOMON.LOCAL"))
+        .hasValueSatisfying(user -> assertThat(user.email()).isEqualTo("owner-b@gnomon.local"));
+
+    mockMvc
+        .perform(
+            post("/v1/tenants/tenant-a/memberships")
+                .with(ownerA)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {"email":"OWNER-B@GNOMON.LOCAL","role":"admin"}
+                    """))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.email").value("owner-b@gnomon.local"))
+        .andExpect(jsonPath("$.role").value("admin"));
 
     UUID tenantBOwnerMembership =
         jdbcTemplate.queryForObject(
