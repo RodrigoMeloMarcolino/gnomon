@@ -21,7 +21,8 @@ as tasks deste repositório.
 
 ## Estado integrado em `main`
 
-HEAD esperado ao criar este checkpoint: `73d5585`.
+HEAD no primeiro registro deste checkpoint: `73d5585`. A onda 2 foi fechada depois nos commits
+`83fb81b` (este checkpoint) e `e594513` (integração de catálogo).
 
 ### Fase 01 — concluída
 
@@ -41,7 +42,7 @@ Commits relevantes:
 - `5aa21e0` — correção do lookup `CITEXT`
 - `f160980` — checkpoint documental da fase 01
 
-### Fase 02 — código funcional integrado; gate conjunto em andamento
+### Fase 02 — concluída
 
 - Migration `V3__catalog.sql` com collaborators, calendars, offerings e
   calendar_offerings.
@@ -63,52 +64,27 @@ Commits relevantes:
 - `98ba294` — hardening do lifecycle staff
 - `73d5585` — wiring/validação de offerings
 
-Validações já verdes nas worktrees:
+Validações finais verdes:
 
-- Catálogo/offerings: 80 testes normais, 4 ArchUnit e 12 integrações reais.
-- Lifecycle staff: 65 testes normais, 4 ArchUnit e 26 testes focados.
-- Flyway V1–V3 e `ddl-auto=validate` passaram com PostgreSQL real.
+- Suíte conjunta: 92 testes normais, incluindo 4 ArchUnit.
+- Perfil `integration`: 19 testes com PostgreSQL 16 e Keycloak 26.
+- Flyway V1–V3, `ddl-auto=validate` e a jornada integrada do catálogo passaram.
 
-## Trabalho ativo no momento do checkpoint
+## Histórico do trabalho ativo no primeiro checkpoint
 
-1. A branch principal estava executando:
+Os itens abaixo foram concluídos e são preservados apenas para rastreabilidade:
 
-   ```text
-   docker run --rm \
-     -v /mnt/c/Users/pichau/Documents/projects/gnomon:/workspace \
-     -w /workspace maven:3.9-eclipse-temurin-21 \
-     ./mvnw spotless:check test -DskipITs
-   ```
-
-   Em uma nova sessão, não assumir que o processo sobreviveu: verificar e repetir o gate.
-
-2. Worktree `/tmp/gnomon-w2-integration`, branch `agent/w2-integration`:
-   subagente implementando `CatalogIntegrationTest` com Spring Boot, MockMvc e PostgreSQL real.
-   Escopo: startup/DDL validate; owner cria collaborator/calendar/offering/assignment; catálogo
-   público; soft deactivation; cross-tenant; duplicate title; rollback/constraints.
-   Se a worktree ou o agente não existir na nova sessão, inspecionar `git log` e `git status`
-   antes de recriar o trabalho.
-
-3. As worktrees `/tmp/gnomon-w2-schema`, `/tmp/gnomon-w2-collaborators` e
+- O gate normal terminou com 92/92 testes.
+- A worktree `/tmp/gnomon-w2-integration` produziu o commit `e594513`.
+- O gate de integração terminou com 19/19 testes.
+- As worktrees `/tmp/gnomon-w2-schema`, `/tmp/gnomon-w2-collaborators` e
    `/tmp/gnomon-w2-offerings` estavam limpas após os commits. Não há mudança pendente conhecida
    nelas.
 
-## Como fechar a onda 2
+## Próxima ação exata
 
-1. Integrar o commit do `CatalogIntegrationTest`, se produzido.
-2. Executar sequencialmente em `main`:
-
-   ```text
-   ./mvnw spotless:check
-   ./mvnw test
-   ./mvnw test -Dtest=ArchitectureTest
-   ./mvnw verify -Pintegration
-   ```
-
-3. Corrigir qualquer regressão antes de avançar.
-4. Atualizar `docs/tasks/02-catalogo.md` e `docs/tasks/README.md` para `done`, registrando
-   implementação, testes, riscos e commits.
-5. Commitar o checkpoint documental.
+Criar e validar o pequeno commit de contratos compartilhados da onda 3 descrito abaixo. Depois,
+abrir três worktrees a partir desse HEAD e disparar os três subagentes.
 
 ## Contratos congelados para a onda 3
 
@@ -185,4 +161,3 @@ Ao concluir cada fase, sincronizar a task local. Ao concluir o trabalho:
 - usar a data real do checkpoint;
 - manter apenas status e ponteiros no Ephemeris, sem copiar conteúdo normativo;
 - a escrita no repo irmão pode exigir autorização adicional do sandbox.
-

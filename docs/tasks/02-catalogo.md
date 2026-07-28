@@ -1,6 +1,6 @@
 # Fase 02 — Catálogo: colaboradores, calendários, offerings
 
-Status: todo
+Status: done (concluída em 2026-07-28)
 
 ## Objetivo
 
@@ -43,10 +43,34 @@ e catálogo de serviços com atribuição.
 
 ## Critérios de aceite
 
-- [ ] Fluxo owner: criar colaborador → calendário existe → cadastrar offering → atribuir →
+- [x] Fluxo owner: criar colaborador → calendário existe → cadastrar offering → atribuir →
       aparece no público filtrado.
-- [ ] Matriz de autorização da spec multi-tenancy coberta para catálogo.
+- [x] Matriz de autorização da spec multi-tenancy coberta para catálogo.
 
 ## Notas de implementação
 
-(preencher ao concluir)
+- A migration aditiva `V3__catalog.sql` criou `collaborators`, `calendars`, `offerings` e
+  `calendar_offerings`, com `tenant_id`, FKs compostas, uniques parciais, CHECKs, índices e
+  triggers de `updated_at`.
+- Domínio e aplicação permanecem separados de JPA. Os adapters tenant-scoped traduzem acesso
+  administrativo cross-tenant para `403` e lookup público fora do tenant para `404`.
+- Criar colaborador também cria seu calendário 1:1 na mesma transação. Desativar colaborador
+  desativa o calendário e remove somente membership `staff`; memberships `owner/admin` são
+  preservadas.
+- O vínculo de staff é idempotente e resistente a corrida via
+  `INSERT ... ON CONFLICT DO NOTHING`.
+- Offerings usam preço em centavos, duração múltipla de 15 minutos, título ativo único e soft
+  delete. A substituição de atribuições calendário–offering é transacional.
+- `CatalogExceptionHandler` mantém o envelope
+  `{"error":{"code","message","details"}}` para validação, conflito, ausência e autorização.
+- Validação conjunta:
+  - `spotless:check` + `test`: 92 testes, zero falhas;
+  - ArchUnit: 4 testes incluídos na suíte, zero falhas;
+  - `verify -Pintegration`: 19 testes, zero falhas, com PostgreSQL 16, Keycloak 26, Flyway
+    V1–V3 e `ddl-auto=validate`;
+  - jornada integrada owner → colaborador/calendário → offering → atribuição → catálogo público,
+    incluindo soft delete, duplicidade e isolamento cross-tenant.
+
+Risco/follow-up: o starter Redis já presente faz o Spring Data sondar repositories JPA durante o
+startup e emitir mensagens informativas. A configuração explícita dos repositories Redis pertence
+à fase 05 e não afeta o comportamento ou readiness atual.

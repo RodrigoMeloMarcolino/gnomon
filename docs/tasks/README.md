@@ -12,7 +12,7 @@ verdes). Status: `todo` | `doing` | `done`.
 | [00.5](00.5-hardening-licoes-moira.md) | Hardening de nascimento: lições do Moira (docs-only) | done | ADRs 0014 (emenda), 0016, 0017 |
 | [00.6](00.6-codex-handoff.md) | Handoff para Codex (docs-only) | done | PRD, ADR index, roadmap |
 | [01](01-identidade-tenancy.md) | Identidade (Keycloak) e tenancy | done | spec keycloak-auth, spec multi-tenancy, ADRs 0003–0005 |
-| [02](02-catalogo.md) | Catálogo: colaboradores, calendários, offerings | todo | ADRs 0005–0007, 0012, 0013 |
+| [02](02-catalogo.md) | Catálogo: colaboradores, calendários, offerings | done | ADRs 0005–0007, 0012, 0013 |
 | [03](03-disponibilidade.md) | Availability rules + available-slots | todo | spec booking, ADRs 0006, 0010, 0016 |
 | [04](04-guest-booking.md) | Guest booking transacional | todo | spec booking, ADRs 0008–0012, 0014, 0016, 0017 |
 | [05](05-cache-redis.md) | Cache Redis das leituras públicas | todo | ADR 0014, RNF-07 |

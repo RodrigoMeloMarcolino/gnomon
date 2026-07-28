@@ -15,12 +15,13 @@ horas.
 
 ## Estado atual
 
-Checkpoint de continuidade: fases `00`, `00.5`, `00.6` e `01` concluídas; a próxima fase é
-`02` — catálogo. Além da fundação técnica, o código atual entrega autenticação JWT com
-Keycloak, projeção JIT de usuários, tenants e memberships com autorização local.
+Checkpoint de continuidade: fases `00`, `00.5`, `00.6`, `01` e `02` concluídas; a próxima fase
+é `03` — disponibilidade. Além da fundação técnica, o código atual entrega autenticação JWT com
+Keycloak, projeção JIT de usuários, tenants e memberships com autorização local, colaboradores,
+calendários, offerings, atribuições e catálogo público.
 
-Catálogo, disponibilidade, booking, cache Redis funcional e observabilidade completa permanecem
-como contratos especificados em `docs/` para as fases seguintes.
+Disponibilidade, booking, cache Redis funcional e observabilidade completa permanecem como
+contratos especificados em `docs/` para as fases seguintes.
 
 ## Stack
 
@@ -100,14 +101,13 @@ PostgreSQL.
 
 ## Autenticação e multi-tenancy
 
-Contrato planejado para a fase `01`: a autenticação é delegada ao Keycloak (realm único
+Implementado na fase `01`: a autenticação é delegada ao Keycloak (realm único
 `gnomon`). A API valida access tokens JWT como OAuth2 resource server (`Authorization: Bearer
 <access_token>`). Login, registro, recuperação de senha, MFA e social login são responsabilidade
 do Keycloak — a API nunca vê senha.
 
-No estado atual de fundação, `SecurityConfig` ainda é temporário e libera todas as rotas
-(`permitAll`) para permitir health checks e desenvolvimento inicial. A substituição pela chain
-real da spec `docs/specs/keycloak-auth.md` é escopo da fase `01`.
+`SecurityConfig` mantém apenas health, readiness e `/v1/public/**` anônimos. Rotas administrativas
+exigem JWT válido; o filtro JIT cria ou atualiza a projeção local antes dos controllers.
 
 A autorização administrativa é resolvida localmente: a tabela `users` é uma projeção local do
 usuário do Keycloak (provisionada no primeiro request autenticado, via `keycloak_sub`), e
