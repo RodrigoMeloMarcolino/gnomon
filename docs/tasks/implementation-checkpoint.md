@@ -22,7 +22,8 @@ as tasks deste repositório.
 ## Estado integrado em `main`
 
 HEAD no primeiro registro deste checkpoint: `73d5585`. A onda 2 foi fechada depois nos commits
-`83fb81b` (este checkpoint) e `e594513` (integração de catálogo).
+`83fb81b` (este checkpoint), `e594513` (integração de catálogo) e `36cb4a4` (documentação).
+Os contratos da onda 3 foram congelados em `dd6cfef`.
 
 ### Fase 01 — concluída
 
@@ -83,8 +84,16 @@ Os itens abaixo foram concluídos e são preservados apenas para rastreabilidade
 
 ## Próxima ação exata
 
-Criar e validar o pequeno commit de contratos compartilhados da onda 3 descrito abaixo. Depois,
-abrir três worktrees a partir desse HEAD e disparar os três subagentes.
+Integrar, nesta ordem lógica, os resultados das três worktrees ativas da onda 3:
+
+- `/tmp/gnomon-w3-algorithm`, branch `agent/w3-algorithm`: cálculo puro, slots e DST;
+- `/tmp/gnomon-w3-rules`, branch `agent/w3-rules`: V4, JPA, CRUD admin e handler;
+- `/tmp/gnomon-w3-public`, branch `agent/w3-public`: adapter de catálogo, occupied vazio e
+  endpoint público.
+
+Antes de cada cherry-pick, exigir commit atômico, gates focados e worktree limpa. Depois de
+integrar os três, resolver somente incompatibilidades reais, executar a suíte conjunta e fechar a
+task 03.
 
 ## Contratos congelados para a onda 3
 
