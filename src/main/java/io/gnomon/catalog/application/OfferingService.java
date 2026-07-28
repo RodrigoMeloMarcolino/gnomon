@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ public class OfferingService
   private final CalendarOfferingRepository assignments;
   private final Clock clock;
 
+  @Autowired
   public OfferingService(
       CatalogTenantAccessPort access,
       CalendarRepository calendars,
@@ -110,6 +112,9 @@ public class OfferingService
   @Override
   @Transactional
   public List<OfferingResult> replace(ReplaceCalendarOfferingsCommand command) {
+    if (command.offeringIds() == null) {
+      throw new CatalogException("validation_error", "offeringIds is required");
+    }
     var tenant = access.requireManager(command.actorUserId(), command.tenantSlug());
     requireAdministrativeCalendar(tenant.tenantId(), command.calendarId());
     Set<UUID> offeringIds = Set.copyOf(command.offeringIds());

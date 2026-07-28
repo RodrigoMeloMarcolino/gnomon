@@ -60,4 +60,18 @@ class CalendarOfferingControllerHttpTest {
         .andExpect(status().isForbidden())
         .andExpect(jsonPath("$.error.code").value("catalog_access_denied"));
   }
+
+  @Test
+  void replace_whenOfferingIdsIsNull_shouldReturn422() throws Exception {
+    mockMvc
+        .perform(
+            put("/v1/tenants/barbearia-solar/calendars/{calendarId}/offerings", CALENDAR_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {"offeringIds":null}
+                    """))
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(jsonPath("$.error.code").value("validation_error"));
+  }
 }

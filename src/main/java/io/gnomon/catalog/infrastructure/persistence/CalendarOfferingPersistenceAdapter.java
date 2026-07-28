@@ -5,6 +5,7 @@ import io.gnomon.catalog.domain.CatalogException;
 import java.time.Clock;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
@@ -14,6 +15,7 @@ class CalendarOfferingPersistenceAdapter implements CalendarOfferingRepository {
   private final SpringDataCalendarOfferingRepository repository;
   private final Clock clock;
 
+  @Autowired
   CalendarOfferingPersistenceAdapter(SpringDataCalendarOfferingRepository repository) {
     this(repository, Clock.systemUTC());
   }

@@ -120,6 +120,20 @@ class OfferingServiceTest {
   }
 
   @Test
+  void replace_whenOfferingIdsIsNull_shouldReturnValidationError() {
+    assertThatThrownBy(
+            () ->
+                service.replace(
+                    new ReplaceCalendarOfferingsCommand(
+                        ACTOR_ID, "barbearia-solar", CALENDAR_ID, null)))
+        .isInstanceOf(CatalogException.class)
+        .extracting(error -> ((CatalogException) error).code())
+        .isEqualTo("validation_error");
+    verify(access, never()).requireManager(any(), any());
+    verify(assignments, never()).replace(any(), any(), any());
+  }
+
+  @Test
   void listPublic_whenCalendarIsInactive_shouldHideCalendar() {
     Calendar calendar = org.mockito.Mockito.mock(Calendar.class);
     when(calendar.active()).thenReturn(false);
