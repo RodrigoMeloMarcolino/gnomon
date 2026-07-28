@@ -1,0 +1,14 @@
+package io.gnomon.tenancy.infrastructure.persistence;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, UUID> {
+
+  Optional<UserJpaEntity> findByEmailIgnoreCase(String email);
+
+  List<UserJpaEntity> findByIdIn(Collection<UUID> ids);
+}
