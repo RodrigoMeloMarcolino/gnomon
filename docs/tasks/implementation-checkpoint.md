@@ -1,4 +1,4 @@
-# Checkpoint de implementação paralela — fases 01–09
+# Checkpoint de implementação paralela — fases 01–09 (pós-onda 3)
 
 Atualizado: 2026-07-28
 
@@ -23,7 +23,8 @@ as tasks deste repositório.
 
 HEAD no primeiro registro deste checkpoint: `73d5585`. A onda 2 foi fechada depois nos commits
 `83fb81b` (este checkpoint), `e594513` (integração de catálogo) e `36cb4a4` (documentação).
-Os contratos da onda 3 foram congelados em `dd6cfef`.
+Os contratos da onda 3 foram congelados em `dd6cfef`. A fase 03 foi integrada nos commits
+`781596c`, `42579ab`, `e08cce4` e `8d15c20`.
 
 ### Fase 01 — concluída
 
@@ -71,6 +72,19 @@ Validações finais verdes:
 - Perfil `integration`: 19 testes com PostgreSQL 16 e Keycloak 26.
 - Flyway V1–V3, `ddl-auto=validate` e a jornada integrada do catálogo passaram.
 
+### Fase 03 — concluída
+
+- Migration `V4__availability_rules.sql` tenant-scoped, com FK composta para calendários,
+  CHECKs nomeados, índices e trigger de `updated_at`.
+- CRUD administrativo com soft deactivate e autorização owner/admin/staff do próprio calendário.
+- Cálculo puro de disponibilidade em slots de 15 minutos, incluindo regras sobrepostas,
+  ocupação, passado, data local e DST gap/overlap.
+- Endpoint público de `available-slots` com catálogo ativo/atribuído e resposta UTC.
+- `OccupiedSlotPort` permanece vazio apenas até a fase 04.
+- Gate normal: 129/129 testes; ArchUnit: 4/4.
+- Perfil `integration`: 23/23 com PostgreSQL 16, Keycloak 26, Flyway V1–V4 e
+  `ddl-auto=validate`.
+
 ## Histórico do trabalho ativo no primeiro checkpoint
 
 Os itens abaixo foram concluídos e são preservados apenas para rastreabilidade:
@@ -84,18 +98,23 @@ Os itens abaixo foram concluídos e são preservados apenas para rastreabilidade
 
 ## Próxima ação exata
 
-Integrar, nesta ordem lógica, os resultados das três worktrees ativas da onda 3:
+Iniciar a onda 4 (fase 04 — guest booking) a partir do `main` após este checkpoint:
 
-- `/tmp/gnomon-w3-algorithm`, branch `agent/w3-algorithm`: cálculo puro, slots e DST;
-- `/tmp/gnomon-w3-rules`, branch `agent/w3-rules`: V4, JPA, CRUD admin e handler;
-- `/tmp/gnomon-w3-public`, branch `agent/w3-public`: adapter de catálogo, occupied vazio e
-  endpoint público.
+1. congelar primeiro os contratos compartilhados do módulo `booking` e a fronteira com
+   `customers`, sem implementar;
+2. criar a migration `V5__booking.sql` sob ownership exclusivo do agente principal;
+3. abrir até três worktrees isoladas a partir do commit de contratos;
+4. paralelizar:
+   - domínio de slots, telefone E.164, fingerprint SHA-256 e invariantes;
+   - persistência/transação/customer upsert/constraints;
+   - API pública/idempotência e testes concorrentes;
+5. integrar nessa ordem, substituir o `EmptyOccupiedSlotAdapter` pela leitura PostgreSQL e rodar
+   os gates conjuntos antes de fechar a task 04.
 
-Antes de cada cherry-pick, exigir commit atômico, gates focados e worktree limpa. Depois de
-integrar os três, resolver somente incompatibilidades reais, executar a suíte conjunta e fechar a
-task 03.
+Antes de implementar, reler `docs/tasks/04-guest-booking.md`, `docs/specs/booking.md` e ADRs
+0008–0012, 0014, 0016 e 0017. A adição de libphonenumber exige justificativa documental.
 
-## Contratos congelados para a onda 3
+## Registro dos contratos congelados da onda 3
 
 Pacote: `io.gnomon.availability`.
 
@@ -112,24 +131,17 @@ Pacote: `io.gnomon.availability`.
 - DST: usar `ZoneRules.getValidOffsets`; gap gera zero instante e overlap gera os dois instantes
   UTC; deduplicar e ordenar.
 
-Ownership proposto:
+Ownership executado:
 
 - Subagente A: algoritmo puro, slotização, DST e testes unitários.
 - Subagente B: migration V4, aggregate/regra, JPA, CRUD admin, constraint translation e testes
   PostgreSQL.
 - Subagente C: resolução de catálogo, occupied port vazio, endpoint público e testes de contrato.
 
-Criar primeiro um commit pequeno apenas com os contratos compartilhados, validá-lo e então abrir
-três worktrees a partir desse HEAD.
+O commit `dd6cfef` congelou esses contratos antes da abertura das três worktrees; os resultados
+foram integrados sem mudança de contrato.
 
 ## Sequência restante
-
-### Onda 3 — disponibilidade
-
-- Implementar A/B/C conforme ownership acima.
-- Validar horário desalinhado na borda e nos CHECKs.
-- Testar exact fit, regras sobrepostas, ocupado, passado, data local e DST.
-- Fechar documentação da fase 03.
 
 ### Onda 4 — booking
 

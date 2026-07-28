@@ -1,6 +1,6 @@
 # Fase 03 — Availability rules e available-slots
 
-Status: todo
+Status: done
 
 ## Objetivo
 
@@ -39,11 +39,31 @@ público — sem persistir slots livres.
 
 ## Critérios de aceite
 
-- [ ] Domínio de disponibilidade 100% testado sem banco.
-- [ ] Endpoint público retorna apenas horários realmente livres e futuros.
-- [ ] Validação simétrica: escrita inválida rejeitada; tabela de tradução de constraints de
+- [x] Domínio de disponibilidade 100% testado sem banco.
+- [x] Endpoint público retorna apenas horários realmente livres e futuros.
+- [x] Validação simétrica: escrita inválida rejeitada; tabela de tradução de constraints de
   `availability_rules` (spec booking 6.1) implementada — nenhuma violação conhecida vira 500.
 
 ## Notas de implementação
 
-(preencher ao concluir)
+- Migration `V4__availability_rules.sql` cria a tabela tenant-scoped com FK composta para
+  calendário, CHECKs nomeados de weekday, ordem e alinhamento de 15 minutos, índices e trigger
+  real de `updated_at`.
+- O domínio puro usa `DefaultAvailabilityCalculator`: step de 15 minutos, exact fit,
+  deduplicação de regras sobrepostas, remoção de ocupados/passado e resolução explícita de DST
+  gap/overlap via offsets válidos da timezone.
+- CRUD administrativo fica sob
+  `/v1/tenants/{tenantSlug}/calendars/{calendarId}/availability-rules`, com soft deactivate,
+  isolamento tenant-scoped e autorização owner/admin ou staff do próprio calendário.
+- O endpoint público
+  `GET /v1/public/tenants/{slug}/available-slots?calendar_id=&offering_id=&date=` valida recursos
+  ativos e atribuição, usa a data local do calendário e retorna instantes UTC no contrato
+  `available_start_times`.
+- `OccupiedSlotPort` usa adapter vazio somente nesta fase; a fase 04 o substitui por leitura
+  PostgreSQL de `appointment_slots`.
+- Commits integrados: `781596c` (algoritmo), `42579ab` (V4 + CRUD),
+  `e08cce4` (endpoint público) e `8d15c20` (wiring).
+- Validação em Java 21: `spotless:check` + 129 testes normais; ArchUnit 4/4; perfil
+  `integration` 23/23 com PostgreSQL 16, Keycloak 26, Flyway V1–V4 e `ddl-auto=validate`.
+- Risco remanescente intencional: até a fase 04, disponibilidade não possui slots ocupados e é
+  advisory; a garantia concorrente nascerá com `appointment_slots`.
