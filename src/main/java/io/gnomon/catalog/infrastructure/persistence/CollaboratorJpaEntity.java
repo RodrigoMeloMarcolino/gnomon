@@ -20,7 +20,7 @@ class CollaboratorJpaEntity {
   @Column(name = "user_id")
   private UUID userId;
 
-  @Column(name = "display_name", nullable = false)
+  @Column(name = "display_name", nullable = false, length = 120)
   private String displayName;
 
   @Column(name = "is_active", nullable = false)

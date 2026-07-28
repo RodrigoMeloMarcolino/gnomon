@@ -9,6 +9,8 @@ public interface MembershipRepository {
 
   TenantMembership save(TenantMembership membership);
 
+  TenantMembership createStaffIfAbsent(TenantMembership membership);
+
   Optional<TenantMembership> findByTenantIdAndUserId(UUID tenantId, UUID userId);
 
   Optional<TenantMembership> findById(UUID id);

@@ -20,10 +20,10 @@ class CalendarJpaEntity {
   @Column(name = "collaborator_id", nullable = false, updatable = false)
   private UUID collaboratorId;
 
-  @Column(nullable = false)
+  @Column(nullable = false, length = 120)
   private String name;
 
-  @Column(nullable = false)
+  @Column(nullable = false, length = 64)
   private String timezone;
 
   @Column(name = "is_active", nullable = false)

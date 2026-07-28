@@ -101,6 +101,10 @@ public class CollaboratorService implements CollaboratorUseCase {
     var access = tenantAccess.requireManager(actorUserId, tenantSlug);
     Collaborator collaborator = requireInTenant(access.tenantId(), collaboratorId);
     var now = clock.instant();
+    UUID previousUserId = collaborator.unlink(now);
+    if (previousUserId != null) {
+      tenantAccess.unlinkStaff(access.tenantId(), previousUserId);
+    }
     collaborator.deactivate(now);
     Calendar calendar = requireCalendar(collaborator);
     calendar.deactivate(now);

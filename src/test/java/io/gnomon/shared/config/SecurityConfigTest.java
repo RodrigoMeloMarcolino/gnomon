@@ -64,6 +64,19 @@ class SecurityConfigTest {
   }
 
   @Test
+  void catalogAdminRoute_withoutToken_shouldReturn401() throws Exception {
+    mockMvc
+        .perform(get("/v1/tenants/tenant/collaborators"))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.error.code").value("unauthorized"));
+  }
+
+  @Test
+  void publicCatalogRoute_withoutToken_shouldBeAccessible() throws Exception {
+    mockMvc.perform(get("/v1/public/tenants/tenant/calendars")).andExpect(status().isOk());
+  }
+
+  @Test
   void protectedRoute_withJwt_shouldBeAccessible() throws Exception {
     mockMvc
         .perform(
@@ -159,7 +172,13 @@ class SecurityConfigTest {
   @RestController
   static class TestController {
 
-    @GetMapping({"/v1/public/test", "/v1/health", "/v1/test/protected"})
+    @GetMapping({
+      "/v1/public/test",
+      "/v1/public/tenants/tenant/calendars",
+      "/v1/health",
+      "/v1/test/protected",
+      "/v1/tenants/tenant/collaborators"
+    })
     String ok() {
       return "ok";
     }

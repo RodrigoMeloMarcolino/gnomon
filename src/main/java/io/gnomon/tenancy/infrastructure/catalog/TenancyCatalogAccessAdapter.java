@@ -64,7 +64,7 @@ class TenancyCatalogAccessAdapter implements CatalogTenantAccessPort {
             .findByTenantIdAndUserId(tenantId, user.id())
             .orElseGet(
                 () ->
-                    memberships.save(
+                    memberships.createStaffIfAbsent(
                         TenantMembership.staffForCollaborator(tenantId, user.id(), now)));
     return new UserLink(
         user.id(), user.email(), user.displayName(), membership.role().databaseValue());

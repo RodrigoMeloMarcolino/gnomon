@@ -31,6 +31,26 @@ class MembershipPersistenceAdapter implements MembershipRepository {
   }
 
   @Override
+  public TenantMembership createStaffIfAbsent(TenantMembership membership) {
+    if (membership.role() != TenantMembership.MembershipRole.STAFF) {
+      throw new IllegalArgumentException("only staff memberships can be created idempotently");
+    }
+    repository.insertStaffIfAbsent(
+        membership.id(),
+        membership.tenantId(),
+        membership.userId(),
+        membership.createdAt(),
+        membership.updatedAt());
+    return repository
+        .findByTenantIdAndUserId(membership.tenantId(), membership.userId())
+        .map(MembershipJpaEntity::toDomain)
+        .orElseThrow(
+            () ->
+                new TenancyException(
+                    "membership_exists", "membership could not be created or recovered"));
+  }
+
+  @Override
   public Optional<TenantMembership> findByTenantIdAndUserId(UUID tenantId, UUID userId) {
     return repository.findByTenantIdAndUserId(tenantId, userId).map(MembershipJpaEntity::toDomain);
   }

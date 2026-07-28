@@ -1,13 +1,16 @@
 package io.gnomon.catalog.api;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import io.gnomon.catalog.application.CalendarResult;
+import io.gnomon.catalog.application.CalendarUseCase;
 import io.gnomon.catalog.application.CollaboratorResult;
 import io.gnomon.catalog.application.CollaboratorUseCase;
 import io.gnomon.catalog.application.PublicCalendarResult;
@@ -36,17 +39,19 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 class CatalogControllerHttpTest {
 
   @Mock private CollaboratorUseCase collaborators;
+  @Mock private CalendarUseCase calendars;
   @Mock private PublicCalendarUseCase publicCalendars;
 
   private MockMvc mockMvc;
+  private LocalUserPrincipal principal;
 
   @BeforeEach
   void setUp() {
-    LocalUserPrincipal principal =
-        new LocalUserPrincipal(UUID.randomUUID(), "subject", "owner@example.com", "Owner");
+    principal = new LocalUserPrincipal(UUID.randomUUID(), "subject", "owner@example.com", "Owner");
     mockMvc =
         MockMvcBuilders.standaloneSetup(
                 new CollaboratorController(collaborators),
+                new CalendarController(calendars),
                 new PublicCalendarController(publicCalendars))
             .setControllerAdvice(new GlobalExceptionHandler())
             .setCustomArgumentResolvers(new PrincipalResolver(principal))
@@ -93,6 +98,30 @@ class CatalogControllerHttpTest {
         .andExpect(jsonPath("$[0].id").value(calendarId.toString()))
         .andExpect(jsonPath("$[0].collaboratorName").value("Maria"))
         .andExpect(jsonPath("$[0].userId").doesNotExist());
+  }
+
+  @Test
+  void deactivateCollaborator_shouldUseAuthenticatedActorAndReturn204() throws Exception {
+    UUID collaboratorId = UUID.randomUUID();
+
+    mockMvc
+        .perform(delete("/v1/tenants/tenant/collaborators/{id}", collaboratorId))
+        .andExpect(status().isNoContent());
+
+    verify(collaborators).deactivate(principal.userId(), "tenant", collaboratorId);
+  }
+
+  @Test
+  void getCalendar_shouldUseAuthenticatedActor() throws Exception {
+    CalendarResult result = collaborator().calendar();
+    when(calendars.get(principal.userId(), "tenant", result.id())).thenReturn(result);
+
+    mockMvc
+        .perform(get("/v1/tenants/tenant/calendars/{id}", result.id()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(result.id().toString()));
+
+    verify(calendars).get(principal.userId(), "tenant", result.id());
   }
 
   private static CollaboratorResult collaborator() {
