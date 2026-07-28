@@ -1,6 +1,6 @@
 # Fase 01 — Identidade (Keycloak) e tenancy
 
-Status: todo
+Status: done (concluída em 2026-07-28)
 
 ## Objetivo
 
@@ -46,4 +46,13 @@ bootstrap de tenant e memberships com autorização por role.
 
 ## Notas de implementação
 
-(preencher ao concluir)
+- Resource server valida assinatura, issuer e audience do Keycloak; o profile Docker mantém o
+  issuer público e busca JWKS pela rede interna.
+- JIT provisioning usa UPSERT PostgreSQL por `keycloak_sub`, normaliza e-mail e instala um
+  principal local preservando JWT e authorities.
+- Migration V2 criou `users`, `tenants` e `tenant_memberships`, com constraints nomeadas,
+  índices de FK e triggers reais de `updated_at`.
+- Membership `staff` direta retorna `422 staff_requires_collaborator`; o vínculo nasce na fase
+  02. Último owner é protegido sob lock.
+- Validação executada: Spotless; 46 testes unitários/HTTP/arquitetura; 6 testes de integração
+  com PostgreSQL 16 e Keycloak 26 reais.

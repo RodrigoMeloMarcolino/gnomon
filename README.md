@@ -15,14 +15,12 @@ horas.
 
 ## Estado atual
 
-Checkpoint de continuidade para desenvolvimento com Codex: fases `00`, `00.5` e `00.6`
-concluídas; a próxima fase é `01` — identidade Keycloak e tenancy. O código atual entrega a
-fundação técnica: Spring Boot, Maven, Flyway, Docker Compose, módulos por feature,
-health/readiness, Spotless, ArchUnit e smoke de integração com PostgreSQL.
+Checkpoint de continuidade: fases `00`, `00.5`, `00.6` e `01` concluídas; a próxima fase é
+`02` — catálogo. Além da fundação técnica, o código atual entrega autenticação JWT com
+Keycloak, projeção JIT de usuários, tenants e memberships com autorização local.
 
-Ainda não há regras de negócio do MVP implementadas. Em especial, autenticação real,
-multi-tenancy, catálogo, disponibilidade, booking, cache Redis funcional e observabilidade
-completa são contratos especificados em `docs/`, mas entram nas fases seguintes do roadmap.
+Catálogo, disponibilidade, booking, cache Redis funcional e observabilidade completa permanecem
+como contratos especificados em `docs/` para as fases seguintes.
 
 ## Stack
 
