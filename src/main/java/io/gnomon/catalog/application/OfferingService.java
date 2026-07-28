@@ -1,0 +1,189 @@
+package io.gnomon.catalog.application;
+
+import io.gnomon.catalog.application.port.CalendarOfferingRepository;
+import io.gnomon.catalog.application.port.CalendarRepository;
+import io.gnomon.catalog.application.port.CatalogTenantAccessPort;
+import io.gnomon.catalog.application.port.OfferingRepository;
+import io.gnomon.catalog.domain.Calendar;
+import io.gnomon.catalog.domain.CatalogException;
+import io.gnomon.catalog.domain.Offering;
+import java.time.Clock;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional(readOnly = true)
+public class OfferingService
+    implements CreateOfferingUseCase,
+        ListOfferingsUseCase,
+        GetOfferingUseCase,
+        UpdateOfferingUseCase,
+        DeactivateOfferingUseCase,
+        ReplaceCalendarOfferingsUseCase,
+        ListPublicOfferingsUseCase,
+        GetPublicTenantProfileUseCase {
+
+  private final CatalogTenantAccessPort access;
+  private final CalendarRepository calendars;
+  private final OfferingRepository offerings;
+  private final CalendarOfferingRepository assignments;
+  private final Clock clock;
+
+  public OfferingService(
+      CatalogTenantAccessPort access,
+      CalendarRepository calendars,
+      OfferingRepository offerings,
+      CalendarOfferingRepository assignments) {
+    this(access, calendars, offerings, assignments, Clock.systemUTC());
+  }
+
+  OfferingService(
+      CatalogTenantAccessPort access,
+      CalendarRepository calendars,
+      OfferingRepository offerings,
+      CalendarOfferingRepository assignments,
+      Clock clock) {
+    this.access = access;
+    this.calendars = calendars;
+    this.offerings = offerings;
+    this.assignments = assignments;
+    this.clock = clock;
+  }
+
+  @Override
+  @Transactional
+  public OfferingResult create(CreateOfferingCommand command) {
+    var tenant = access.requireManager(command.actorUserId(), command.tenantSlug());
+    Offering offering =
+        Offering.create(
+            tenant.tenantId(),
+            command.title(),
+            command.description(),
+            command.durationMinutes(),
+            command.priceCents(),
+            clock.instant());
+    rejectDuplicateActiveTitle(offering);
+    return OfferingResult.from(offerings.save(offering));
+  }
+
+  @Override
+  public List<OfferingResult> list(UUID actorUserId, String tenantSlug) {
+    var tenant = access.requireManager(actorUserId, tenantSlug);
+    return sorted(offerings.findByTenantId(tenant.tenantId()));
+  }
+
+  @Override
+  public OfferingResult get(UUID actorUserId, String tenantSlug, UUID offeringId) {
+    var tenant = access.requireManager(actorUserId, tenantSlug);
+    return OfferingResult.from(requireAdministrativeOffering(tenant.tenantId(), offeringId));
+  }
+
+  @Override
+  @Transactional
+  public OfferingResult update(UpdateOfferingCommand command) {
+    var tenant = access.requireManager(command.actorUserId(), command.tenantSlug());
+    Offering offering = requireAdministrativeOffering(tenant.tenantId(), command.offeringId());
+    offering.update(
+        command.title(),
+        command.description(),
+        command.durationMinutes(),
+        command.priceCents(),
+        command.active(),
+        clock.instant());
+    rejectDuplicateActiveTitle(offering);
+    return OfferingResult.from(offerings.save(offering));
+  }
+
+  @Override
+  @Transactional
+  public void deactivate(UUID actorUserId, String tenantSlug, UUID offeringId) {
+    var tenant = access.requireManager(actorUserId, tenantSlug);
+    Offering offering = requireAdministrativeOffering(tenant.tenantId(), offeringId);
+    offering.deactivate(clock.instant());
+    offerings.save(offering);
+  }
+
+  @Override
+  @Transactional
+  public List<OfferingResult> replace(ReplaceCalendarOfferingsCommand command) {
+    var tenant = access.requireManager(command.actorUserId(), command.tenantSlug());
+    requireAdministrativeCalendar(tenant.tenantId(), command.calendarId());
+    Set<UUID> offeringIds = Set.copyOf(command.offeringIds());
+    List<Offering> selected =
+        offeringIds.stream()
+            .map(id -> requireAdministrativeOffering(tenant.tenantId(), id))
+            .toList();
+    assignments.replace(tenant.tenantId(), command.calendarId(), offeringIds);
+    return sorted(selected);
+  }
+
+  @Override
+  public List<OfferingResult> list(String tenantSlug, UUID calendarId) {
+    var tenant = access.requirePublicTenant(tenantSlug);
+    if (calendarId != null) {
+      Calendar calendar =
+          calendars
+              .findByTenantIdAndId(tenant.tenantId(), calendarId)
+              .filter(Calendar::active)
+              .orElseThrow(
+                  () -> new CatalogException("calendar_not_found", "calendar was not found"));
+    }
+    return sorted(offerings.findActiveByTenantId(tenant.tenantId(), calendarId));
+  }
+
+  @Override
+  public PublicTenantProfileResult get(String tenantSlug) {
+    var tenant = access.requirePublicTenant(tenantSlug);
+    return new PublicTenantProfileResult(
+        tenant.tenantId(),
+        tenant.name(),
+        tenant.slug(),
+        tenant.defaultTimezone(),
+        tenant.currencyCode());
+  }
+
+  private Offering requireAdministrativeOffering(UUID tenantId, UUID offeringId) {
+    return offerings
+        .findByTenantIdAndId(tenantId, offeringId)
+        .orElseGet(
+            () -> {
+              if (offerings.findById(offeringId).isPresent()) {
+                throw new CatalogException(
+                    "catalog_access_denied", "cross-tenant access is forbidden");
+              }
+              throw new CatalogException("offering_not_found", "offering was not found");
+            });
+  }
+
+  private Calendar requireAdministrativeCalendar(UUID tenantId, UUID calendarId) {
+    return calendars
+        .findByTenantIdAndId(tenantId, calendarId)
+        .orElseGet(
+            () -> {
+              if (calendars.findById(calendarId).isPresent()) {
+                throw new CatalogException(
+                    "catalog_access_denied", "cross-tenant access is forbidden");
+              }
+              throw new CatalogException("calendar_not_found", "calendar was not found");
+            });
+  }
+
+  private void rejectDuplicateActiveTitle(Offering offering) {
+    if (offering.active()
+        && offerings.activeTitleExists(
+            offering.tenantId(), offering.normalizedTitle(), offering.id())) {
+      throw new CatalogException("validation_error", "an active offering already uses this title");
+    }
+  }
+
+  private static List<OfferingResult> sorted(List<Offering> values) {
+    return values.stream()
+        .sorted(Comparator.comparing(Offering::title).thenComparing(Offering::id))
+        .map(OfferingResult::from)
+        .toList();
+  }
+}
