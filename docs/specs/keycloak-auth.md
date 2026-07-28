@@ -39,8 +39,15 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/gnomon}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8081/realms/gnomon/protocol/openid-connect/certs}
           audiences: gnomon-api
 ```
+
+O issuer é sempre o endereço público usado pelo navegador e presente no claim `iss`. No profile
+Docker completo, a API mantém esse issuer público para validação exata e usa
+`KEYCLOAK_JWK_SET_URI=http://keycloak:8081/realms/gnomon/protocol/openid-connect/certs` para
+buscar as chaves pela rede interna. O client `gnomon-web` inclui `gnomon-api` no claim `aud`
+por audience mapper versionado no realm.
 
 Regras da `SecurityFilterChain`:
 

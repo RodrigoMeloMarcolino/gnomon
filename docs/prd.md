@@ -131,8 +131,9 @@ Regras estruturais:
   (`users`) a partir das claims do token (JIT provisioning).
 - **RF-03** `POST /v1/tenants` cria o tenant e a membership `owner` do usuário autenticado
   (bootstrap). Slug do tenant é único global.
-- **RF-04** Owner pode convidar usuários existentes para o tenant com role `admin` ou `staff`
-  (fluxo de convite por e-mail é evolução futura; no MVP, adição direta por e-mail cadastrado).
+- **RF-04** Owner pode adicionar usuários existentes ao tenant com role `admin`. A role `staff`
+  só nasce ou permanece quando o usuário é vinculado a um colaborador (RF-07); criação direta de
+  `staff` sem colaborador é rejeitada. Convite por e-mail é evolução futura.
 - **RF-05** Um usuário pode pertencer a múltiplos tenants; rotas administrativas carregam o
   tenant no path (`/v1/tenants/{tenantSlug}/...`) e a API valida membership + role.
 

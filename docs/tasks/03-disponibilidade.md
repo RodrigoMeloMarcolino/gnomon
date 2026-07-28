@@ -22,7 +22,7 @@ público — sem persistir slots livres.
   - `ListAvailableSlotsUseCase` (spec booking 5.1) com todas as validações de escopo/atribuição.
 - Endpoint público:
   `GET /v1/public/tenants/{slug}/available-slots?calendar_id=&offering_id=&date=`
-  retornando instantes UTC (`["2027-07-01T12:00:00Z"]`).
+  retornando `{"available_start_times":["2027-07-01T12:00:00Z"]}`.
 
 ## Fora de escopo
 
@@ -31,7 +31,8 @@ público — sem persistir slots livres.
 
 ## Testes
 
-- Unit do domínio (bateria da spec booking seção 7, incluindo DST e clock injetável).
+- Unit do domínio (bateria da spec booking seção 7, incluindo DST: gap ignorado e overlap com
+  dois instantes UTC; clock injetável).
 - Integração: regras CRUD com autorização; **escrita com horário desalinhado (ex.: `09:07`) →
   422 na borda e CHECK no banco, sem derrubar o available-slots**; available-slots com offering
   não atribuído → 404; data local do calendário respeitada; resposta em UTC.

@@ -11,11 +11,14 @@ bootstrap de tenant e memberships com autorização por role.
 
 - `keycloak/realm-gnomon.json` completo (realm, clients `gnomon-web`/`gnomon-api`,
   self-registration, usuário dev) conforme `docs/specs/keycloak-auth.md`.
+- Issuer público + JWK Set URI interno no Docker e audience mapper `gnomon-api` no client web.
 - `SecurityFilterChain`: público `/v1/public/**` + health; restante autenticado; stateless.
 - Migrations: `users`, `tenants`, `tenant_memberships` (spec multi-tenancy 3.1–3.3).
 - Filtro de JIT provisioning (upsert `users` por `keycloak_sub`, retry de corrida).
 - Use cases: `CreateTenantUseCase` (bootstrap, membership owner), `ListMyTenantsUseCase`,
   `GetTenantUseCase`, gestão de memberships (add/remove/change role, invariante último owner).
+- A role `staff` não pode ser criada diretamente nesta fase: sem colaborador vinculado,
+  retorna `422 staff_requires_collaborator`; o vínculo atômico nasce na fase 02.
 - Endpoints: `POST /v1/tenants`, `GET /v1/tenants`, `GET/PATCH /v1/tenants/{tenantSlug}`,
   `GET/POST/DELETE /v1/tenants/{tenantSlug}/memberships[...]`.
 - Resolução de escopo: validação membership+role por operação; erros da spec

@@ -12,8 +12,10 @@ fail-open quando o Redis estiver indisponível.
 - Primitives de cache em `shared.infrastructure.cache` (interface assíncrona simples,
   implementações Redis e no-op) — sem regra de domínio em shared (guardrail Moira).
 - Política de cache dentro de cada módulo dono (padrão do checkpoint 2026-06-23 do Moira):
-  - `catalog`: cache do perfil público do tenant, lista de calendários e catálogo;
-  - `availability`: cache de available-slots com versionamento por calendário+dia.
+  - `catalog`: cache do perfil público do tenant, lista de calendários e catálogo, TTL
+    configurável com default de 10 minutos;
+  - `availability`: cache de available-slots com versionamento por calendário+dia e TTL
+    configurável com default de 60 segundos.
 - Invalidações:
   - create/update de offering → invalida catálogo do tenant;
   - mudança de duração/is_active em offering ou de availability rule → incrementa versão de

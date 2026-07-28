@@ -19,12 +19,14 @@ Cliente final cancela ou remarca sem login, autorizado por token seguro por appo
   disponibilidade do novo horário; transação: remove slots antigos, insere novos (mesma
   proteção de constraint), atualiza `start_at`/`end_at`; conflito → rollback mantendo o
   appointment anterior e 409.
-- Tokens de uso único por ação; comparação de hash em tempo constante.
+- Tokens de uso único por ação; comparação de hash em tempo constante. Cancelamento consome os
+  hashes após commit; remarcação bem-sucedida rotaciona ambos e conflito preserva os tokens
+  anteriores. Appointments anteriores à migration, com hashes nulos, não expõem ações públicas.
 
 ## Fora de escopo
 
-- Revogação/rotação de tokens; janela mínima de antecedência para cancelar (regra de política
-  futura); notificação de cancelamento.
+- Revogação administrativa/rotação avulsa de tokens; janela mínima de antecedência para
+  cancelar (regra de política futura); notificação de cancelamento.
 
 ## Testes
 

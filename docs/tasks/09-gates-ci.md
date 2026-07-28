@@ -14,9 +14,11 @@ smoke E2E, com CI verde e branch protegida.
   repository), `shared` sem regra de módulo.
 - Verificação de schema drift: Flyway migrations vs entidades JPA
   (`hbm2ddl` validate em perfil de teste ou task dedicada no CI).
-- Cobertura com baseline (JaCoCo) falhando abaixo do piso acordado.
+- Cobertura com JaCoCo falhando abaixo de 80% de linhas e 70% de branches nos pacotes
+  `domain` e `application`.
 - Smoke E2E: bootstrap tenant → colaborador → offering → atribuição → availability →
-  available-slots → booking → tentativa de conflito (profile dedicado).
+  available-slots → booking → tentativa de conflito → cancelamento/remarcação (profile
+  dedicado).
 - GitHub Actions conforme `docs/ci.md`: jobs lint/unit/integration/approval-gate; proteção da
   `main` com os 4 checks obrigatórios.
 - Índices de FK guiados por `EXPLAIN` nas consultas quentes (appointments por calendário/data,

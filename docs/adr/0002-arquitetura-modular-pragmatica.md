@@ -40,10 +40,10 @@ primitives, erro envelope). Regras:
 
 - Novo módulo = novo package com as quatro camadas; não criar camadas globais genéricas
   (`controllers/`, `services/`, `repositories/` na raiz).
-- Mapeamento JPA ↔ domínio acontece na borda de `infrastructure` quando o model ORM não puder
-  ser o próprio modelo de domínio (o Moira aprendeu isso na task 04; o Gnomon já nasce com a
-  fronteira prevista, mas sem proibir pragmatismo: entidades JPA simples podem ser usadas no
-  domínio de módulos sem regra rica, documentando a exceção).
+- Mapeamento JPA ↔ domínio acontece sempre na borda de `infrastructure`. Entidades JPA não são
+  modelos de domínio, inclusive em módulos inicialmente simples; isso mantém a regra
+  `domain` sem Spring/JPA verificável pelo ArchUnit e evita que uma exceção temporária vire
+  acoplamento permanente.
 - `shared` não pode acumular regra de múltiplos domínios (guardrail herdado do checkpoint
   2026-06-23 do Moira).
 

@@ -21,17 +21,21 @@ verdes). Status: `todo` | `doing` | `done`.
 ## Ordem e dependências
 
 ```
-00 → 00.5 → 00.6 → 01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09
+00 → 00.5 → 00.6 → 01 → 02 → 03 → 04
+                                      ├→ 05 cache
+                                      ├→ 06 observabilidade
+                                      ├→ 07 admin
+                                      └→ 08 cancel/remarcação
+05 + 06 + 07 + 08 → 09
 ```
 
 - 00.5 (hardening docs-only) é bloqueante da 01: emenda specs/ADRs/tasks com as lições do
   Moira antes de qualquer código de negócio.
 - 00.6 é o checkpoint de troca de agente para Codex; não altera decisões de produto nem
   arquitetura.
-- 05 (cache) pode ser antecipada se reads públicos pesarem; exige 03 e 04 estáveis.
-- 06 (observabilidade) pode ser parcialmente antecipada (fundação de logging na fase 00),
-  mas o contrato completo fecha na 06.
-- 07 e 08 são independentes entre si, mas ambas exigem 04.
+- 05, 06, 07 e 08 são workstreams paralelizáveis após o core da fase 04 estabilizar.
+- 06 pode ter fundação antecipada, mas o contrato completo fecha na própria fase.
+- 09 integra e valida os quatro workstreams pós-core.
 
 ## Regras do roadmap
 

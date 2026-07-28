@@ -39,7 +39,8 @@ slots ocupados na mesma transação e double booking impossível via constraint.
 ## Critérios de aceite
 
 - [ ] Critérios da spec booking seção 9 verdes.
-- [ ] Demonstração: dois requests simultâneos idênticos → um 201, um 409.
+- [ ] Demonstração: mesma chave + mesmo payload simultâneos → um 201 e um replay 200; chaves
+      distintas disputando o mesmo slot → um 201 e um 409.
 - [ ] Nenhuma violação de constraint conhecida retorna 500 (spec booking 6.1).
 
 ## Notas de implementação

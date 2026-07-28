@@ -12,11 +12,13 @@ e catálogo de serviços com atribuição.
 - Migrations: `collaborators`, `calendars`, `offerings`, `calendar_offerings` (spec
   multi-tenancy 3.4–3.5 + spec booking seção 3).
 - Use cases (todos tenant-scoped com validação de role):
-  - CRUD colaboradores (criar já gera o calendário 1:1 na mesma transação);
+  - CRUD colaboradores (criar já gera o calendário 1:1 na mesma transação; remoção é
+    desativação lógica e preserva histórico);
   - vincular/desvincular `user_id` ↔ collaborator (cria/ajusta membership `staff`);
   - editar calendário (nome, timezone, is_active) — owner/admin; staff apenas leitura do
     próprio;
-  - CRUD offerings (duração múltipla de 15, preço em centavos, unicidade de título ativo);
+  - CRUD offerings (duração múltipla de 15, preço em centavos, unicidade de título ativo;
+    remoção é desativação lógica);
   - atribuição `PUT /v1/tenants/{slug}/calendars/{calendarId}/offerings` (substitui o conjunto
     atribuído).
 - Endpoints públicos (sem auth, apenas leitura de ativos):
@@ -34,7 +36,8 @@ e catálogo de serviços com atribuição.
 ## Testes
 
 - Integração: criar colaborador cria calendário atomicamente; vínculo staff concede acesso só
-  ao próprio calendário; CRUD com cross-tenant 403/404; catálogo público só mostra ativos;
+  ao próprio calendário; CRUD administrativo cross-tenant 403 e público fora do escopo 404;
+  catálogo público só mostra ativos;
   filtro por atribuição.
 - Unit: validação de duração (%15), preço >= 0, unicidade de título.
 
