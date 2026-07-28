@@ -1,29 +1,25 @@
 package io.gnomon.shared.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 class HealthControllerTest {
 
-  private final JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
-  private final HealthController controller = new HealthController(jdbcTemplate);
-
   @Test
   void healthReturnsOkWithoutTouchingInfrastructure() {
+    var controller = new HealthController(new ReadyJdbcTemplate(1));
+
     assertThat(controller.health().status()).isEqualTo("ok");
   }
 
   @Test
   void readyReturnsReadyWhenDatabaseIsReachable() {
-    when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class))).thenReturn(1);
+    var controller = new HealthController(new ReadyJdbcTemplate(1));
 
     var response = controller.ready();
 
@@ -34,13 +30,40 @@ class HealthControllerTest {
 
   @Test
   void readyReturnsUnavailableWhenDatabaseIsDown() {
-    when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class)))
-        .thenThrow(new DataAccessResourceFailureException("connection refused"));
+    var controller =
+        new HealthController(
+            new FailingJdbcTemplate(new DataAccessResourceFailureException("connection refused")));
 
     var response = controller.ready();
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().status()).isEqualTo("unavailable");
+  }
+
+  private static final class ReadyJdbcTemplate extends JdbcTemplate {
+    private final Integer result;
+
+    private ReadyJdbcTemplate(Integer result) {
+      this.result = result;
+    }
+
+    @Override
+    public <T> T queryForObject(String sql, Class<T> requiredType) throws DataAccessException {
+      return requiredType.cast(result);
+    }
+  }
+
+  private static final class FailingJdbcTemplate extends JdbcTemplate {
+    private final DataAccessException error;
+
+    private FailingJdbcTemplate(DataAccessException error) {
+      this.error = error;
+    }
+
+    @Override
+    public <T> T queryForObject(String sql, Class<T> requiredType) throws DataAccessException {
+      throw error;
+    }
   }
 }

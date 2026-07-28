@@ -7,6 +7,7 @@ verdes). Status: `todo` | `doing` | `done`.
 | ---- | ------ | ------ | ------------------------ |
 | [00](00-fundacao.md) | Fundação técnica | done | ADR 0001, 0002 |
 | [00.5](00.5-hardening-licoes-moira.md) | Hardening de nascimento: lições do Moira (docs-only) | done | ADRs 0014 (emenda), 0016, 0017 |
+| [00.6](00.6-codex-handoff.md) | Handoff para Codex (docs-only) | done | PRD, ADR index, roadmap |
 | [01](01-identidade-tenancy.md) | Identidade (Keycloak) e tenancy | todo | spec keycloak-auth, spec multi-tenancy, ADRs 0003–0005 |
 | [02](02-catalogo.md) | Catálogo: colaboradores, calendários, offerings | todo | ADRs 0005–0007, 0012, 0013 |
 | [03](03-disponibilidade.md) | Availability rules + available-slots | todo | spec booking, ADRs 0006, 0010, 0016 |
@@ -20,11 +21,13 @@ verdes). Status: `todo` | `doing` | `done`.
 ## Ordem e dependências
 
 ```
-00 → 00.5 → 01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09
+00 → 00.5 → 00.6 → 01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09
 ```
 
 - 00.5 (hardening docs-only) é bloqueante da 01: emenda specs/ADRs/tasks com as lições do
   Moira antes de qualquer código de negócio.
+- 00.6 é o checkpoint de troca de agente para Codex; não altera decisões de produto nem
+  arquitetura.
 - 05 (cache) pode ser antecipada se reads públicos pesarem; exige 03 e 04 estáveis.
 - 06 (observabilidade) pode ser parcialmente antecipada (fundação de logging na fase 00),
   mas o contrato completo fecha na 06.

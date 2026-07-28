@@ -13,6 +13,17 @@ cliente final agenda com um calendário do tenant — sem precisar criar conta (
 O nome do serviço vem do gnômon: a peça do relógio de sol que projeta a sombra para medir as
 horas.
 
+## Estado atual
+
+Checkpoint de continuidade para desenvolvimento com Codex: fases `00`, `00.5` e `00.6`
+concluídas; a próxima fase é `01` — identidade Keycloak e tenancy. O código atual entrega a
+fundação técnica: Spring Boot, Maven, Flyway, Docker Compose, módulos por feature,
+health/readiness, Spotless, ArchUnit e smoke de integração com PostgreSQL.
+
+Ainda não há regras de negócio do MVP implementadas. Em especial, autenticação real,
+multi-tenancy, catálogo, disponibilidade, booking, cache Redis funcional e observabilidade
+completa são contratos especificados em `docs/`, mas entram nas fases seguintes do roadmap.
+
 ## Stack
 
 - Java 21 (LTS)
@@ -91,9 +102,14 @@ PostgreSQL.
 
 ## Autenticação e multi-tenancy
 
-A autenticação é delegada ao Keycloak (realm único `gnomon`). A API valida access tokens JWT
-como OAuth2 resource server (`Authorization: Bearer <access_token>`). Login, registro,
-recuperação de senha, MFA e social login são responsabilidade do Keycloak — a API nunca vê senha.
+Contrato planejado para a fase `01`: a autenticação é delegada ao Keycloak (realm único
+`gnomon`). A API valida access tokens JWT como OAuth2 resource server (`Authorization: Bearer
+<access_token>`). Login, registro, recuperação de senha, MFA e social login são responsabilidade
+do Keycloak — a API nunca vê senha.
+
+No estado atual de fundação, `SecurityConfig` ainda é temporário e libera todas as rotas
+(`permitAll`) para permitir health checks e desenvolvimento inicial. A substituição pela chain
+real da spec `docs/specs/keycloak-auth.md` é escopo da fase `01`.
 
 A autorização administrativa é resolvida localmente: a tabela `users` é uma projeção local do
 usuário do Keycloak (provisionada no primeiro request autenticado, via `keycloak_sub`), e
@@ -155,9 +171,13 @@ Erros HTTP seguem o envelope:
 
 ## Logging estruturado
 
-A aplicação emite um evento por linha em `stdout` em JSON, seguindo contrato compatível com o
-OpenTelemetry Logs Data Model (ver `docs/specs/structured-logging.md`). Toda resposta HTTP
-inclui `X-Request-ID` e `X-Correlation-ID`.
+Contrato planejado para a fase `06`: a aplicação emitirá um evento por linha em `stdout` em JSON,
+seguindo contrato compatível com o OpenTelemetry Logs Data Model (ver
+`docs/specs/structured-logging.md`). Toda resposta HTTP incluirá `X-Request-ID` e
+`X-Correlation-ID`.
+
+No estado atual, a observabilidade completa ainda não está implementada; os logs seguem o padrão
+do Spring Boot. `docker-compose.observability.yaml` será criado na fase `06`.
 
 Configuração principal:
 
@@ -170,7 +190,8 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
 
 ### Pipeline local Collector, Loki e Grafana
 
-Suba a stack de observabilidade separadamente:
+Disponível a partir da fase `06`. Quando essa fase for concluída, a stack de observabilidade
+subirá separadamente:
 
 ```powershell
 docker compose -f docker-compose.observability.yaml up -d
