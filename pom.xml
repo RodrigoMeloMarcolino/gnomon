@@ -23,6 +23,7 @@
     <!-- Boot 4 não gerencia mais testcontainers/rest-assured: versões fixadas aqui -->
     <testcontainers.version>2.0.5</testcontainers.version>
     <rest-assured.version>6.0.1</rest-assured.version>
+    <libphonenumber.version>9.0.32</libphonenumber.version>
     <!-- Preloaded as a Java agent: JDK 21 containers do not allow Mockito self-attach. -->
     <argLine/>
     <!-- Tags JUnit: testes de integração rodam só com -Pintegration ou -Pall-tests -->
@@ -89,6 +90,12 @@
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <scope>runtime</scope>
+    </dependency>
+    <!-- Canonização E.164 usa metadados internacionais atualizados e evita heurísticas locais. -->
+    <dependency>
+      <groupId>com.googlecode.libphonenumber</groupId>
+      <artifactId>libphonenumber</artifactId>
+      <version>${libphonenumber.version}</version>
     </dependency>
 
     <dependency>
