@@ -43,6 +43,12 @@ public final class TenantMembership {
     return new TenantMembership(UUID.randomUUID(), tenantId, userId, role, now, now);
   }
 
+  /** Creates staff only from the collaborator-link workflow, never from direct membership APIs. */
+  public static TenantMembership staffForCollaborator(UUID tenantId, UUID userId, Instant now) {
+    return new TenantMembership(
+        UUID.randomUUID(), tenantId, userId, MembershipRole.STAFF, now, now);
+  }
+
   public void changeRole(MembershipRole newRole, boolean lastOwner, Instant now) {
     Objects.requireNonNull(newRole, "newRole");
     if (newRole == MembershipRole.STAFF) {
