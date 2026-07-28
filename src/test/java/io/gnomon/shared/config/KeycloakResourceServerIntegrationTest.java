@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import io.gnomon.tenancy.application.LocalUserResult;
+import io.gnomon.tenancy.application.ProvisionLocalUserUseCase;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -15,6 +17,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +47,8 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @Tag("integration")
 @SpringJUnitConfig
@@ -186,6 +191,21 @@ class KeycloakResourceServerIntegrationTest {
     @Bean
     JwtDecoder jwtDecoder() {
       return KeycloakResourceServerIntegrationTest.jwtDecoder(issuerUri());
+    }
+
+    @Bean
+    ProvisionLocalUserUseCase provisionLocalUserUseCase() {
+      return command ->
+          new LocalUserResult(
+              UUID.fromString("00000000-0000-0000-0000-000000000001"),
+              command.keycloakSubject(),
+              command.email(),
+              command.displayName());
+    }
+
+    @Bean
+    ObjectMapper objectMapper() {
+      return JsonMapper.builder().build();
     }
   }
 

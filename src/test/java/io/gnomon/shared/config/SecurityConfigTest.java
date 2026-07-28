@@ -7,7 +7,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import io.gnomon.tenancy.application.LocalUserResult;
+import io.gnomon.tenancy.application.ProvisionLocalUserUseCase;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +26,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @SpringJUnitConfig
 @ContextConfiguration(classes = {SecurityConfig.class, SecurityConfigTest.TestWebConfig.class})
@@ -60,7 +65,19 @@ class SecurityConfigTest {
 
   @Test
   void protectedRoute_withJwt_shouldBeAccessible() throws Exception {
-    mockMvc.perform(get("/v1/test/protected").with(jwt())).andExpect(status().isOk());
+    mockMvc
+        .perform(
+            get("/v1/test/protected")
+                .with(
+                    jwt()
+                        .jwt(
+                            token ->
+                                token
+                                    .subject("keycloak-subject")
+                                    .claim("email", "user@example.com")
+                                    .claim("name", "Test User")
+                                    .claim("email_verified", true))))
+        .andExpect(status().isOk());
   }
 
   @Test
@@ -121,6 +138,21 @@ class SecurityConfigTest {
       return token -> {
         throw new IllegalArgumentException("Decoder must not be called by mock JWT requests");
       };
+    }
+
+    @Bean
+    ProvisionLocalUserUseCase provisionLocalUserUseCase() {
+      return command ->
+          new LocalUserResult(
+              UUID.fromString("00000000-0000-0000-0000-000000000001"),
+              command.keycloakSubject(),
+              command.email(),
+              command.displayName());
+    }
+
+    @Bean
+    ObjectMapper objectMapper() {
+      return JsonMapper.builder().build();
     }
   }
 

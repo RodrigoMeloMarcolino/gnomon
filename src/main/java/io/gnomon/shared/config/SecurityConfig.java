@@ -1,5 +1,7 @@
 package io.gnomon.shared.config;
 
+import io.gnomon.tenancy.api.security.LocalUserProvisioningFilter;
+import io.gnomon.tenancy.application.ProvisionLocalUserUseCase;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -15,12 +17,14 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import tools.jackson.databind.ObjectMapper;
 
 /** OAuth2 resource server stateless conforme a spec de autenticação via Keycloak. */
 @Configuration
@@ -32,7 +36,8 @@ public class SecurityConfig {
   SecurityFilterChain securityFilterChain(
       HttpSecurity http,
       AuthenticationEntryPoint authenticationEntryPoint,
-      AccessDeniedHandler accessDeniedHandler)
+      AccessDeniedHandler accessDeniedHandler,
+      LocalUserProvisioningFilter localUserProvisioningFilter)
       throws Exception {
     return http.csrf(csrf -> csrf.disable())
         .cors(Customizer.withDefaults())
@@ -55,7 +60,16 @@ public class SecurityConfig {
                     .authenticationEntryPoint(authenticationEntryPoint)
                     .accessDeniedHandler(accessDeniedHandler)
                     .jwt(Customizer.withDefaults()))
+        .addFilterAfter(localUserProvisioningFilter, BearerTokenAuthenticationFilter.class)
         .build();
+  }
+
+  @Bean
+  LocalUserProvisioningFilter localUserProvisioningFilter(
+      ProvisionLocalUserUseCase provisionLocalUser,
+      ObjectMapper objectMapper,
+      @Value("${gnomon.security.require-verified-email:false}") boolean requireVerifiedEmail) {
+    return new LocalUserProvisioningFilter(provisionLocalUser, objectMapper, requireVerifiedEmail);
   }
 
   @Bean
@@ -99,6 +113,9 @@ public class SecurityConfig {
   private static void writeError(
       HttpServletResponse response, int status, String code, String message) throws IOException {
     response.setStatus(status);
+    if (status == HttpServletResponse.SC_UNAUTHORIZED) {
+      response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer");
+    }
     response.setCharacterEncoding(StandardCharsets.UTF_8.name());
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     response
