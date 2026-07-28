@@ -50,7 +50,8 @@ class BookingSchemaMigrationTest {
       while (tableResult.next()) {
         tables.add(tableResult.getString("table_name"));
       }
-      assertThat(tables).containsExactlyInAnyOrder("customers", "appointments", "appointment_slots");
+      assertThat(tables)
+          .containsExactlyInAnyOrder("customers", "appointments", "appointment_slots");
     }
 
     assertIndexes(
@@ -106,8 +107,7 @@ class BookingSchemaMigrationTest {
   }
 
   @Test
-  void bookingConstraints_shouldRejectDuplicatePhoneIdempotencyAndOccupiedSlot()
-      throws Exception {
+  void bookingConstraints_shouldRejectDuplicatePhoneIdempotencyAndOccupiedSlot() throws Exception {
     var catalog = insertCatalog("booking-unique");
     UUID customer = insertCustomer("+5585999990001");
     UUID appointment =
@@ -124,9 +124,7 @@ class BookingSchemaMigrationTest {
         .isInstanceOf(SQLException.class)
         .hasMessageContaining("uq_customers_phone");
     assertThatThrownBy(
-            () ->
-                insertAppointment(
-                    catalog, customer, "booking-key", "b".repeat(64), "scheduled"))
+            () -> insertAppointment(catalog, customer, "booking-key", "b".repeat(64), "scheduled"))
         .isInstanceOf(SQLException.class)
         .hasMessageContaining("uq_appointments_tenant_idempotency_key");
     assertThatThrownBy(
@@ -149,8 +147,7 @@ class BookingSchemaMigrationTest {
 
     assertThatThrownBy(
             () ->
-                insertAppointment(
-                    catalogA, customer, "invalid-status", "c".repeat(64), "pending"))
+                insertAppointment(catalogA, customer, "invalid-status", "c".repeat(64), "pending"))
         .isInstanceOf(SQLException.class)
         .hasMessageContaining("ck_appointments_status");
     assertThatThrownBy(
@@ -268,11 +265,7 @@ class BookingSchemaMigrationTest {
   }
 
   private static UUID insertAppointment(
-      CatalogIds catalog,
-      UUID customerId,
-      String idempotencyKey,
-      String fingerprint,
-      String status)
+      CatalogIds catalog, UUID customerId, String idempotencyKey, String fingerprint, String status)
       throws SQLException {
     UUID id = UUID.randomUUID();
     try (var connection = connection();
@@ -306,8 +299,7 @@ class BookingSchemaMigrationTest {
   }
 
   private static void insertSlot(
-      UUID tenantId, UUID appointmentId, UUID calendarId, Instant slotStartAt)
-      throws SQLException {
+      UUID tenantId, UUID appointmentId, UUID calendarId, Instant slotStartAt) throws SQLException {
     try (var connection = connection();
         var statement =
             connection.prepareStatement(

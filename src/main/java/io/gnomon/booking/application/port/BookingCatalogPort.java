@@ -5,8 +5,7 @@ import java.util.UUID;
 
 public interface BookingCatalogPort {
 
-  BookingContext requireSchedulableOffering(
-      String tenantSlug, UUID calendarId, UUID offeringId);
+  BookingContext requireSchedulableOffering(String tenantSlug, UUID calendarId, UUID offeringId);
 
   record BookingContext(
       UUID tenantId,

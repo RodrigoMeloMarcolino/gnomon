@@ -12,6 +12,5 @@ public interface AppointmentRepository {
 
   boolean insert(Appointment appointment);
 
-  void insertSlots(
-      UUID tenantId, UUID appointmentId, UUID calendarId, List<Instant> slotStarts);
+  void insertSlots(UUID tenantId, UUID appointmentId, UUID calendarId, List<Instant> slotStarts);
 }

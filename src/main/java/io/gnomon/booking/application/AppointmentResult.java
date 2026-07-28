@@ -15,8 +15,7 @@ public record AppointmentResult(
 
   public record CalendarSummary(UUID id, String name, String timezone) {}
 
-  public record OfferingSummary(
-      UUID id, String title, int durationMinutes, Integer priceCents) {}
+  public record OfferingSummary(UUID id, String title, int durationMinutes, Integer priceCents) {}
 
   public record CustomerSummary(UUID id, String name, String phone, String email) {}
 }
