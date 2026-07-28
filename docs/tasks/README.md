@@ -1,5 +1,8 @@
 # Roadmap de implementação — Gnomon
 
+Checkpoint operacional para retomada entre sessões:
+[implementation-checkpoint.md](implementation-checkpoint.md).
+
 Ordem de execução das fases. Cada fase só inicia com a anterior concluída (critérios de aceite
 verdes). Status: `todo` | `doing` | `done`.
 
