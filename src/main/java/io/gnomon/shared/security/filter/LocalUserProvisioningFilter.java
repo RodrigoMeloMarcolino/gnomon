@@ -2,8 +2,8 @@ package io.gnomon.shared.security.filter;
 
 import io.gnomon.shared.security.authentication.LocalUserAuthenticationToken;
 import io.gnomon.shared.security.authentication.LocalUserPrincipal;
+import io.gnomon.tenancy.application.port.in.ProvisionLocalUserCommand;
 import io.gnomon.tenancy.application.port.in.ProvisionLocalUserUseCase;
-import io.gnomon.tenancy.application.port.in.ProvisionLocalUserUseCase.ProvisionLocalUserCommand;
 import io.gnomon.tenancy.domain.exception.TenancyException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

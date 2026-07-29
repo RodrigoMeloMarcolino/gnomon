@@ -1,7 +1,7 @@
 package io.gnomon.tenancy.application.service;
 
+import io.gnomon.tenancy.application.port.in.ProvisionLocalUserCommand;
 import io.gnomon.tenancy.application.port.in.ProvisionLocalUserUseCase;
-import io.gnomon.tenancy.application.port.in.ProvisionLocalUserUseCase.ProvisionLocalUserCommand;
 import io.gnomon.tenancy.application.port.in.result.LocalUserResult;
 import io.gnomon.tenancy.application.port.out.UserProjectionPort;
 import io.gnomon.tenancy.domain.model.User;

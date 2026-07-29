@@ -51,4 +51,16 @@ class ArchitectureTest {
           .should()
           .dependOnClassesThat()
           .resideInAPackage("..infrastructure..");
+
+  @ArchTest
+  static final ArchRule crossModuleCatalogAdaptersUseCatalogInputPorts =
+      noClasses()
+          .that()
+          .resideInAnyPackage(
+              "..booking.infrastructure.integration.catalog..",
+              "..availability.infrastructure.integration.catalog..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAnyPackage(
+              "io.gnomon.catalog.application.port.out..", "io.gnomon.catalog.domain.model..");
 }

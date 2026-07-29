@@ -1,6 +1,5 @@
 package io.gnomon.catalog.application.port.out;
 
-import java.time.Instant;
 import java.util.UUID;
 
 public interface CatalogTenantAccessPort {
@@ -11,17 +10,7 @@ public interface CatalogTenantAccessPort {
 
   TenantAccess requirePublicTenant(String tenantSlug);
 
-  UserLink linkStaff(UUID tenantId, String userEmail, Instant now);
+  UserLink linkStaff(UUID tenantId, String userEmail, java.time.Instant now);
 
   void unlinkStaff(UUID tenantId, UUID userId);
-
-  record TenantAccess(
-      UUID tenantId,
-      String name,
-      String slug,
-      String defaultTimezone,
-      String currencyCode,
-      String actorRole) {}
-
-  record UserLink(UUID userId, String email, String displayName, String membershipRole) {}
 }

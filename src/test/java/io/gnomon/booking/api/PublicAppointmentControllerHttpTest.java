@@ -12,12 +12,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import io.gnomon.booking.api.controller.PublicAppointmentController;
 import io.gnomon.booking.api.exception.BookingExceptionHandler;
 import io.gnomon.booking.application.port.in.AppointmentResult;
-import io.gnomon.booking.application.port.in.AppointmentResult.CalendarSummary;
-import io.gnomon.booking.application.port.in.AppointmentResult.CustomerSummary;
-import io.gnomon.booking.application.port.in.AppointmentResult.OfferingSummary;
+import io.gnomon.booking.application.port.in.CalendarSummary;
+import io.gnomon.booking.application.port.in.CreateAppointmentCommand;
 import io.gnomon.booking.application.port.in.CreateAppointmentUseCase;
-import io.gnomon.booking.application.port.in.CreateAppointmentUseCase.CreateAppointmentCommand;
-import io.gnomon.booking.application.port.in.CreateAppointmentUseCase.CreationResult;
+import io.gnomon.booking.application.port.in.CreationResult;
+import io.gnomon.booking.application.port.in.CustomerSummary;
+import io.gnomon.booking.application.port.in.OfferingSummary;
 import io.gnomon.shared.api.exception.GlobalExceptionHandler;
 import java.time.Instant;
 import java.util.UUID;

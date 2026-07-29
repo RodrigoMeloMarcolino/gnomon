@@ -6,8 +6,8 @@ import static org.mockito.Mockito.when;
 
 import io.gnomon.availability.application.port.out.AvailabilityRuleRepository;
 import io.gnomon.availability.application.port.out.OccupiedSlotPort;
+import io.gnomon.availability.application.port.out.OfferingContext;
 import io.gnomon.availability.application.port.out.PublicAvailabilityCatalogPort;
-import io.gnomon.availability.application.port.out.PublicAvailabilityCatalogPort.OfferingContext;
 import io.gnomon.availability.application.service.AvailableSlotsService;
 import io.gnomon.availability.domain.model.AvailabilityRule;
 import io.gnomon.availability.domain.service.AvailabilityCalculator;

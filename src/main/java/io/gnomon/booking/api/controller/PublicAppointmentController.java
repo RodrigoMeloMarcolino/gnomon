@@ -2,8 +2,8 @@ package io.gnomon.booking.api.controller;
 
 import io.gnomon.booking.api.request.CreateAppointmentRequest;
 import io.gnomon.booking.api.response.AppointmentResponse;
+import io.gnomon.booking.application.port.in.CreateAppointmentCommand;
 import io.gnomon.booking.application.port.in.CreateAppointmentUseCase;
-import io.gnomon.booking.application.port.in.CreateAppointmentUseCase.CreateAppointmentCommand;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

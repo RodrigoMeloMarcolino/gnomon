@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.gnomon.tenancy.application.port.in.ProvisionLocalUserUseCase.ProvisionLocalUserCommand;
+import io.gnomon.tenancy.application.port.in.ProvisionLocalUserCommand;
 import io.gnomon.tenancy.application.port.in.result.LocalUserResult;
 import io.gnomon.tenancy.application.port.out.UserProjectionPort;
 import io.gnomon.tenancy.application.service.LocalUserProvisioningService;

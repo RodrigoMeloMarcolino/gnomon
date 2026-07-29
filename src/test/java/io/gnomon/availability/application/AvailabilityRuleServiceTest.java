@@ -6,12 +6,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.gnomon.availability.application.port.in.AvailabilityRuleUseCase.CreateAvailabilityRuleCommand;
-import io.gnomon.availability.application.port.in.AvailabilityRuleUseCase.UpdateAvailabilityRuleCommand;
+import io.gnomon.availability.application.port.in.CreateAvailabilityRuleCommand;
+import io.gnomon.availability.application.port.in.UpdateAvailabilityRuleCommand;
 import io.gnomon.availability.application.port.in.result.AvailabilityRuleResult;
 import io.gnomon.availability.application.port.out.AvailabilityCalendarAccessPort;
-import io.gnomon.availability.application.port.out.AvailabilityCalendarAccessPort.CalendarContext;
 import io.gnomon.availability.application.port.out.AvailabilityRuleRepository;
+import io.gnomon.availability.application.port.out.CalendarContext;
 import io.gnomon.availability.application.service.AvailabilityRuleService;
 import io.gnomon.availability.domain.exception.AvailabilityException;
 import io.gnomon.availability.domain.model.AvailabilityRule;

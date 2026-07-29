@@ -19,12 +19,4 @@ public interface CollaboratorUseCase {
   CollaboratorResult linkUser(LinkCollaboratorUserCommand command);
 
   CollaboratorResult unlinkUser(UUID actorUserId, String tenantSlug, UUID collaboratorId);
-
-  record CreateCollaboratorCommand(UUID actorUserId, String tenantSlug, String displayName) {}
-
-  record UpdateCollaboratorCommand(
-      UUID actorUserId, String tenantSlug, UUID collaboratorId, String displayName) {}
-
-  record LinkCollaboratorUserCommand(
-      UUID actorUserId, String tenantSlug, UUID collaboratorId, String userEmail) {}
 }

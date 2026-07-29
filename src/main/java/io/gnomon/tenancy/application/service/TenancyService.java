@@ -1,15 +1,15 @@
 package io.gnomon.tenancy.application.service;
 
+import io.gnomon.tenancy.application.port.in.AddMembershipCommand;
+import io.gnomon.tenancy.application.port.in.ChangeMembershipRoleCommand;
+import io.gnomon.tenancy.application.port.in.CreateTenantCommand;
 import io.gnomon.tenancy.application.port.in.CreateTenantUseCase;
-import io.gnomon.tenancy.application.port.in.CreateTenantUseCase.CreateTenantCommand;
 import io.gnomon.tenancy.application.port.in.GetTenantUseCase;
 import io.gnomon.tenancy.application.port.in.ListMyTenantsUseCase;
 import io.gnomon.tenancy.application.port.in.ManageMembershipUseCase;
-import io.gnomon.tenancy.application.port.in.ManageMembershipUseCase.AddMembershipCommand;
-import io.gnomon.tenancy.application.port.in.ManageMembershipUseCase.ChangeMembershipRoleCommand;
-import io.gnomon.tenancy.application.port.in.ManageMembershipUseCase.RemoveMembershipCommand;
+import io.gnomon.tenancy.application.port.in.RemoveMembershipCommand;
+import io.gnomon.tenancy.application.port.in.UpdateTenantCommand;
 import io.gnomon.tenancy.application.port.in.UpdateTenantUseCase;
-import io.gnomon.tenancy.application.port.in.UpdateTenantUseCase.UpdateTenantCommand;
 import io.gnomon.tenancy.application.port.in.result.MembershipResult;
 import io.gnomon.tenancy.application.port.in.result.TenantResult;
 import io.gnomon.tenancy.application.port.out.MembershipRepository;

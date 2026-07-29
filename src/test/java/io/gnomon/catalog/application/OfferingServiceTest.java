@@ -7,14 +7,14 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.gnomon.catalog.application.port.in.CreateOfferingUseCase.CreateOfferingCommand;
-import io.gnomon.catalog.application.port.in.ReplaceCalendarOfferingsUseCase.ReplaceCalendarOfferingsCommand;
+import io.gnomon.catalog.application.port.in.CreateOfferingCommand;
+import io.gnomon.catalog.application.port.in.ReplaceCalendarOfferingsCommand;
 import io.gnomon.catalog.application.port.in.result.OfferingResult;
 import io.gnomon.catalog.application.port.out.CalendarOfferingRepository;
 import io.gnomon.catalog.application.port.out.CalendarRepository;
 import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
-import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort.TenantAccess;
 import io.gnomon.catalog.application.port.out.OfferingRepository;
+import io.gnomon.catalog.application.port.out.TenantAccess;
 import io.gnomon.catalog.application.service.OfferingService;
 import io.gnomon.catalog.domain.exception.CatalogException;
 import io.gnomon.catalog.domain.model.Calendar;

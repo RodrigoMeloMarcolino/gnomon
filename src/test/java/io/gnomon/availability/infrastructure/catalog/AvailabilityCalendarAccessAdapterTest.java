@@ -5,14 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import io.gnomon.availability.domain.exception.AvailabilityException;
-import io.gnomon.catalog.application.port.out.CalendarRepository;
-import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
-import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort.TenantAccess;
-import io.gnomon.catalog.application.port.out.CollaboratorRepository;
-import io.gnomon.catalog.domain.model.Calendar;
-import io.gnomon.catalog.domain.model.Collaborator;
-import java.time.Instant;
-import java.util.Optional;
+import io.gnomon.catalog.application.port.in.CalendarUseCase;
+import io.gnomon.catalog.application.port.in.WritableCalendar;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,22 +16,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class AvailabilityCalendarAccessAdapterTest {
 
-  private static final Instant NOW = Instant.parse("2027-07-01T12:00:00Z");
-
-  @Mock private CatalogTenantAccessPort tenantAccess;
-  @Mock private CalendarRepository calendars;
-  @Mock private CollaboratorRepository collaborators;
+  @Mock private CalendarUseCase calendars;
 
   @Test
   void requireWritableCalendar_whenOwnerTargetsTenantCalendar_shouldAllow() {
     UUID actor = UUID.randomUUID();
     UUID tenant = UUID.randomUUID();
-    Calendar calendar =
-        Calendar.create(tenant, UUID.randomUUID(), "Agenda", "America/Fortaleza", NOW);
-    when(tenantAccess.requireMember(actor, "tenant")).thenReturn(access(tenant, "owner"));
-    when(calendars.findByTenantIdAndId(tenant, calendar.id())).thenReturn(Optional.of(calendar));
+    UUID calendar = UUID.randomUUID();
+    when(calendars.requireWritableCalendar(actor, "tenant", calendar))
+        .thenReturn(
+            new WritableCalendar(tenant, calendar, java.time.ZoneId.of("America/Fortaleza")));
 
-    var result = adapter().requireWritableCalendar(actor, "tenant", calendar.id());
+    var result = adapter().requireWritableCalendar(actor, "tenant", calendar);
 
     assertThat(result.tenantId()).isEqualTo(tenant);
     assertThat(result.zoneId().getId()).isEqualTo("America/Fortaleza");
@@ -47,33 +37,26 @@ class AvailabilityCalendarAccessAdapterTest {
   void requireWritableCalendar_whenStaffOwnsCalendar_shouldAllow() {
     UUID actor = UUID.randomUUID();
     UUID tenant = UUID.randomUUID();
-    UUID collaboratorId = UUID.randomUUID();
-    Calendar calendar = Calendar.create(tenant, collaboratorId, "Agenda", "America/Fortaleza", NOW);
-    Collaborator collaborator =
-        new Collaborator(collaboratorId, tenant, actor, "Staff", true, NOW, NOW);
-    when(tenantAccess.requireMember(actor, "tenant")).thenReturn(access(tenant, "staff"));
-    when(calendars.findByTenantIdAndId(tenant, calendar.id())).thenReturn(Optional.of(calendar));
-    when(collaborators.findByTenantIdAndId(tenant, collaboratorId))
-        .thenReturn(Optional.of(collaborator));
+    UUID calendar = UUID.randomUUID();
+    when(calendars.requireWritableCalendar(actor, "tenant", calendar))
+        .thenReturn(
+            new WritableCalendar(tenant, calendar, java.time.ZoneId.of("America/Fortaleza")));
 
-    assertThat(adapter().requireWritableCalendar(actor, "tenant", calendar.id()).calendarId())
-        .isEqualTo(calendar.id());
+    assertThat(adapter().requireWritableCalendar(actor, "tenant", calendar).calendarId())
+        .isEqualTo(calendar);
   }
 
   @Test
   void requireWritableCalendar_whenStaffTargetsAnotherCalendar_shouldReject() {
     UUID actor = UUID.randomUUID();
     UUID tenant = UUID.randomUUID();
-    UUID collaboratorId = UUID.randomUUID();
-    Calendar calendar = Calendar.create(tenant, collaboratorId, "Agenda", "America/Fortaleza", NOW);
-    Collaborator collaborator =
-        new Collaborator(collaboratorId, tenant, UUID.randomUUID(), "Other", true, NOW, NOW);
-    when(tenantAccess.requireMember(actor, "tenant")).thenReturn(access(tenant, "staff"));
-    when(calendars.findByTenantIdAndId(tenant, calendar.id())).thenReturn(Optional.of(calendar));
-    when(collaborators.findByTenantIdAndId(tenant, collaboratorId))
-        .thenReturn(Optional.of(collaborator));
+    UUID calendar = UUID.randomUUID();
+    when(calendars.requireWritableCalendar(actor, "tenant", calendar))
+        .thenThrow(
+            new io.gnomon.catalog.domain.exception.CatalogException(
+                "staff_calendar_mismatch", "staff can only access their own calendar"));
 
-    assertThatThrownBy(() -> adapter().requireWritableCalendar(actor, "tenant", calendar.id()))
+    assertThatThrownBy(() -> adapter().requireWritableCalendar(actor, "tenant", calendar))
         .isInstanceOf(AvailabilityException.class)
         .extracting(exception -> ((AvailabilityException) exception).code())
         .isEqualTo("staff_calendar_mismatch");
@@ -83,23 +66,19 @@ class AvailabilityCalendarAccessAdapterTest {
   void requireWritableCalendar_whenCalendarExistsInAnotherTenant_shouldRejectAsForbidden() {
     UUID actor = UUID.randomUUID();
     UUID tenant = UUID.randomUUID();
-    Calendar other =
-        Calendar.create(UUID.randomUUID(), UUID.randomUUID(), "Other", "America/Fortaleza", NOW);
-    when(tenantAccess.requireMember(actor, "tenant")).thenReturn(access(tenant, "admin"));
-    when(calendars.findByTenantIdAndId(tenant, other.id())).thenReturn(Optional.empty());
-    when(calendars.findById(other.id())).thenReturn(Optional.of(other));
+    UUID other = UUID.randomUUID();
+    when(calendars.requireWritableCalendar(actor, "tenant", other))
+        .thenThrow(
+            new io.gnomon.catalog.domain.exception.CatalogException(
+                "availability_access_denied", "cross-tenant access is forbidden"));
 
-    assertThatThrownBy(() -> adapter().requireWritableCalendar(actor, "tenant", other.id()))
+    assertThatThrownBy(() -> adapter().requireWritableCalendar(actor, "tenant", other))
         .isInstanceOf(AvailabilityException.class)
         .extracting(exception -> ((AvailabilityException) exception).code())
         .isEqualTo("availability_access_denied");
   }
 
   private AvailabilityCalendarAccessAdapter adapter() {
-    return new AvailabilityCalendarAccessAdapter(tenantAccess, calendars, collaborators);
-  }
-
-  private static TenantAccess access(UUID tenantId, String role) {
-    return new TenantAccess(tenantId, "Tenant", "tenant", "America/Fortaleza", "BRL", role);
+    return new AvailabilityCalendarAccessAdapter(calendars);
   }
 }

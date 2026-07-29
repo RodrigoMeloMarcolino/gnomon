@@ -2,8 +2,8 @@ package io.gnomon.catalog.api.controller;
 
 import io.gnomon.catalog.api.request.ReplaceCalendarOfferingsRequest;
 import io.gnomon.catalog.api.response.OfferingResponse;
+import io.gnomon.catalog.application.port.in.ReplaceCalendarOfferingsCommand;
 import io.gnomon.catalog.application.port.in.ReplaceCalendarOfferingsUseCase;
-import io.gnomon.catalog.application.port.in.ReplaceCalendarOfferingsUseCase.ReplaceCalendarOfferingsCommand;
 import io.gnomon.shared.security.authentication.LocalUserPrincipal;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;

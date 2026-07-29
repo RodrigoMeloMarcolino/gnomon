@@ -13,11 +13,4 @@ public interface ManageMembershipUseCase {
   MembershipResult changeRole(ChangeMembershipRoleCommand command);
 
   void remove(RemoveMembershipCommand command);
-
-  record AddMembershipCommand(UUID actorUserId, String tenantSlug, String userEmail, String role) {}
-
-  record ChangeMembershipRoleCommand(
-      UUID actorUserId, String tenantSlug, UUID membershipId, String role) {}
-
-  record RemoveMembershipCommand(UUID actorUserId, String tenantSlug, UUID membershipId) {}
 }

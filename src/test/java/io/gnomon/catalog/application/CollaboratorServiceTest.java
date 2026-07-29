@@ -6,12 +6,12 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.gnomon.catalog.application.port.in.CollaboratorUseCase.CreateCollaboratorCommand;
+import io.gnomon.catalog.application.port.in.CreateCollaboratorCommand;
 import io.gnomon.catalog.application.port.in.result.CollaboratorResult;
 import io.gnomon.catalog.application.port.out.CalendarRepository;
 import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
-import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort.TenantAccess;
 import io.gnomon.catalog.application.port.out.CollaboratorRepository;
+import io.gnomon.catalog.application.port.out.TenantAccess;
 import io.gnomon.catalog.application.service.CollaboratorService;
 import io.gnomon.catalog.domain.model.Calendar;
 import io.gnomon.catalog.domain.model.Collaborator;
