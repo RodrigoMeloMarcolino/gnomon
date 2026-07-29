@@ -1,8 +1,8 @@
 package io.gnomon.tenancy.infrastructure.integration.catalog;
 
 import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
-import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort.TenantAccess;
-import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort.UserLink;
+import io.gnomon.catalog.application.port.out.TenantAccess;
+import io.gnomon.catalog.application.port.out.UserLink;
 import io.gnomon.catalog.domain.exception.CatalogException;
 import io.gnomon.tenancy.application.port.out.MembershipRepository;
 import io.gnomon.tenancy.application.port.out.TenantRepository;

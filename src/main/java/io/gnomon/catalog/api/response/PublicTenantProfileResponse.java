@@ -1,6 +1,6 @@
 package io.gnomon.catalog.api.response;
 
-import io.gnomon.catalog.application.port.in.GetPublicTenantProfileUseCase.PublicTenantProfileResult;
+import io.gnomon.catalog.application.port.in.PublicTenantProfileResult;
 import java.util.UUID;
 
 public record PublicTenantProfileResponse(

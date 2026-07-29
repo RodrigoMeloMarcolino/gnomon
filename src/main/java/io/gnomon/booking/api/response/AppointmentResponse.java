@@ -28,30 +28,4 @@ public record AppointmentResponse(
         CustomerResponse.from(result.customer()),
         result.customerNotes());
   }
-
-  @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-  record CalendarResponse(UUID id, String name, String timezone) {
-
-    static CalendarResponse from(AppointmentResult.CalendarSummary calendar) {
-      return new CalendarResponse(calendar.id(), calendar.name(), calendar.timezone());
-    }
-  }
-
-  @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-  record OfferingResponse(UUID id, String title, int durationMinutes, Integer priceCents) {
-
-    static OfferingResponse from(AppointmentResult.OfferingSummary offering) {
-      return new OfferingResponse(
-          offering.id(), offering.title(), offering.durationMinutes(), offering.priceCents());
-    }
-  }
-
-  @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-  record CustomerResponse(UUID id, String name, String phone, String email) {
-
-    static CustomerResponse from(AppointmentResult.CustomerSummary customer) {
-      return new CustomerResponse(
-          customer.id(), customer.name(), customer.phone(), customer.email());
-    }
-  }
 }

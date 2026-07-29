@@ -11,11 +11,6 @@ public interface CalendarUseCase {
 
   void deactivate(UUID actorUserId, String tenantSlug, UUID calendarId);
 
-  record UpdateCalendarCommand(
-      UUID actorUserId,
-      String tenantSlug,
-      UUID calendarId,
-      String name,
-      String timezone,
-      Boolean active) {}
+  /** Cross-module contract for authorization and timezone resolution of a writable calendar. */
+  WritableCalendar requireWritableCalendar(UUID actorUserId, String tenantSlug, UUID calendarId);
 }

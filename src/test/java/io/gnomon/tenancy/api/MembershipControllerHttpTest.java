@@ -14,7 +14,7 @@ import io.gnomon.shared.security.authentication.LocalUserPrincipal;
 import io.gnomon.tenancy.api.controller.MembershipController;
 import io.gnomon.tenancy.api.exception.TenancyExceptionHandler;
 import io.gnomon.tenancy.application.port.in.ManageMembershipUseCase;
-import io.gnomon.tenancy.application.port.in.ManageMembershipUseCase.RemoveMembershipCommand;
+import io.gnomon.tenancy.application.port.in.RemoveMembershipCommand;
 import io.gnomon.tenancy.application.port.in.result.MembershipResult;
 import io.gnomon.tenancy.domain.exception.TenancyException;
 import java.time.Instant;

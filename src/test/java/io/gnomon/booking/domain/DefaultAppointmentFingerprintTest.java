@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.gnomon.booking.application.exception.BookingException;
 import io.gnomon.booking.application.port.out.AppointmentFingerprint;
-import io.gnomon.booking.application.port.out.AppointmentFingerprint.NormalizedBooking;
+import io.gnomon.booking.application.port.out.NormalizedBooking;
 import io.gnomon.booking.infrastructure.fingerprint.DefaultAppointmentFingerprint;
 import org.junit.jupiter.api.Test;
 

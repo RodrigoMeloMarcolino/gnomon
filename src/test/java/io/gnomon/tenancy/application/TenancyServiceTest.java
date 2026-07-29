@@ -6,9 +6,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.gnomon.tenancy.application.port.in.CreateTenantUseCase.CreateTenantCommand;
-import io.gnomon.tenancy.application.port.in.ManageMembershipUseCase.AddMembershipCommand;
-import io.gnomon.tenancy.application.port.in.ManageMembershipUseCase.ChangeMembershipRoleCommand;
+import io.gnomon.tenancy.application.port.in.AddMembershipCommand;
+import io.gnomon.tenancy.application.port.in.ChangeMembershipRoleCommand;
+import io.gnomon.tenancy.application.port.in.CreateTenantCommand;
 import io.gnomon.tenancy.application.port.in.result.TenantResult;
 import io.gnomon.tenancy.application.port.out.MembershipRepository;
 import io.gnomon.tenancy.application.port.out.TenantRepository;

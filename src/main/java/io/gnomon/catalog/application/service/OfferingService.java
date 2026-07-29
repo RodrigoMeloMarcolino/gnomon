@@ -1,19 +1,19 @@
 package io.gnomon.catalog.application.service;
 
+import io.gnomon.catalog.application.port.in.CreateOfferingCommand;
 import io.gnomon.catalog.application.port.in.CreateOfferingUseCase;
-import io.gnomon.catalog.application.port.in.CreateOfferingUseCase.CreateOfferingCommand;
 import io.gnomon.catalog.application.port.in.DeactivateOfferingUseCase;
 import io.gnomon.catalog.application.port.in.GetOfferingUseCase;
 import io.gnomon.catalog.application.port.in.GetPublicTenantProfileUseCase;
-import io.gnomon.catalog.application.port.in.GetPublicTenantProfileUseCase.PublicTenantProfileResult;
 import io.gnomon.catalog.application.port.in.ListOfferingsUseCase;
 import io.gnomon.catalog.application.port.in.ListPublicOfferingsUseCase;
+import io.gnomon.catalog.application.port.in.PublicTenantProfileResult;
+import io.gnomon.catalog.application.port.in.ReplaceCalendarOfferingsCommand;
 import io.gnomon.catalog.application.port.in.ReplaceCalendarOfferingsUseCase;
-import io.gnomon.catalog.application.port.in.ReplaceCalendarOfferingsUseCase.ReplaceCalendarOfferingsCommand;
+import io.gnomon.catalog.application.port.in.SchedulableOffering;
 import io.gnomon.catalog.application.port.in.SchedulableOfferingUseCase;
-import io.gnomon.catalog.application.port.in.SchedulableOfferingUseCase.SchedulableOffering;
+import io.gnomon.catalog.application.port.in.UpdateOfferingCommand;
 import io.gnomon.catalog.application.port.in.UpdateOfferingUseCase;
-import io.gnomon.catalog.application.port.in.UpdateOfferingUseCase.UpdateOfferingCommand;
 import io.gnomon.catalog.application.port.in.result.OfferingResult;
 import io.gnomon.catalog.application.port.out.CalendarOfferingRepository;
 import io.gnomon.catalog.application.port.out.CalendarRepository;

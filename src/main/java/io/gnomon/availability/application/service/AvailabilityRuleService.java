@@ -1,8 +1,8 @@
 package io.gnomon.availability.application.service;
 
 import io.gnomon.availability.application.port.in.AvailabilityRuleUseCase;
-import io.gnomon.availability.application.port.in.AvailabilityRuleUseCase.CreateAvailabilityRuleCommand;
-import io.gnomon.availability.application.port.in.AvailabilityRuleUseCase.UpdateAvailabilityRuleCommand;
+import io.gnomon.availability.application.port.in.CreateAvailabilityRuleCommand;
+import io.gnomon.availability.application.port.in.UpdateAvailabilityRuleCommand;
 import io.gnomon.availability.application.port.in.result.AvailabilityRuleResult;
 import io.gnomon.availability.application.port.out.AvailabilityCalendarAccessPort;
 import io.gnomon.availability.application.port.out.AvailabilityRuleRepository;

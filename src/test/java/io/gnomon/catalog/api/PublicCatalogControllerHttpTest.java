@@ -9,8 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import io.gnomon.catalog.api.controller.PublicCatalogController;
 import io.gnomon.catalog.api.exception.CatalogExceptionHandler;
 import io.gnomon.catalog.application.port.in.GetPublicTenantProfileUseCase;
-import io.gnomon.catalog.application.port.in.GetPublicTenantProfileUseCase.PublicTenantProfileResult;
 import io.gnomon.catalog.application.port.in.ListPublicOfferingsUseCase;
+import io.gnomon.catalog.application.port.in.PublicTenantProfileResult;
 import io.gnomon.catalog.application.port.in.result.OfferingResult;
 import io.gnomon.catalog.domain.exception.CatalogException;
 import io.gnomon.shared.api.exception.GlobalExceptionHandler;

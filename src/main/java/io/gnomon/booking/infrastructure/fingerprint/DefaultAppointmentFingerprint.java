@@ -2,7 +2,7 @@ package io.gnomon.booking.infrastructure.fingerprint;
 
 import io.gnomon.booking.application.exception.BookingException;
 import io.gnomon.booking.application.port.out.AppointmentFingerprint;
-import io.gnomon.booking.application.port.out.AppointmentFingerprint.NormalizedBooking;
+import io.gnomon.booking.application.port.out.NormalizedBooking;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

@@ -1,9 +1,9 @@
 package io.gnomon.catalog.application.service;
 
 import io.gnomon.catalog.application.port.in.CollaboratorUseCase;
-import io.gnomon.catalog.application.port.in.CollaboratorUseCase.CreateCollaboratorCommand;
-import io.gnomon.catalog.application.port.in.CollaboratorUseCase.LinkCollaboratorUserCommand;
-import io.gnomon.catalog.application.port.in.CollaboratorUseCase.UpdateCollaboratorCommand;
+import io.gnomon.catalog.application.port.in.CreateCollaboratorCommand;
+import io.gnomon.catalog.application.port.in.LinkCollaboratorUserCommand;
+import io.gnomon.catalog.application.port.in.UpdateCollaboratorCommand;
 import io.gnomon.catalog.application.port.in.result.CalendarResult;
 import io.gnomon.catalog.application.port.in.result.CollaboratorResult;
 import io.gnomon.catalog.application.port.out.CalendarRepository;

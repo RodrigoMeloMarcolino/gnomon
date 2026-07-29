@@ -3,15 +3,18 @@ package io.gnomon.booking.application.service;
 import io.gnomon.booking.application.exception.BookingErrorCodes;
 import io.gnomon.booking.application.exception.BookingException;
 import io.gnomon.booking.application.port.in.AppointmentResult;
+import io.gnomon.booking.application.port.in.CalendarSummary;
+import io.gnomon.booking.application.port.in.CreateAppointmentCommand;
 import io.gnomon.booking.application.port.in.CreateAppointmentUseCase;
-import io.gnomon.booking.application.port.in.CreateAppointmentUseCase.CreateAppointmentCommand;
-import io.gnomon.booking.application.port.in.CreateAppointmentUseCase.CreationResult;
+import io.gnomon.booking.application.port.in.CreationResult;
+import io.gnomon.booking.application.port.in.CustomerSummary;
+import io.gnomon.booking.application.port.in.OfferingSummary;
 import io.gnomon.booking.application.port.out.AppointmentFingerprint;
-import io.gnomon.booking.application.port.out.AppointmentFingerprint.NormalizedBooking;
 import io.gnomon.booking.application.port.out.AppointmentRepository;
 import io.gnomon.booking.application.port.out.BookingAvailabilityPort;
 import io.gnomon.booking.application.port.out.BookingCatalogPort;
-import io.gnomon.booking.application.port.out.BookingCatalogPort.BookingContext;
+import io.gnomon.booking.application.port.out.BookingContext;
+import io.gnomon.booking.application.port.out.NormalizedBooking;
 import io.gnomon.booking.application.port.out.PhoneCanonicalizer;
 import io.gnomon.booking.domain.exception.BookingDomainException;
 import io.gnomon.booking.domain.model.Appointment;
@@ -284,15 +287,13 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
         appointment.startAt(),
         appointment.endAt(),
         appointment.status().name().toLowerCase(Locale.ROOT),
-        new AppointmentResult.CalendarSummary(
-            context.calendarId(), context.calendarName(), context.zoneId().getId()),
-        new AppointmentResult.OfferingSummary(
+        new CalendarSummary(context.calendarId(), context.calendarName(), context.zoneId().getId()),
+        new OfferingSummary(
             context.offeringId(),
             context.offeringTitle(),
             appointment.durationMinutesSnapshot(),
             context.priceCents()),
-        new AppointmentResult.CustomerSummary(
-            customer.id(), customer.name(), customer.phone(), customer.email()),
+        new CustomerSummary(customer.id(), customer.name(), customer.phone(), customer.email()),
         appointment.customerNotes());
   }
 

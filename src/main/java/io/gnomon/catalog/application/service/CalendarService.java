@@ -1,7 +1,8 @@
 package io.gnomon.catalog.application.service;
 
 import io.gnomon.catalog.application.port.in.CalendarUseCase;
-import io.gnomon.catalog.application.port.in.CalendarUseCase.UpdateCalendarCommand;
+import io.gnomon.catalog.application.port.in.UpdateCalendarCommand;
+import io.gnomon.catalog.application.port.in.WritableCalendar;
 import io.gnomon.catalog.application.port.in.result.CalendarResult;
 import io.gnomon.catalog.application.port.out.CalendarRepository;
 import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
@@ -10,6 +11,7 @@ import io.gnomon.catalog.domain.exception.CatalogException;
 import io.gnomon.catalog.domain.model.Calendar;
 import io.gnomon.catalog.domain.model.Collaborator;
 import java.time.Clock;
+import java.time.ZoneId;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -69,6 +71,15 @@ public class CalendarService implements CalendarUseCase {
     requireOwnCalendar(access.actorRole(), actorUserId, calendar);
     calendar.deactivate(clock.instant());
     calendars.save(calendar);
+  }
+
+  @Override
+  public WritableCalendar requireWritableCalendar(
+      UUID actorUserId, String tenantSlug, UUID calendarId) {
+    var access = tenantAccess.requireMember(actorUserId, tenantSlug);
+    Calendar calendar = requireInTenant(access.tenantId(), calendarId);
+    requireOwnCalendar(access.actorRole(), actorUserId, calendar);
+    return new WritableCalendar(access.tenantId(), calendar.id(), ZoneId.of(calendar.timezone()));
   }
 
   private void requireOwnCalendar(String role, UUID actorUserId, Calendar calendar) {

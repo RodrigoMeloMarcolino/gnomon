@@ -3,7 +3,7 @@ package io.gnomon.catalog.api.controller;
 import io.gnomon.catalog.api.request.UpdateCalendarRequest;
 import io.gnomon.catalog.api.response.CalendarResponse;
 import io.gnomon.catalog.application.port.in.CalendarUseCase;
-import io.gnomon.catalog.application.port.in.CalendarUseCase.UpdateCalendarCommand;
+import io.gnomon.catalog.application.port.in.UpdateCalendarCommand;
 import io.gnomon.shared.security.authentication.LocalUserPrincipal;
 import jakarta.validation.Valid;
 import java.util.UUID;
