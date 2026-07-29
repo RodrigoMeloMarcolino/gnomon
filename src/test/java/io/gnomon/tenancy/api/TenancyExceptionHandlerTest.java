@@ -2,7 +2,8 @@ package io.gnomon.tenancy.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.gnomon.tenancy.domain.TenancyException;
+import io.gnomon.tenancy.api.exception.TenancyExceptionHandler;
+import io.gnomon.tenancy.domain.exception.TenancyException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 

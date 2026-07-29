@@ -7,8 +7,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.gnomon.booking.domain.BookingException;
-import io.gnomon.booking.domain.Customer;
+import io.gnomon.customers.domain.exception.CustomerException;
+import io.gnomon.customers.domain.model.Customer;
+import io.gnomon.customers.infrastructure.persistence.adapter.CustomerJdbcAdapter;
 import java.sql.SQLException;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -54,7 +55,7 @@ class CustomerJdbcAdapterTest {
 
     assertThatThrownBy(() -> adapter.findOrCreate("", "+5585999999999", null))
         .isInstanceOfSatisfying(
-            BookingException.class,
+            CustomerException.class,
             exception -> assertThat(exception.code()).isEqualTo("validation_error"));
   }
 }

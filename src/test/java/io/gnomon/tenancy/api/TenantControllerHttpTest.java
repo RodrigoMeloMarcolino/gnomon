@@ -8,15 +8,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import io.gnomon.shared.api.GlobalExceptionHandler;
-import io.gnomon.tenancy.api.security.LocalUserPrincipal;
-import io.gnomon.tenancy.application.CreateTenantUseCase;
-import io.gnomon.tenancy.application.CreateTenantUseCase.CreateTenantCommand;
-import io.gnomon.tenancy.application.GetTenantUseCase;
-import io.gnomon.tenancy.application.ListMyTenantsUseCase;
-import io.gnomon.tenancy.application.TenantResult;
-import io.gnomon.tenancy.application.UpdateTenantUseCase;
-import io.gnomon.tenancy.domain.TenancyException;
+import io.gnomon.shared.api.exception.GlobalExceptionHandler;
+import io.gnomon.shared.security.authentication.LocalUserPrincipal;
+import io.gnomon.tenancy.api.controller.TenantController;
+import io.gnomon.tenancy.api.exception.TenancyExceptionHandler;
+import io.gnomon.tenancy.application.port.in.CreateTenantUseCase;
+import io.gnomon.tenancy.application.port.in.CreateTenantUseCase.CreateTenantCommand;
+import io.gnomon.tenancy.application.port.in.GetTenantUseCase;
+import io.gnomon.tenancy.application.port.in.ListMyTenantsUseCase;
+import io.gnomon.tenancy.application.port.in.UpdateTenantUseCase;
+import io.gnomon.tenancy.application.port.in.result.TenantResult;
+import io.gnomon.tenancy.domain.exception.TenancyException;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;

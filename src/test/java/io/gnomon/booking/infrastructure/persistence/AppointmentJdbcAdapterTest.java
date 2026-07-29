@@ -8,8 +8,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.gnomon.booking.domain.Appointment;
-import io.gnomon.booking.domain.BookingException;
+import io.gnomon.booking.application.exception.BookingException;
+import io.gnomon.booking.domain.model.Appointment;
+import io.gnomon.booking.infrastructure.persistence.adapter.AppointmentJdbcAdapter;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.List;
@@ -49,6 +50,23 @@ class AppointmentJdbcAdapterTest {
     assertThat(adapter.insert(appointment)).isFalse();
     assertThat(AppointmentJdbcAdapter.INSERT_APPOINTMENT)
         .contains("ON CONFLICT ON CONSTRAINT uq_appointments_tenant_idempotency_key DO NOTHING");
+  }
+
+  @Test
+  void insert_whenTenantIdentityConstraintFails_shouldTranslateValidationError() {
+    Appointment appointment = appointment();
+    var failure =
+        new DataIntegrityViolationException(
+            "insert failed",
+            new SQLException("violates constraint uq_appointments_tenant_identity"));
+    when(jdbcTemplate.update(eq(AppointmentJdbcAdapter.INSERT_APPOINTMENT), any(Object[].class)))
+        .thenThrow(failure);
+    var adapter = new AppointmentJdbcAdapter(jdbcTemplate);
+
+    assertThatThrownBy(() -> adapter.insert(appointment))
+        .isInstanceOfSatisfying(
+            BookingException.class,
+            exception -> assertThat(exception.code()).isEqualTo("validation_error"));
   }
 
   @Test

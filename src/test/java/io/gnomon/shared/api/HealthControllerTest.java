@@ -2,6 +2,7 @@ package io.gnomon.shared.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.gnomon.shared.api.controller.HealthController;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;

@@ -6,8 +6,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.gnomon.tenancy.application.LocalUserResult;
-import io.gnomon.tenancy.application.ProvisionLocalUserUseCase;
+import io.gnomon.shared.security.authentication.LocalUserAuthenticationToken;
+import io.gnomon.shared.security.filter.LocalUserProvisioningFilter;
+import io.gnomon.tenancy.application.port.in.ProvisionLocalUserUseCase;
+import io.gnomon.tenancy.application.port.in.result.LocalUserResult;
 import jakarta.servlet.FilterChain;
 import java.time.Instant;
 import java.util.UUID;

@@ -1,17 +1,17 @@
-package io.gnomon.booking.infrastructure.catalog;
+package io.gnomon.booking.infrastructure.integration.catalog;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import io.gnomon.booking.domain.BookingException;
-import io.gnomon.catalog.application.port.CalendarRepository;
-import io.gnomon.catalog.application.port.CatalogTenantAccessPort;
-import io.gnomon.catalog.application.port.CatalogTenantAccessPort.TenantAccess;
-import io.gnomon.catalog.application.port.OfferingRepository;
-import io.gnomon.catalog.domain.Calendar;
-import io.gnomon.catalog.domain.CatalogException;
-import io.gnomon.catalog.domain.Offering;
+import io.gnomon.booking.application.exception.BookingException;
+import io.gnomon.catalog.application.port.out.CalendarRepository;
+import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
+import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort.TenantAccess;
+import io.gnomon.catalog.application.port.out.OfferingRepository;
+import io.gnomon.catalog.domain.exception.CatalogException;
+import io.gnomon.catalog.domain.model.Calendar;
+import io.gnomon.catalog.domain.model.Offering;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;

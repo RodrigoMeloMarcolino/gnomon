@@ -11,16 +11,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import io.gnomon.catalog.application.CreateOfferingUseCase;
-import io.gnomon.catalog.application.DeactivateOfferingUseCase;
-import io.gnomon.catalog.application.GetOfferingUseCase;
-import io.gnomon.catalog.application.ListOfferingsUseCase;
-import io.gnomon.catalog.application.OfferingResult;
-import io.gnomon.catalog.application.UpdateOfferingUseCase;
-import io.gnomon.catalog.application.UpdateOfferingUseCase.UpdateOfferingCommand;
-import io.gnomon.catalog.domain.CatalogException;
-import io.gnomon.shared.api.GlobalExceptionHandler;
-import io.gnomon.tenancy.api.security.LocalUserPrincipal;
+import io.gnomon.catalog.api.controller.OfferingController;
+import io.gnomon.catalog.api.exception.CatalogExceptionHandler;
+import io.gnomon.catalog.application.port.in.CreateOfferingUseCase;
+import io.gnomon.catalog.application.port.in.DeactivateOfferingUseCase;
+import io.gnomon.catalog.application.port.in.GetOfferingUseCase;
+import io.gnomon.catalog.application.port.in.ListOfferingsUseCase;
+import io.gnomon.catalog.application.port.in.UpdateOfferingUseCase;
+import io.gnomon.catalog.application.port.in.UpdateOfferingUseCase.UpdateOfferingCommand;
+import io.gnomon.catalog.application.port.in.result.OfferingResult;
+import io.gnomon.catalog.domain.exception.CatalogException;
+import io.gnomon.shared.api.exception.GlobalExceptionHandler;
+import io.gnomon.shared.security.authentication.LocalUserPrincipal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;

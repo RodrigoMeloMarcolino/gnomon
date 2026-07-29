@@ -9,12 +9,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import io.gnomon.shared.api.GlobalExceptionHandler;
-import io.gnomon.tenancy.api.security.LocalUserPrincipal;
-import io.gnomon.tenancy.application.ManageMembershipUseCase;
-import io.gnomon.tenancy.application.ManageMembershipUseCase.RemoveMembershipCommand;
-import io.gnomon.tenancy.application.MembershipResult;
-import io.gnomon.tenancy.domain.TenancyException;
+import io.gnomon.shared.api.exception.GlobalExceptionHandler;
+import io.gnomon.shared.security.authentication.LocalUserPrincipal;
+import io.gnomon.tenancy.api.controller.MembershipController;
+import io.gnomon.tenancy.api.exception.TenancyExceptionHandler;
+import io.gnomon.tenancy.application.port.in.ManageMembershipUseCase;
+import io.gnomon.tenancy.application.port.in.ManageMembershipUseCase.RemoveMembershipCommand;
+import io.gnomon.tenancy.application.port.in.result.MembershipResult;
+import io.gnomon.tenancy.domain.exception.TenancyException;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;

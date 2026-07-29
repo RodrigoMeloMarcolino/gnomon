@@ -1,4 +1,4 @@
-package io.gnomon.tenancy.infrastructure.catalog;
+package io.gnomon.tenancy.infrastructure.integration.catalog;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -7,13 +7,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.gnomon.catalog.domain.CatalogException;
-import io.gnomon.tenancy.application.port.MembershipRepository;
-import io.gnomon.tenancy.application.port.TenantRepository;
-import io.gnomon.tenancy.application.port.UserRepository;
-import io.gnomon.tenancy.domain.Tenant;
-import io.gnomon.tenancy.domain.TenantMembership;
-import io.gnomon.tenancy.domain.User;
+import io.gnomon.catalog.domain.exception.CatalogException;
+import io.gnomon.tenancy.application.port.out.MembershipRepository;
+import io.gnomon.tenancy.application.port.out.TenantRepository;
+import io.gnomon.tenancy.application.port.out.UserRepository;
+import io.gnomon.tenancy.domain.model.Tenant;
+import io.gnomon.tenancy.domain.model.TenantMembership;
+import io.gnomon.tenancy.domain.model.User;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;

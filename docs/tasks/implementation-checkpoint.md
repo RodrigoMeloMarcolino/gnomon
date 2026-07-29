@@ -1,4 +1,4 @@
-# Checkpoint de implementação paralela — fases 01–09 (pós-onda 3)
+# Checkpoint de implementação paralela — fases 01–09 (pós-onda 4)
 
 Atualizado: 2026-07-28
 
@@ -24,7 +24,8 @@ as tasks deste repositório.
 HEAD no primeiro registro deste checkpoint: `73d5585`. A onda 2 foi fechada depois nos commits
 `83fb81b` (este checkpoint), `e594513` (integração de catálogo) e `36cb4a4` (documentação).
 Os contratos da onda 3 foram congelados em `dd6cfef`. A fase 03 foi integrada nos commits
-`781596c`, `42579ab`, `e08cce4` e `8d15c20`.
+`781596c`, `42579ab`, `e08cce4` e `8d15c20`. A fase 04 foi integrada a partir dos contratos
+`5bc786e`, migration `67ee031` e frentes `837c5ff`, `0caf214` e `bd9b40b`.
 
 ### Fase 01 — concluída
 
@@ -85,6 +86,20 @@ Validações finais verdes:
 - Perfil `integration`: 23/23 com PostgreSQL 16, Keycloak 26, Flyway V1–V4 e
   `ddl-auto=validate`.
 
+### Fase 04 — concluída
+
+- Migration `V5__booking.sql` com customers globais, appointments tenant-scoped e slots
+  ocupados protegidos por `UNIQUE(calendar_id, slot_start_at)`.
+- Domínio puro de slots, telefone E.164 e fingerprint SHA-256; libphonenumber com região default
+  configurável.
+- Booking público transacional com `Idempotency-Key` obrigatório, replay `200`, criação `201`,
+  conflito determinístico e customer upsert concorrente.
+- `OccupiedSlotPort` agora lê PostgreSQL; disponibilidade deixa de usar o adapter vazio.
+- Eventos P0 de booking sem PII.
+- Gate normal: 211/211 testes; ArchUnit: 4/4.
+- Perfil `integration`: 33/33 com PostgreSQL 16, Keycloak 26, Flyway V1–V5,
+  `ddl-auto=validate` e corridas reais de slot/idempotência/customer.
+
 ## Histórico do trabalho ativo no primeiro checkpoint
 
 Os itens abaixo foram concluídos e são preservados apenas para rastreabilidade:
@@ -96,23 +111,30 @@ Os itens abaixo foram concluídos e são preservados apenas para rastreabilidade
    `/tmp/gnomon-w2-offerings` estavam limpas após os commits. Não há mudança pendente conhecida
    nelas.
 
+## Checkpoint 04.5 — hardening arquitetural
+
+Antes das ondas 05–07, a fase 04.5 está em execução. Ela preserva integralmente a implementação
+local ainda não commitada de booking e não altera endpoints, JSON, schema ou migrations. O foco é
+a taxonomia de ports, customers como módulo próprio, principal em `shared.security`, contratos de
+integração explícitos e gates ArchUnit reforçados (ADR 0019).
+
 ## Próxima ação exata
 
-Iniciar a onda 4 (fase 04 — guest booking) a partir do `main` após este checkpoint:
+Concluir a 04.5 e somente então iniciar a onda 5, com o core transacional estável:
 
-1. congelar primeiro os contratos compartilhados do módulo `booking` e a fronteira com
-   `customers`, sem implementar;
-2. criar a migration `V5__booking.sql` sob ownership exclusivo do agente principal;
-3. abrir até três worktrees isoladas a partir do commit de contratos;
-4. paralelizar:
-   - domínio de slots, telefone E.164, fingerprint SHA-256 e invariantes;
-   - persistência/transação/customer upsert/constraints;
-   - API pública/idempotência e testes concorrentes;
-5. integrar nessa ordem, substituir o `EmptyOccupiedSlotAdapter` pela leitura PostgreSQL e rodar
-   os gates conjuntos antes de fechar a task 04.
+1. reler `docs/tasks/05-cache-redis.md`, `06-observabilidade.md` e
+   `07-painel-admin.md`, além das specs/ADRs apontadas por elas;
+2. congelar contratos compartilhados de invalidação de cache, contexto estruturado de logs e
+   leitura/transição administrativa de appointments;
+3. abrir worktrees isoladas a partir do commit de contratos e paralelizar Redis fail-open,
+   observabilidade vendor-neutral e painel admin tenant-scoped;
+4. manter migrations/configurações globais, integração e documentação sob ownership do agente
+   principal;
+5. integrar somente depois dos gates isolados e executar `spotless:check`, testes, ArchUnit e
+   integração conjunta antes de fechar qualquer uma das fases 05–07.
 
-Antes de implementar, reler `docs/tasks/04-guest-booking.md`, `docs/specs/booking.md` e ADRs
-0008–0012, 0014, 0016 e 0017. A adição de libphonenumber exige justificativa documental.
+A fase 08 pode começar quando houver vaga, mas cancelamento/remarcação continuam dependentes dos
+tokens da migration aditiva própria e das regras transacionais descritas no checkpoint abaixo.
 
 ## Registro dos contratos congelados da onda 3
 
@@ -141,19 +163,27 @@ Ownership executado:
 O commit `dd6cfef` congelou esses contratos antes da abertura das três worktrees; os resultados
 foram integrados sem mudança de contrato.
 
+## Registro dos contratos congelados da onda 4
+
+Pacote: `io.gnomon.booking`.
+
+- `CreateAppointmentUseCase.create(CreateAppointmentCommand)` retorna
+  `CreationResult(AppointmentResult, replayed)`.
+- `BookingCatalogPort` resolve tenant, calendário e offering agendável em um contexto snapshot.
+- `BookingAvailabilityPort` valida o instante usando regras e slots ocupados.
+- `CustomerRepository.findOrCreate(...)` executa o upsert global por telefone.
+- `AppointmentRepository` faz lookup/insert idempotente e insere slots ocupados.
+- `SlotGenerator`, `PhoneCanonicalizer` e `AppointmentFingerprint` são contratos de domínio
+  puros.
+- Endpoint: `POST /v1/public/tenants/{slug}/appointments`, com payload `snake_case` e
+  `Idempotency-Key`.
+- `OccupiedSlotPort` manteve o contrato da onda 3; apenas o adapter vazio foi trocado por
+  PostgreSQL.
+
+O commit `5bc786e` congelou esses contratos antes das três worktrees. A integração preservou as
+assinaturas; apenas adicionou implementações, wiring e testes conjuntos.
+
 ## Sequência restante
-
-### Onda 4 — booking
-
-- Migration `V5__booking.sql`.
-- Paralelizar:
-  - domínio de slots, telefone E.164, fingerprint SHA-256 e invariantes;
-  - persistência/transação/customer upsert/constraints;
-  - API pública/idempotência/testes concorrentes.
-- Adicionar libphonenumber com justificativa documentada.
-- Garantir mesma chave/payload: `201` e replay `200`; chaves distintas no mesmo slot:
-  `201` e `409`.
-- Booking, customer e slots em transação curta; unique de slot é a garantia final.
 
 ### Ondas 5 e 6 — pós-core e ações públicas
 

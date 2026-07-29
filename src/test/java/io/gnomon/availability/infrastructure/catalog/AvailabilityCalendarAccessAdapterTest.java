@@ -1,16 +1,16 @@
-package io.gnomon.availability.infrastructure.catalog;
+package io.gnomon.availability.infrastructure.integration.catalog;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import io.gnomon.availability.domain.AvailabilityException;
-import io.gnomon.catalog.application.port.CalendarRepository;
-import io.gnomon.catalog.application.port.CatalogTenantAccessPort;
-import io.gnomon.catalog.application.port.CatalogTenantAccessPort.TenantAccess;
-import io.gnomon.catalog.application.port.CollaboratorRepository;
-import io.gnomon.catalog.domain.Calendar;
-import io.gnomon.catalog.domain.Collaborator;
+import io.gnomon.availability.domain.exception.AvailabilityException;
+import io.gnomon.catalog.application.port.out.CalendarRepository;
+import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
+import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort.TenantAccess;
+import io.gnomon.catalog.application.port.out.CollaboratorRepository;
+import io.gnomon.catalog.domain.model.Calendar;
+import io.gnomon.catalog.domain.model.Collaborator;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;

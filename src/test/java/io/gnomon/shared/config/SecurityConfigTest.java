@@ -7,8 +7,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import io.gnomon.tenancy.application.LocalUserResult;
-import io.gnomon.tenancy.application.ProvisionLocalUserUseCase;
+import io.gnomon.shared.security.config.SecurityConfig;
+import io.gnomon.tenancy.application.port.in.ProvisionLocalUserUseCase;
+import io.gnomon.tenancy.application.port.in.result.LocalUserResult;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;

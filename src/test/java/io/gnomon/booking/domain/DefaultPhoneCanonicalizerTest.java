@@ -3,6 +3,9 @@ package io.gnomon.booking.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.gnomon.booking.application.exception.BookingException;
+import io.gnomon.booking.application.port.out.PhoneCanonicalizer;
+import io.gnomon.booking.infrastructure.phone.DefaultPhoneCanonicalizer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -30,8 +33,7 @@ class DefaultPhoneCanonicalizerTest {
 
   @ParameterizedTest
   @NullAndEmptySource
-  @ValueSource(
-      strings = {" ", "123", "+55 85 PHONE", "+55/85/99999/9999", "++55 85 99999-9999"})
+  @ValueSource(strings = {" ", "123", "+55 85 PHONE", "+55/85/99999/9999", "++55 85 99999-9999"})
   void canonicalize_withInvalidInput_shouldThrowPhoneInvalid(String raw) {
     assertThatThrownBy(() -> brazilian.canonicalize(raw))
         .isInstanceOf(BookingException.class)

@@ -1,6 +1,6 @@
 package io.gnomon.availability.api;
 
-import io.gnomon.tenancy.api.security.LocalUserPrincipal;
+import io.gnomon.shared.security.authentication.LocalUserPrincipal;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.context.request.NativeWebRequest;

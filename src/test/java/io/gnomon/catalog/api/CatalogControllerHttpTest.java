@@ -9,14 +9,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import io.gnomon.catalog.application.CalendarResult;
-import io.gnomon.catalog.application.CalendarUseCase;
-import io.gnomon.catalog.application.CollaboratorResult;
-import io.gnomon.catalog.application.CollaboratorUseCase;
-import io.gnomon.catalog.application.PublicCalendarResult;
-import io.gnomon.catalog.application.PublicCalendarUseCase;
-import io.gnomon.shared.api.GlobalExceptionHandler;
-import io.gnomon.tenancy.api.security.LocalUserPrincipal;
+import io.gnomon.catalog.api.controller.CalendarController;
+import io.gnomon.catalog.api.controller.CollaboratorController;
+import io.gnomon.catalog.api.controller.PublicCalendarController;
+import io.gnomon.catalog.application.port.in.CalendarUseCase;
+import io.gnomon.catalog.application.port.in.CollaboratorUseCase;
+import io.gnomon.catalog.application.port.in.PublicCalendarUseCase;
+import io.gnomon.catalog.application.port.in.result.CalendarResult;
+import io.gnomon.catalog.application.port.in.result.CollaboratorResult;
+import io.gnomon.catalog.application.port.in.result.PublicCalendarResult;
+import io.gnomon.shared.api.exception.GlobalExceptionHandler;
+import io.gnomon.shared.security.authentication.LocalUserPrincipal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;

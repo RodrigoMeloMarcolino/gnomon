@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.gnomon.tenancy.application.ProvisionLocalUserUseCase.ProvisionLocalUserCommand;
-import io.gnomon.tenancy.application.port.UserProjectionPort;
-import io.gnomon.tenancy.domain.User;
+import io.gnomon.tenancy.application.port.in.ProvisionLocalUserUseCase.ProvisionLocalUserCommand;
+import io.gnomon.tenancy.application.port.in.result.LocalUserResult;
+import io.gnomon.tenancy.application.port.out.UserProjectionPort;
+import io.gnomon.tenancy.application.service.LocalUserProvisioningService;
+import io.gnomon.tenancy.domain.model.User;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;

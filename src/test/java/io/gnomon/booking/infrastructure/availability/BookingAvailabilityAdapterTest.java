@@ -1,13 +1,13 @@
-package io.gnomon.booking.infrastructure.availability;
+package io.gnomon.booking.infrastructure.integration.availability;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.gnomon.availability.application.port.AvailabilityRuleRepository;
-import io.gnomon.availability.application.port.OccupiedSlotPort;
-import io.gnomon.availability.domain.AvailabilityCalculator;
-import io.gnomon.availability.domain.AvailabilityWindow;
+import io.gnomon.availability.application.port.out.AvailabilityRuleRepository;
+import io.gnomon.availability.application.port.out.OccupiedSlotPort;
+import io.gnomon.availability.domain.model.AvailabilityWindow;
+import io.gnomon.availability.domain.service.AvailabilityCalculator;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -40,7 +40,7 @@ class BookingAvailabilityAdapterTest {
     var window =
         new AvailabilityWindow(DayOfWeek.THURSDAY, LocalTime.of(9, 0), LocalTime.of(17, 0), true);
     var rule =
-        new io.gnomon.availability.domain.AvailabilityRule(
+        new io.gnomon.availability.domain.model.AvailabilityRule(
             UUID.randomUUID(),
             TENANT_ID,
             CALENDAR_ID,

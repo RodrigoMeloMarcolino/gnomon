@@ -36,6 +36,8 @@ primitives, erro envelope). Regras:
 - Dependências permitidas: `api` → `application` → `domain` ← `infrastructure`
   (`infrastructure` também implementa ports de `application`). Enforced por testes ArchUnit.
 
+O ADR 0019 detalha a taxonomia obrigatória de ports e os limites entre módulos.
+
 ## Consequências
 
 - Novo módulo = novo package com as quatro camadas; não criar camadas globais genéricas

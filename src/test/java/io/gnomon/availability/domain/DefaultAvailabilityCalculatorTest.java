@@ -3,6 +3,10 @@ package io.gnomon.availability.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.gnomon.availability.domain.exception.AvailabilityException;
+import io.gnomon.availability.domain.model.AvailabilityWindow;
+import io.gnomon.availability.domain.service.AvailabilityCalculator;
+import io.gnomon.availability.domain.service.DefaultAvailabilityCalculator;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;

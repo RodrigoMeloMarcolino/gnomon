@@ -4,9 +4,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import io.gnomon.booking.application.CreateAppointmentService;
-import io.gnomon.booking.domain.BookingException;
-import io.gnomon.shared.api.GlobalExceptionHandler;
+import io.gnomon.booking.api.exception.BookingExceptionHandler;
+import io.gnomon.booking.application.exception.BookingErrorCodes;
+import io.gnomon.booking.application.exception.BookingException;
+import io.gnomon.shared.api.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -52,6 +53,14 @@ class BookingExceptionHandlerHttpTest {
         .andExpect(jsonPath("$.error.code").value("validation_error"));
   }
 
+  @Test
+  void knownUniqueConstraint_shouldReturnCanonical422() throws Exception {
+    mockMvc
+        .perform(get("/test/unique"))
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(jsonPath("$.error.code").value("validation_error"));
+  }
+
   @RestController
   @RequestMapping("/test")
   static class FailureProbeController {
@@ -59,8 +68,7 @@ class BookingExceptionHandlerHttpTest {
     @GetMapping("/advisory")
     String advisory() {
       throw new BookingException(
-          CreateAppointmentService.SLOT_UNAVAILABLE_VALIDATION,
-          "requested start time is not available");
+          BookingErrorCodes.SLOT_UNAVAILABLE_VALIDATION, "requested start time is not available");
     }
 
     @GetMapping("/conflict")
@@ -72,6 +80,12 @@ class BookingExceptionHandlerHttpTest {
     String check() {
       throw new DataIntegrityViolationException(
           "constraint failed", new IllegalStateException("ck_appointments_time_order"));
+    }
+
+    @GetMapping("/unique")
+    String unique() {
+      throw new DataIntegrityViolationException(
+          "constraint failed", new IllegalStateException("uq_appointments_tenant_identity"));
     }
   }
 }

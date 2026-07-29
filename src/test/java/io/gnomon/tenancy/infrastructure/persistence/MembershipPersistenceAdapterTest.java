@@ -4,7 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.gnomon.tenancy.domain.TenantMembership;
+import io.gnomon.tenancy.domain.model.TenantMembership;
+import io.gnomon.tenancy.infrastructure.persistence.adapter.MembershipPersistenceAdapter;
+import io.gnomon.tenancy.infrastructure.persistence.entity.MembershipJpaEntity;
+import io.gnomon.tenancy.infrastructure.persistence.repository.SpringDataMembershipRepository;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;

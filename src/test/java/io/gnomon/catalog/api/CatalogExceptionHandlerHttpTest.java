@@ -4,8 +4,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import io.gnomon.catalog.domain.CatalogException;
-import io.gnomon.shared.api.GlobalExceptionHandler;
+import io.gnomon.catalog.api.exception.CatalogExceptionHandler;
+import io.gnomon.catalog.domain.exception.CatalogException;
+import io.gnomon.shared.api.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;

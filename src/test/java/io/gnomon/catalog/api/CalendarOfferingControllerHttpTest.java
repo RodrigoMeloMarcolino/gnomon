@@ -6,10 +6,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import io.gnomon.catalog.application.ReplaceCalendarOfferingsUseCase;
-import io.gnomon.catalog.domain.CatalogException;
-import io.gnomon.shared.api.GlobalExceptionHandler;
-import io.gnomon.tenancy.api.security.LocalUserPrincipal;
+import io.gnomon.catalog.api.controller.CalendarOfferingController;
+import io.gnomon.catalog.api.exception.CatalogExceptionHandler;
+import io.gnomon.catalog.application.port.in.ReplaceCalendarOfferingsUseCase;
+import io.gnomon.catalog.domain.exception.CatalogException;
+import io.gnomon.shared.api.exception.GlobalExceptionHandler;
+import io.gnomon.shared.security.authentication.LocalUserPrincipal;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

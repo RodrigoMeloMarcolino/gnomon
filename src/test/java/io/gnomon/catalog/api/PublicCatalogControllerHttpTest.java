@@ -6,12 +6,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import io.gnomon.catalog.application.GetPublicTenantProfileUseCase;
-import io.gnomon.catalog.application.GetPublicTenantProfileUseCase.PublicTenantProfileResult;
-import io.gnomon.catalog.application.ListPublicOfferingsUseCase;
-import io.gnomon.catalog.application.OfferingResult;
-import io.gnomon.catalog.domain.CatalogException;
-import io.gnomon.shared.api.GlobalExceptionHandler;
+import io.gnomon.catalog.api.controller.PublicCatalogController;
+import io.gnomon.catalog.api.exception.CatalogExceptionHandler;
+import io.gnomon.catalog.application.port.in.GetPublicTenantProfileUseCase;
+import io.gnomon.catalog.application.port.in.GetPublicTenantProfileUseCase.PublicTenantProfileResult;
+import io.gnomon.catalog.application.port.in.ListPublicOfferingsUseCase;
+import io.gnomon.catalog.application.port.in.result.OfferingResult;
+import io.gnomon.catalog.domain.exception.CatalogException;
+import io.gnomon.shared.api.exception.GlobalExceptionHandler;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;

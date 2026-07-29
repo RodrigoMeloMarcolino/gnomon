@@ -7,10 +7,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import io.gnomon.availability.application.ListAvailableSlotsUseCase;
-import io.gnomon.catalog.api.CatalogExceptionHandler;
-import io.gnomon.catalog.domain.CatalogException;
-import io.gnomon.shared.api.GlobalExceptionHandler;
+import io.gnomon.availability.api.controller.PublicAvailabilityController;
+import io.gnomon.availability.api.exception.AvailabilityExceptionHandler;
+import io.gnomon.availability.application.port.in.ListAvailableSlotsUseCase;
+import io.gnomon.catalog.api.exception.CatalogExceptionHandler;
+import io.gnomon.catalog.domain.exception.CatalogException;
+import io.gnomon.shared.api.exception.GlobalExceptionHandler;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;

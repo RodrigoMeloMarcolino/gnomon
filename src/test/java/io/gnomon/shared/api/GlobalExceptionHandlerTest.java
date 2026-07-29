@@ -2,8 +2,10 @@ package io.gnomon.shared.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.gnomon.tenancy.api.CreateMembershipRequest;
-import io.gnomon.tenancy.api.CreateTenantRequest;
+import io.gnomon.shared.api.exception.GlobalExceptionHandler;
+import io.gnomon.shared.api.response.FieldValidationError;
+import io.gnomon.tenancy.api.request.CreateMembershipRequest;
+import io.gnomon.tenancy.api.request.CreateTenantRequest;
 import jakarta.validation.Validation;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -26,7 +28,7 @@ class GlobalExceptionHandlerTest {
     var response =
         handler.handleBodyValidation(new MethodArgumentNotValidException(null, bindingResult));
 
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().error().code()).isEqualTo("validation_error");
     assertThat(response.getBody().error().message()).isEqualTo("request validation failed");

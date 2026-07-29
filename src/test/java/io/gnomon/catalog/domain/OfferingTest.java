@@ -3,7 +3,9 @@ package io.gnomon.catalog.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.gnomon.catalog.domain.Offering.Change;
+import io.gnomon.catalog.domain.exception.CatalogException;
+import io.gnomon.catalog.domain.model.Offering;
+import io.gnomon.catalog.domain.model.Offering.Change;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;

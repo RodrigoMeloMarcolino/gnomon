@@ -3,6 +3,8 @@ package io.gnomon.booking.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.gnomon.booking.domain.exception.BookingDomainException;
+import io.gnomon.booking.domain.model.Appointment;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -26,9 +28,7 @@ class AppointmentTest {
   @Test
   void constructor_withBlankOptionalNotes_shouldNormalizeToNull() {
     assertThat(
-            appointment(
-                    START, START.plusSeconds(30 * 60L), 30, "UTC", "key", " ")
-                .customerNotes())
+            appointment(START, START.plusSeconds(30 * 60L), 30, "UTC", "key", " ").customerNotes())
         .isNull();
   }
 
@@ -49,9 +49,7 @@ class AppointmentTest {
     Instant misaligned = Instant.parse("2026-07-28T12:00:01Z");
 
     assertValidationError(
-        () ->
-            appointment(
-                misaligned, misaligned.plusSeconds(30 * 60L), 30, "UTC", "key", null));
+        () -> appointment(misaligned, misaligned.plusSeconds(30 * 60L), 30, "UTC", "key", null));
   }
 
   @Test
@@ -84,7 +82,7 @@ class AppointmentTest {
                     null,
                     "key",
                     "ABC"))
-        .isInstanceOf(BookingException.class)
+        .isInstanceOf(BookingDomainException.class)
         .hasMessageContaining("lowercase SHA-256");
   }
 
@@ -114,8 +112,8 @@ class AppointmentTest {
   private static void assertValidationError(
       org.assertj.core.api.ThrowableAssert.ThrowingCallable call) {
     assertThatThrownBy(call)
-        .isInstanceOf(BookingException.class)
-        .extracting(exception -> ((BookingException) exception).code())
+        .isInstanceOf(BookingDomainException.class)
+        .extracting(exception -> ((BookingDomainException) exception).code())
         .isEqualTo("validation_error");
   }
 }

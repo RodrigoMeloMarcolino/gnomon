@@ -170,6 +170,9 @@
         <version>3.8.0</version>
         <configuration>
           <java>
+            <expandWildcardImports/>
+            <removeUnusedImports/>
+            <forbidWildcardImports/>
             <googleJavaFormat>
               <version>1.35.0</version>
               <style>GOOGLE</style>

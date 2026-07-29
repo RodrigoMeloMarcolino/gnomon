@@ -8,20 +8,21 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.gnomon.booking.application.CreateAppointmentUseCase.CreateAppointmentCommand;
-import io.gnomon.booking.application.port.AppointmentRepository;
-import io.gnomon.booking.application.port.BookingAvailabilityPort;
-import io.gnomon.booking.application.port.BookingCatalogPort;
-import io.gnomon.booking.application.port.BookingCatalogPort.BookingContext;
-import io.gnomon.booking.application.port.CustomerRepository;
-import io.gnomon.booking.domain.Appointment;
-import io.gnomon.booking.domain.Appointment.Status;
-import io.gnomon.booking.domain.AppointmentFingerprint;
-import io.gnomon.booking.domain.AppointmentFingerprint.NormalizedBooking;
-import io.gnomon.booking.domain.BookingException;
-import io.gnomon.booking.domain.Customer;
-import io.gnomon.booking.domain.PhoneCanonicalizer;
-import io.gnomon.booking.domain.SlotGenerator;
+import io.gnomon.booking.application.exception.BookingException;
+import io.gnomon.booking.application.port.in.CreateAppointmentUseCase.CreateAppointmentCommand;
+import io.gnomon.booking.application.port.out.AppointmentFingerprint;
+import io.gnomon.booking.application.port.out.AppointmentFingerprint.NormalizedBooking;
+import io.gnomon.booking.application.port.out.AppointmentRepository;
+import io.gnomon.booking.application.port.out.BookingAvailabilityPort;
+import io.gnomon.booking.application.port.out.BookingCatalogPort;
+import io.gnomon.booking.application.port.out.BookingCatalogPort.BookingContext;
+import io.gnomon.booking.application.port.out.PhoneCanonicalizer;
+import io.gnomon.booking.application.service.CreateAppointmentService;
+import io.gnomon.booking.domain.model.Appointment;
+import io.gnomon.booking.domain.model.Appointment.Status;
+import io.gnomon.booking.domain.service.SlotGenerator;
+import io.gnomon.customers.application.port.out.CustomerRepository;
+import io.gnomon.customers.domain.model.Customer;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -47,7 +48,7 @@ class CreateAppointmentServiceTest {
       UUID.fromString("60000000-0000-0000-0000-000000000001");
   private static final Instant NOW = Instant.parse("2027-06-30T12:00:00Z");
   private static final Instant START_AT = Instant.parse("2027-07-01T12:00:00Z");
-  private static final String FINGERPRINT = "fingerprint";
+  private static final String FINGERPRINT = "a".repeat(64);
 
   @Mock private BookingCatalogPort catalog;
   @Mock private BookingAvailabilityPort availability;
@@ -139,7 +140,7 @@ class CreateAppointmentServiceTest {
   void create_whenIdempotencyKeyAlreadyHasDifferentFingerprint_shouldConflict() {
     givenNormalizedRequest();
     when(appointments.findByTenantIdAndIdempotencyKey(TENANT_ID, "intent-1"))
-        .thenReturn(Optional.of(appointment("another-fingerprint")));
+        .thenReturn(Optional.of(appointment("b".repeat(64))));
 
     assertThatThrownBy(() -> service.create(command()))
         .isInstanceOf(BookingException.class)

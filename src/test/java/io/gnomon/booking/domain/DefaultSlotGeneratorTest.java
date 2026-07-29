@@ -3,6 +3,9 @@ package io.gnomon.booking.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.gnomon.booking.domain.exception.BookingDomainException;
+import io.gnomon.booking.domain.service.DefaultSlotGenerator;
+import io.gnomon.booking.domain.service.SlotGenerator;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -54,8 +57,8 @@ class DefaultSlotGeneratorTest {
   @ValueSource(ints = {-15, 0, 1, 14, 16, 29})
   void generate_withInvalidDuration_shouldReject(int durationMinutes) {
     assertThatThrownBy(() -> generator.generate(START, durationMinutes))
-        .isInstanceOf(BookingException.class)
-        .extracting(exception -> ((BookingException) exception).code())
+        .isInstanceOf(BookingDomainException.class)
+        .extracting(exception -> ((BookingDomainException) exception).code())
         .isEqualTo("validation_error");
   }
 
@@ -63,7 +66,7 @@ class DefaultSlotGeneratorTest {
   @MethodSource("misalignedStarts")
   void generate_withMisalignedStart_shouldReject(Instant startAt) {
     assertThatThrownBy(() -> generator.generate(startAt, 30))
-        .isInstanceOf(BookingException.class)
+        .isInstanceOf(BookingDomainException.class)
         .hasMessageContaining("15-minute boundary");
   }
 

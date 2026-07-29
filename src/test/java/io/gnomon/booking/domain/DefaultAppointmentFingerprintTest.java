@@ -3,7 +3,10 @@ package io.gnomon.booking.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.gnomon.booking.domain.AppointmentFingerprint.NormalizedBooking;
+import io.gnomon.booking.application.exception.BookingException;
+import io.gnomon.booking.application.port.out.AppointmentFingerprint;
+import io.gnomon.booking.application.port.out.AppointmentFingerprint.NormalizedBooking;
+import io.gnomon.booking.infrastructure.fingerprint.DefaultAppointmentFingerprint;
 import org.junit.jupiter.api.Test;
 
 class DefaultAppointmentFingerprintTest {
@@ -17,8 +20,7 @@ class DefaultAppointmentFingerprintTest {
 
   @Test
   void sha256_withKnownNormalizedBooking_shouldMatchFixedVector() {
-    var booking =
-        booking("Alice Smith", PHONE, "alice@example.com", "window seat", START_AT);
+    var booking = booking("Alice Smith", PHONE, "alice@example.com", "window seat", START_AT);
 
     assertThat(fingerprint.sha256(booking))
         .isEqualTo("14898b768a363d7538db3e926552d48ce92e8e3a986692f5e70e4d9e9707da5d");
@@ -83,7 +85,6 @@ class DefaultAppointmentFingerprintTest {
 
   private static NormalizedBooking booking(
       String name, String phone, String email, String notes, String startAt) {
-    return new NormalizedBooking(
-        CALENDAR_ID, OFFERING_ID, startAt, name, phone, email, notes);
+    return new NormalizedBooking(CALENDAR_ID, OFFERING_ID, startAt, name, phone, email, notes);
   }
 }

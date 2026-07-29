@@ -8,10 +8,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import io.gnomon.availability.application.AvailabilityRuleResult;
-import io.gnomon.availability.application.AvailabilityRuleUseCase;
-import io.gnomon.shared.api.GlobalExceptionHandler;
-import io.gnomon.tenancy.api.security.LocalUserPrincipal;
+import io.gnomon.availability.api.controller.AvailabilityRuleController;
+import io.gnomon.availability.api.exception.AvailabilityExceptionHandler;
+import io.gnomon.availability.application.port.in.AvailabilityRuleUseCase;
+import io.gnomon.availability.application.port.in.result.AvailabilityRuleResult;
+import io.gnomon.shared.api.exception.GlobalExceptionHandler;
+import io.gnomon.shared.security.authentication.LocalUserPrincipal;
 import java.time.Instant;
 import java.time.LocalTime;
 import java.util.UUID;

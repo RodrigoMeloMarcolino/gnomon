@@ -2,7 +2,9 @@ package io.gnomon.tenancy.domain;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.gnomon.tenancy.domain.TenantMembership.MembershipRole;
+import io.gnomon.tenancy.domain.exception.TenancyException;
+import io.gnomon.tenancy.domain.model.TenantMembership;
+import io.gnomon.tenancy.domain.model.TenantMembership.MembershipRole;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
