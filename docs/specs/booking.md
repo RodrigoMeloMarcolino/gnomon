@@ -33,12 +33,14 @@ Constraints: `UNIQUE(tenant_id, lower(title)) WHERE is_active`; índice `(tenant
 
 ### `calendar_offerings`
 
-PK composta `(calendar_id, offering_id)`; ambas FKs. Índice `(offering_id)` (lado da FK não
-coberto pelo prefixo da PK — ADR 0017).
+`tenant_id` (FK), PK composta `(calendar_id, offering_id)`; ambas FKs devem pertencer ao mesmo
+tenant. Índices `(tenant_id)` e `(offering_id)` (lado da FK não coberto pelo prefixo da PK —
+ADR 0017).
 
 ### `availability_rules`
 
-`id`, `calendar_id` (FK), `weekday` SMALLINT (1–7, 1=segunda), `start_time` < `end_time`
+`id`, `tenant_id` (FK), `calendar_id` (FK no mesmo tenant), `weekday` SMALLINT (1–7,
+1=segunda), `start_time` < `end_time`
 (TIME local), `is_active` (default true), timestamps. Índice `(calendar_id, weekday)`.
 Constraints: `CHECK (weekday BETWEEN 1 AND 7)`, `CHECK (start_time < end_time)` e
 **`CHECK` de alinhamento de 15 min** em `start_time`/`end_time` (minuto ∈ {0,15,30,45},
@@ -70,7 +72,8 @@ aditiva da fase 08, que é a fase que as utiliza; ADR 0017, zero colunas mortas.
 
 ### `appointment_slots`
 
-`id`, `appointment_id` (FK), `calendar_id` (FK), `slot_start_at` (TIMESTAMPTZ).
+`id`, `tenant_id` (FK), `appointment_id` (FK no mesmo tenant), `calendar_id` (FK no mesmo
+tenant), `slot_start_at` (TIMESTAMPTZ).
 Constraint crítica: **`UNIQUE(calendar_id, slot_start_at)`**. Índice `(appointment_id)`
 (FK — ADR 0017). Append-only: sem `updated_at`.
 
@@ -101,7 +104,9 @@ availableStarts(rules: List<AvailabilityRule>, durationMinutes: int,
 
 1. Filtra regras ativas do `weekday` da data local; sem regra → lista vazia.
 2. Gera candidatos em step de 15 min dentro de cada janela `[start_time, end_time)` local,
-   convertidos para UTC via `zone`; regras sobrepostas são deduplicadas.
+   convertidos para UTC via `zone`; regras sobrepostas são deduplicadas. Horários locais
+   inexistentes por transição DST são ignorados; horários ambíguos geram os dois instantes UTC
+   válidos.
 3. Remove candidatos cujo serviço não cabe na janela (`candidato + duração > end_time`).
 4. Remove candidatos cujos slots gerados intersectam `occupied`.
 5. Remove candidatos ≤ `now`.
@@ -145,12 +150,14 @@ Fluxo:
    **Segundos/nanos não-zero são rejeitados (422 `validation_error`), nunca truncados
    silenciosamente** (Emenda 00.5 / ADR 0016: no Moira o truncamento silencioso de `09:00:45`
    para `09:00` era surpresa de contrato).
-4. **Idempotência**: busca por `(tenant_id, idempotency_key)`; fingerprint igual → replay
+4. **Idempotência**: busca por `(tenant_id, idempotency_key)`; o fingerprint é SHA-256 de uma
+   representação determinística após normalização (IDs, instante UTC, nome aparado, telefone
+   E.164, e-mail lowercase e opcionais normalizados). Fingerprint igual → replay
    (200 com o appointment original); fingerprint diferente → 409 `idempotency_key_conflict`.
 5. Abre transação curta (sem chamadas externas):
-   a. Busca customer por telefone canônico; se não existir, cria (corrida em `UNIQUE(phone)` →
-      re-ler dentro da transação e seguir). Nome/e-mail submetidos para telefone existente são
-      descartados no MVP.
+   a. Busca/cria customer por telefone canônico com `INSERT ... ON CONFLICT`, evitando abortar
+      a transação na corrida de `UNIQUE(phone)`. Nome/e-mail submetidos para telefone existente
+      são descartados no MVP.
    b. Cria appointment com `duration_minutes_snapshot` e `calendar_timezone_snapshot`.
    c. Insere todos os slots de 4.1 em `appointment_slots`.
    d. Violação de `UNIQUE(calendar_id, slot_start_at)` → rollback total →
@@ -178,7 +185,7 @@ nunca vira 500:
 | ---------- | ------ | ---- |
 | `UNIQUE(calendar_id, slot_start_at)` (`appointment_slots`) | `slot_unavailable` | 409 |
 | `UNIQUE(tenant_id, idempotency_key)` (`appointments`) | replay ou `idempotency_key_conflict` (conforme fingerprint) | 200 / 409 |
-| `UNIQUE(phone)` (`customers`) | retry de leitura dentro da transação (não vaza ao cliente) | — |
+| `UNIQUE(phone)` (`customers`) | `INSERT ... ON CONFLICT` + leitura interna (não vaza ao cliente) | — |
 | `UNIQUE(tenant_id, lower(title)) WHERE is_active` (`offerings`) | `validation_error` (`title`) | 422 |
 | `CHECK (duration_minutes > 0 AND % 15 = 0)` (`offerings`) | `validation_error` (`duration_minutes`) | 422 |
 | `CHECK (price_cents >= 0)` (`offerings`) | `validation_error` (`price_cents`) | 422 |

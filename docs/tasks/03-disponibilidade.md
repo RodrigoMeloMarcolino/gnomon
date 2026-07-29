@@ -1,6 +1,6 @@
 # Fase 03 — Availability rules e available-slots
 
-Status: todo
+Status: done
 
 ## Objetivo
 
@@ -22,7 +22,7 @@ público — sem persistir slots livres.
   - `ListAvailableSlotsUseCase` (spec booking 5.1) com todas as validações de escopo/atribuição.
 - Endpoint público:
   `GET /v1/public/tenants/{slug}/available-slots?calendar_id=&offering_id=&date=`
-  retornando instantes UTC (`["2027-07-01T12:00:00Z"]`).
+  retornando `{"available_start_times":["2027-07-01T12:00:00Z"]}`.
 
 ## Fora de escopo
 
@@ -31,18 +31,39 @@ público — sem persistir slots livres.
 
 ## Testes
 
-- Unit do domínio (bateria da spec booking seção 7, incluindo DST e clock injetável).
+- Unit do domínio (bateria da spec booking seção 7, incluindo DST: gap ignorado e overlap com
+  dois instantes UTC; clock injetável).
 - Integração: regras CRUD com autorização; **escrita com horário desalinhado (ex.: `09:07`) →
   422 na borda e CHECK no banco, sem derrubar o available-slots**; available-slots com offering
   não atribuído → 404; data local do calendário respeitada; resposta em UTC.
 
 ## Critérios de aceite
 
-- [ ] Domínio de disponibilidade 100% testado sem banco.
-- [ ] Endpoint público retorna apenas horários realmente livres e futuros.
-- [ ] Validação simétrica: escrita inválida rejeitada; tabela de tradução de constraints de
+- [x] Domínio de disponibilidade 100% testado sem banco.
+- [x] Endpoint público retorna apenas horários realmente livres e futuros.
+- [x] Validação simétrica: escrita inválida rejeitada; tabela de tradução de constraints de
   `availability_rules` (spec booking 6.1) implementada — nenhuma violação conhecida vira 500.
 
 ## Notas de implementação
 
-(preencher ao concluir)
+- Migration `V4__availability_rules.sql` cria a tabela tenant-scoped com FK composta para
+  calendário, CHECKs nomeados de weekday, ordem e alinhamento de 15 minutos, índices e trigger
+  real de `updated_at`.
+- O domínio puro usa `DefaultAvailabilityCalculator`: step de 15 minutos, exact fit,
+  deduplicação de regras sobrepostas, remoção de ocupados/passado e resolução explícita de DST
+  gap/overlap via offsets válidos da timezone.
+- CRUD administrativo fica sob
+  `/v1/tenants/{tenantSlug}/calendars/{calendarId}/availability-rules`, com soft deactivate,
+  isolamento tenant-scoped e autorização owner/admin ou staff do próprio calendário.
+- O endpoint público
+  `GET /v1/public/tenants/{slug}/available-slots?calendar_id=&offering_id=&date=` valida recursos
+  ativos e atribuição, usa a data local do calendário e retorna instantes UTC no contrato
+  `available_start_times`.
+- `OccupiedSlotPort` usa adapter vazio somente nesta fase; a fase 04 o substitui por leitura
+  PostgreSQL de `appointment_slots`.
+- Commits integrados: `781596c` (algoritmo), `42579ab` (V4 + CRUD),
+  `e08cce4` (endpoint público) e `8d15c20` (wiring).
+- Validação em Java 21: `spotless:check` + 129 testes normais; ArchUnit 4/4; perfil
+  `integration` 23/23 com PostgreSQL 16, Keycloak 26, Flyway V1–V4 e `ddl-auto=validate`.
+- Risco remanescente intencional: até a fase 04, disponibilidade não possui slots ocupados e é
+  advisory; a garantia concorrente nascerá com `appointment_slots`.

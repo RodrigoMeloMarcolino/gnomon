@@ -1,6 +1,6 @@
 # Fase 04 — Guest booking transacional
 
-Status: todo
+Status: done
 
 ## Objetivo
 
@@ -38,10 +38,46 @@ slots ocupados na mesma transação e double booking impossível via constraint.
 
 ## Critérios de aceite
 
-- [ ] Critérios da spec booking seção 9 verdes.
-- [ ] Demonstração: dois requests simultâneos idênticos → um 201, um 409.
-- [ ] Nenhuma violação de constraint conhecida retorna 500 (spec booking 6.1).
+- [x] Critérios da spec booking seção 9 verdes.
+- [x] Demonstração: mesma chave + mesmo payload simultâneos → um 201 e um replay 200; chaves
+      distintas disputando o mesmo slot → um 201 e um 409.
+- [x] Nenhuma violação de constraint conhecida retorna 500 (spec booking 6.1).
 
 ## Notas de implementação
 
-(preencher ao concluir)
+- Migration `V5__booking.sql` cria `customers`, `appointments` e `appointment_slots`, com FKs
+  tenant-scoped, índices de todas as FKs, triggers reais de `updated_at`, status fechado e as
+  uniques de telefone, idempotência e ocupação por calendário. Tokens da fase 08 permanecem
+  ausentes e `appointment_slots` é append-only, sem `updated_at`.
+- O módulo `io.gnomon.booking` preserva domínio puro, ports de application e adapters JDBC. O
+  fluxo público valida catálogo e disponibilidade, normaliza o payload, calcula fingerprint
+  SHA-256, faz upsert concorrente de customer, persiste appointment + slots em transação curta
+  e materializa replay sem chamadas externas.
+- A dependência `com.googlecode.libphonenumber:libphonenumber:9.0.32` foi adicionada porque
+  canonização E.164 correta depende de metadados internacionais atualizados; heurísticas locais
+  para DDI/DDD não cobrem validade, regiões e evolução dos planos de numeração. A região default
+  é configurável por `DEFAULT_PHONE_REGION` (default `BR`).
+- `EmptyOccupiedSlotAdapter` foi removido. Disponibilidade pública e validação de booking agora
+  leem `appointment_slots` no PostgreSQL através de `PostgresOccupiedSlotAdapter`.
+- O endpoint `POST /v1/public/tenants/{slug}/appointments` usa payload `snake_case`, exige
+  `Idempotency-Key`, retorna `201` na criação e `200` no replay. Precheck indisponível retorna
+  `422 slot_unavailable`; disputa decidida pela unique do banco retorna
+  `409 slot_unavailable`.
+- Eventos P0 `appointment.booking_succeeded`, `appointment.booking_replayed`,
+  `appointment.booking_rejected` e `appointment.booking_conflict` foram adicionados sem PII.
+  O contrato JSON completo do stdout continua pertencendo à fase 06.
+
+## Validação
+
+- `./mvnw spotless:check`: verde em container Maven/Java 21.
+- `./mvnw test`: 211/211 testes verdes, incluindo 4/4 regras ArchUnit.
+- `./mvnw verify -Pintegration`: 33/33 testes verdes com PostgreSQL 16, Keycloak 26, Flyway
+  V1–V5 e `ddl-auto=validate`.
+- Concorrência real: mesma chave/payload → `201` + `200` e um appointment; chaves distintas no
+  mesmo slot → `201` + `409`; overlap parcial → um vencedor; calendários diferentes → ambos
+  vencem; corrida do mesmo telefone → um customer global.
+
+## Riscos/follow-ups
+
+- Formatação estruturada JSON, correlação e OTLP dos eventos entram na fase 06.
+- Rate limiting público e gates de carga/schema drift permanecem para o hardening da fase 09.

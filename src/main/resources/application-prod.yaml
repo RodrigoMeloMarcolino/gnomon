@@ -11,3 +11,7 @@ spring:
   flyway:
     # Em prod as migrations são aplicadas pela pipeline (./mvnw flyway:migrate), não no startup.
     enabled: false
+
+gnomon:
+  security:
+    require-verified-email: ${REQUIRE_VERIFIED_EMAIL:true}

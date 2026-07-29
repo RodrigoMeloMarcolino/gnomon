@@ -1,0 +1,53 @@
+{
+  "realm": "gnomon-test",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "clients": [
+    {
+      "clientId": "gnomon-test-valid",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "audience-gnomon-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "gnomon-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "gnomon-test-invalid-audience",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true
+    }
+  ],
+  "users": [
+    {
+      "username": "security-test",
+      "email": "security-test@gnomon.local",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Security",
+      "lastName": "Test",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "security-test-password",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

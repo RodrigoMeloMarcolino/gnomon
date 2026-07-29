@@ -134,8 +134,9 @@ Constraints: `UNIQUE(tenant_id, collaborator_id)` (1:1 no MVP); índice `(collab
 - Toda query administrativa filtra por `tenant_id` derivado do path validado — nunca por
   parâmetro de query opcional.
 - IDs de recursos (calendar_id, offering_id, appointment_id) recebidos em payloads/paths devem
-  ser validados como pertencentes ao tenant do path antes do uso; recurso de outro tenant →
-  `404` (tratado como inexistente naquele escopo).
+  ser validados como pertencentes ao tenant do path antes do uso; em rotas administrativas,
+  recurso de outro tenant → `403`. Rotas públicas continuam ocultando recursos fora do escopo
+  com `404`.
 - Customers são globais: endpoints administrativos de customer expõem apenas customers com
   appointments no tenant, e apenas campos globais mínimos (nome, telefone, e-mail).
 - Cache Redis de leituras públicas é particionado por tenant/calendário na chave.
@@ -174,7 +175,7 @@ Integração (Testcontainers + Keycloak):
 - Bootstrap: primeiro request autenticado provisiona `users`; `POST /v1/tenants` cria tenant +
   membership owner.
 - Último owner não pode ser removido/rebaixado (409 `last_owner`).
-- Recurso de outro tenant referenciado por ID no payload → 404.
+- Recurso de outro tenant referenciado por ID em rota administrativa → 403.
 
 Unit:
 
