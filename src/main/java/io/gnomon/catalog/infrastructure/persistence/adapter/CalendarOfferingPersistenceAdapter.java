@@ -5,6 +5,7 @@ import io.gnomon.catalog.domain.exception.CatalogException;
 import io.gnomon.catalog.infrastructure.persistence.entity.CalendarOfferingJpaEntity;
 import io.gnomon.catalog.infrastructure.persistence.repository.SpringDataCalendarOfferingRepository;
 import java.time.Clock;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,11 @@ class CalendarOfferingPersistenceAdapter implements CalendarOfferingRepository {
       }
       throw exception;
     }
+  }
+
+  @Override
+  public List<UUID> findCalendarIdsByTenantIdAndOfferingId(UUID tenantId, UUID offeringId) {
+    return repository.findCalendarIdsByTenantIdAndOfferingId(tenantId, offeringId);
   }
 
   private static boolean isKnownAssignmentConstraint(Throwable exception) {

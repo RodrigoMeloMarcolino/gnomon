@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import io.gnomon.availability.application.port.out.AvailabilityRuleRepository;
 import io.gnomon.availability.application.port.out.OccupiedSlotPort;
 import io.gnomon.availability.application.port.out.OfferingContext;
+import io.gnomon.availability.application.port.out.PublicAvailabilityCachePort;
 import io.gnomon.availability.application.port.out.PublicAvailabilityCatalogPort;
 import io.gnomon.availability.application.service.AvailableSlotsService;
 import io.gnomon.availability.domain.model.AvailabilityRule;
@@ -39,13 +40,14 @@ class AvailableSlotsServiceTest {
   @Mock private PublicAvailabilityCatalogPort catalog;
   @Mock private AvailabilityRuleRepository rules;
   @Mock private OccupiedSlotPort occupiedSlots;
+  @Mock private PublicAvailabilityCachePort cache;
   @Mock private AvailabilityCalculator calculator;
 
   @Test
   void list_whenOfferingIsSchedulable_shouldCalculateUsingLocalDayAndInjectedClock() {
     var service =
         new AvailableSlotsService(
-            catalog, rules, occupiedSlots, calculator, Clock.fixed(NOW, ZoneOffset.UTC));
+            catalog, rules, occupiedSlots, cache, calculator, Clock.fixed(NOW, ZoneOffset.UTC));
     var context = new OfferingContext(TENANT_ID, CALENDAR_ID, ZONE, 30);
     var rule =
         new AvailabilityRule(
@@ -65,6 +67,15 @@ class AvailableSlotsServiceTest {
 
     when(catalog.requireSchedulableOffering("barbearia-solar", CALENDAR_ID, OFFERING_ID))
         .thenReturn(context);
+    when(cache.availableSlots(
+            org.mockito.ArgumentMatchers.eq(TENANT_ID),
+            org.mockito.ArgumentMatchers.eq(CALENDAR_ID),
+            org.mockito.ArgumentMatchers.eq(OFFERING_ID),
+            org.mockito.ArgumentMatchers.eq(DATE),
+            org.mockito.ArgumentMatchers.any()))
+        .thenAnswer(
+            invocation ->
+                invocation.<java.util.function.Supplier<List<Instant>>>getArgument(4).get());
     when(rules.findActiveByTenantIdAndCalendarIdAndWeekday(
             TENANT_ID, CALENDAR_ID, DayOfWeek.THURSDAY))
         .thenReturn(List.of(rule));

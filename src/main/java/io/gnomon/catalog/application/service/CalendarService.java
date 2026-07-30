@@ -5,8 +5,10 @@ import io.gnomon.catalog.application.port.in.UpdateCalendarCommand;
 import io.gnomon.catalog.application.port.in.WritableCalendar;
 import io.gnomon.catalog.application.port.in.result.CalendarResult;
 import io.gnomon.catalog.application.port.out.CalendarRepository;
+import io.gnomon.catalog.application.port.out.CatalogAvailabilityCachePort;
 import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
 import io.gnomon.catalog.application.port.out.CollaboratorRepository;
+import io.gnomon.catalog.application.port.out.PublicCatalogCachePort;
 import io.gnomon.catalog.domain.exception.CatalogException;
 import io.gnomon.catalog.domain.model.Calendar;
 import io.gnomon.catalog.domain.model.Collaborator;
@@ -25,24 +27,41 @@ public class CalendarService implements CalendarUseCase {
   private final CollaboratorRepository collaborators;
   private final CatalogTenantAccessPort tenantAccess;
   private final Clock clock;
+  private final PublicCatalogCachePort cache;
+  private final CatalogAvailabilityCachePort availabilityCache;
+
+  public CalendarService(
+      CalendarRepository calendars,
+      CollaboratorRepository collaborators,
+      CatalogTenantAccessPort tenantAccess,
+      Clock clock,
+      PublicCatalogCachePort cache) {
+    this(calendars, collaborators, tenantAccess, clock, cache, (tenantId, calendarId) -> {});
+  }
 
   @Autowired
   public CalendarService(
       CalendarRepository calendars,
       CollaboratorRepository collaborators,
-      CatalogTenantAccessPort tenantAccess) {
-    this(calendars, collaborators, tenantAccess, Clock.systemUTC());
+      CatalogTenantAccessPort tenantAccess,
+      PublicCatalogCachePort cache,
+      CatalogAvailabilityCachePort availabilityCache) {
+    this(calendars, collaborators, tenantAccess, Clock.systemUTC(), cache, availabilityCache);
   }
 
   public CalendarService(
       CalendarRepository calendars,
       CollaboratorRepository collaborators,
       CatalogTenantAccessPort tenantAccess,
-      Clock clock) {
+      Clock clock,
+      PublicCatalogCachePort cache,
+      CatalogAvailabilityCachePort availabilityCache) {
     this.calendars = calendars;
     this.collaborators = collaborators;
     this.tenantAccess = tenantAccess;
     this.clock = clock;
+    this.cache = cache;
+    this.availabilityCache = availabilityCache;
   }
 
   @Override
@@ -60,7 +79,10 @@ public class CalendarService implements CalendarUseCase {
     Calendar calendar = requireInTenant(access.tenantId(), command.calendarId());
     requireOwnCalendar(access.actorRole(), command.actorUserId(), calendar);
     calendar.update(command.name(), command.timezone(), command.active(), clock.instant());
-    return CalendarResult.from(calendars.save(calendar));
+    CalendarResult result = CalendarResult.from(calendars.save(calendar));
+    cache.invalidateAfterCommit(access.tenantId());
+    availabilityCache.invalidateCalendarAfterCommit(access.tenantId(), calendar.id());
+    return result;
   }
 
   @Override
@@ -71,6 +93,8 @@ public class CalendarService implements CalendarUseCase {
     requireOwnCalendar(access.actorRole(), actorUserId, calendar);
     calendar.deactivate(clock.instant());
     calendars.save(calendar);
+    cache.invalidateAfterCommit(access.tenantId());
+    availabilityCache.invalidateCalendarAfterCommit(access.tenantId(), calendar.id());
   }
 
   @Override

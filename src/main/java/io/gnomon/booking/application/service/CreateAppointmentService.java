@@ -11,6 +11,7 @@ import io.gnomon.booking.application.port.in.CustomerSummary;
 import io.gnomon.booking.application.port.in.OfferingSummary;
 import io.gnomon.booking.application.port.out.AppointmentFingerprint;
 import io.gnomon.booking.application.port.out.AppointmentRepository;
+import io.gnomon.booking.application.port.out.BookingAvailabilityCachePort;
 import io.gnomon.booking.application.port.out.BookingAvailabilityPort;
 import io.gnomon.booking.application.port.out.BookingCatalogPort;
 import io.gnomon.booking.application.port.out.BookingContext;
@@ -52,6 +53,7 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
 
   private final BookingCatalogPort catalog;
   private final BookingAvailabilityPort availability;
+  private final BookingAvailabilityCachePort availabilityCache;
   private final CustomerRepository customers;
   private final AppointmentRepository appointments;
   private final PhoneCanonicalizer phoneCanonicalizer;
@@ -59,10 +61,32 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
   private final SlotGenerator slotGenerator;
   private final Clock clock;
 
+  public CreateAppointmentService(
+      BookingCatalogPort catalog,
+      BookingAvailabilityPort availability,
+      CustomerRepository customers,
+      AppointmentRepository appointments,
+      PhoneCanonicalizer phoneCanonicalizer,
+      AppointmentFingerprint appointmentFingerprint,
+      SlotGenerator slotGenerator,
+      Clock clock) {
+    this(
+        catalog,
+        availability,
+        (tenantId, calendarId, offeringId, startAt, calendarZone) -> {},
+        customers,
+        appointments,
+        phoneCanonicalizer,
+        appointmentFingerprint,
+        slotGenerator,
+        clock);
+  }
+
   @Autowired
   public CreateAppointmentService(
       BookingCatalogPort catalog,
       BookingAvailabilityPort availability,
+      BookingAvailabilityCachePort availabilityCache,
       CustomerRepository customers,
       AppointmentRepository appointments,
       PhoneCanonicalizer phoneCanonicalizer,
@@ -71,6 +95,7 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
     this(
         catalog,
         availability,
+        availabilityCache,
         customers,
         appointments,
         phoneCanonicalizer,
@@ -82,6 +107,7 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
   public CreateAppointmentService(
       BookingCatalogPort catalog,
       BookingAvailabilityPort availability,
+      BookingAvailabilityCachePort availabilityCache,
       CustomerRepository customers,
       AppointmentRepository appointments,
       PhoneCanonicalizer phoneCanonicalizer,
@@ -90,6 +116,7 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
       Clock clock) {
     this.catalog = catalog;
     this.availability = availability;
+    this.availabilityCache = availabilityCache;
     this.customers = customers;
     this.appointments = appointments;
     this.phoneCanonicalizer = phoneCanonicalizer;
@@ -188,6 +215,12 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
           context.calendarId(),
           slotGenerator.generate(command.startAt(), context.durationMinutes()));
       CreationResult result = new CreationResult(toResult(appointment, context, customer), false);
+      availabilityCache.invalidateBookingDayAfterCommit(
+          context.tenantId(),
+          context.calendarId(),
+          context.offeringId(),
+          appointment.startAt(),
+          context.zoneId());
       logAfterCommit(
           "appointment.booking_succeeded",
           "appointment booking succeeded",

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import io.gnomon.catalog.application.port.out.CalendarRepository;
 import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
 import io.gnomon.catalog.application.port.out.CollaboratorRepository;
+import io.gnomon.catalog.application.port.out.PublicCatalogCachePort;
 import io.gnomon.catalog.application.port.out.TenantAccess;
 import io.gnomon.catalog.application.service.CalendarService;
 import io.gnomon.catalog.domain.exception.CatalogException;
@@ -28,6 +29,7 @@ class CalendarServiceTest {
   @Mock private CalendarRepository calendars;
   @Mock private CollaboratorRepository collaborators;
   @Mock private CatalogTenantAccessPort tenantAccess;
+  @Mock private PublicCatalogCachePort cache;
 
   @Test
   void get_whenStaffTargetsAnotherCalendar_shouldReject() {
@@ -46,7 +48,7 @@ class CalendarServiceTest {
         .thenReturn(Optional.of(collaborator));
     var service =
         new CalendarService(
-            calendars, collaborators, tenantAccess, Clock.fixed(now, ZoneOffset.UTC));
+            calendars, collaborators, tenantAccess, Clock.fixed(now, ZoneOffset.UTC), cache);
 
     assertThatThrownBy(() -> service.get(actor, "tenant", calendar.id()))
         .isInstanceOf(CatalogException.class)
@@ -67,7 +69,7 @@ class CalendarServiceTest {
     when(calendars.findByTenantIdAndId(tenant, calendar.id())).thenReturn(Optional.of(calendar));
     var service =
         new CalendarService(
-            calendars, collaborators, tenantAccess, Clock.fixed(now, ZoneOffset.UTC));
+            calendars, collaborators, tenantAccess, Clock.fixed(now, ZoneOffset.UTC), cache);
 
     var result = service.requireWritableCalendar(actor, "tenant", calendar.id());
 

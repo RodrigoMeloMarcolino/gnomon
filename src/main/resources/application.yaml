@@ -11,6 +11,9 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  data:
+    redis:
+      timeout: ${REDIS_TIMEOUT:1s}
   security:
     oauth2:
       resourceserver:
@@ -23,6 +26,10 @@ gnomon:
     default-phone-region: ${DEFAULT_PHONE_REGION:BR}
   cache:
     enabled: ${CACHE_ENABLED:true}
+    catalog:
+      ttl: ${CATALOG_CACHE_TTL:10m}
+    availability:
+      ttl: ${AVAILABILITY_CACHE_TTL:60s}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:}
   security:

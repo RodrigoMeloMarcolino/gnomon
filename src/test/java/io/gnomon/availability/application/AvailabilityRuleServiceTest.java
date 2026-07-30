@@ -12,6 +12,7 @@ import io.gnomon.availability.application.port.in.result.AvailabilityRuleResult;
 import io.gnomon.availability.application.port.out.AvailabilityCalendarAccessPort;
 import io.gnomon.availability.application.port.out.AvailabilityRuleRepository;
 import io.gnomon.availability.application.port.out.CalendarContext;
+import io.gnomon.availability.application.port.out.PublicAvailabilityCachePort;
 import io.gnomon.availability.application.service.AvailabilityRuleService;
 import io.gnomon.availability.domain.exception.AvailabilityException;
 import io.gnomon.availability.domain.model.AvailabilityRule;
@@ -40,12 +41,14 @@ class AvailabilityRuleServiceTest {
 
   @Mock private AvailabilityRuleRepository rules;
   @Mock private AvailabilityCalendarAccessPort calendarAccess;
+  @Mock private PublicAvailabilityCachePort cache;
 
   private AvailabilityRuleService service;
 
   @BeforeEach
   void setUp() {
-    service = new AvailabilityRuleService(rules, calendarAccess, Clock.fixed(NOW, ZoneOffset.UTC));
+    service =
+        new AvailabilityRuleService(rules, calendarAccess, cache, Clock.fixed(NOW, ZoneOffset.UTC));
     when(calendarAccess.requireWritableCalendar(ACTOR_ID, "tenant", CALENDAR_ID))
         .thenReturn(new CalendarContext(TENANT_ID, CALENDAR_ID, ZoneId.of("America/Fortaleza")));
   }
@@ -62,6 +65,7 @@ class AvailabilityRuleServiceTest {
     assertThat(result.weekday()).isEqualTo(1);
     assertThat(result.active()).isTrue();
     assertThat(result.createdAt()).isEqualTo(NOW);
+    verify(cache).invalidateCalendarAfterCommit(TENANT_ID, CALENDAR_ID);
   }
 
   @Test
@@ -112,6 +116,7 @@ class AvailabilityRuleServiceTest {
 
     assertThat(rule.active()).isFalse();
     verify(rules).save(rule);
+    verify(cache).invalidateCalendarAfterCommit(TENANT_ID, CALENDAR_ID);
   }
 
   @Test

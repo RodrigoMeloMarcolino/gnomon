@@ -14,6 +14,7 @@ import io.gnomon.catalog.application.port.out.CalendarOfferingRepository;
 import io.gnomon.catalog.application.port.out.CalendarRepository;
 import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
 import io.gnomon.catalog.application.port.out.OfferingRepository;
+import io.gnomon.catalog.application.port.out.PublicCatalogCachePort;
 import io.gnomon.catalog.application.port.out.TenantAccess;
 import io.gnomon.catalog.application.service.OfferingService;
 import io.gnomon.catalog.domain.exception.CatalogException;
@@ -46,6 +47,7 @@ class OfferingServiceTest {
   @Mock private CalendarRepository calendars;
   @Mock private OfferingRepository offerings;
   @Mock private CalendarOfferingRepository assignments;
+  @Mock private PublicCatalogCachePort cache;
 
   private OfferingService service;
 
@@ -53,7 +55,7 @@ class OfferingServiceTest {
   void setUp() {
     service =
         new OfferingService(
-            access, calendars, offerings, assignments, Clock.fixed(NOW, ZoneOffset.UTC));
+            access, calendars, offerings, assignments, Clock.fixed(NOW, ZoneOffset.UTC), cache);
   }
 
   @Test
@@ -68,6 +70,7 @@ class OfferingServiceTest {
     assertThat(result.tenantId()).isEqualTo(TENANT_ID);
     assertThat(result.active()).isTrue();
     verify(offerings).save(any(Offering.class));
+    verify(cache).invalidateAfterCommit(TENANT_ID);
   }
 
   @Test

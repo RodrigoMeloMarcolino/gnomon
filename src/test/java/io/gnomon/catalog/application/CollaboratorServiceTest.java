@@ -11,6 +11,7 @@ import io.gnomon.catalog.application.port.in.result.CollaboratorResult;
 import io.gnomon.catalog.application.port.out.CalendarRepository;
 import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
 import io.gnomon.catalog.application.port.out.CollaboratorRepository;
+import io.gnomon.catalog.application.port.out.PublicCatalogCachePort;
 import io.gnomon.catalog.application.port.out.TenantAccess;
 import io.gnomon.catalog.application.service.CollaboratorService;
 import io.gnomon.catalog.domain.model.Calendar;
@@ -34,6 +35,7 @@ class CollaboratorServiceTest {
   @Mock private CollaboratorRepository collaborators;
   @Mock private CalendarRepository calendars;
   @Mock private CatalogTenantAccessPort tenantAccess;
+  @Mock private PublicCatalogCachePort cache;
 
   private CollaboratorService service;
 
@@ -41,7 +43,7 @@ class CollaboratorServiceTest {
   void setUp() {
     service =
         new CollaboratorService(
-            collaborators, calendars, tenantAccess, Clock.fixed(NOW, ZoneOffset.UTC));
+            collaborators, calendars, tenantAccess, Clock.fixed(NOW, ZoneOffset.UTC), cache);
   }
 
   @Test

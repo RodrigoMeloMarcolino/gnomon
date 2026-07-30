@@ -13,6 +13,7 @@ import io.gnomon.tenancy.application.port.in.UpdateTenantUseCase;
 import io.gnomon.tenancy.application.port.in.result.MembershipResult;
 import io.gnomon.tenancy.application.port.in.result.TenantResult;
 import io.gnomon.tenancy.application.port.out.MembershipRepository;
+import io.gnomon.tenancy.application.port.out.TenantPublicCatalogCachePort;
 import io.gnomon.tenancy.application.port.out.TenantRepository;
 import io.gnomon.tenancy.application.port.out.UserRepository;
 import io.gnomon.tenancy.domain.exception.TenancyException;
@@ -45,11 +46,20 @@ public class TenancyService
   private final MembershipRepository memberships;
   private final UserRepository users;
   private final Clock clock;
+  private final TenantPublicCatalogCachePort publicCatalogCache;
 
   @Autowired
   public TenancyService(
+      TenantRepository tenants,
+      MembershipRepository memberships,
+      UserRepository users,
+      TenantPublicCatalogCachePort publicCatalogCache) {
+    this(tenants, memberships, users, Clock.systemUTC(), publicCatalogCache);
+  }
+
+  public TenancyService(
       TenantRepository tenants, MembershipRepository memberships, UserRepository users) {
-    this(tenants, memberships, users, Clock.systemUTC());
+    this(tenants, memberships, users, Clock.systemUTC(), tenantId -> {});
   }
 
   public TenancyService(
@@ -57,10 +67,20 @@ public class TenancyService
       MembershipRepository memberships,
       UserRepository users,
       Clock clock) {
+    this(tenants, memberships, users, clock, tenantId -> {});
+  }
+
+  public TenancyService(
+      TenantRepository tenants,
+      MembershipRepository memberships,
+      UserRepository users,
+      Clock clock,
+      TenantPublicCatalogCachePort publicCatalogCache) {
     this.tenants = tenants;
     this.memberships = memberships;
     this.users = users;
     this.clock = clock;
+    this.publicCatalogCache = publicCatalogCache;
   }
 
   @Override
@@ -121,7 +141,9 @@ public class TenancyService
         command.currencyCode(),
         Tenant.TenantStatus.from(command.status()),
         clock.instant());
-    return TenantResult.from(tenants.save(tenant), membership);
+    TenantResult result = TenantResult.from(tenants.save(tenant), membership);
+    publicCatalogCache.invalidateAfterCommit(tenant.id());
+    return result;
   }
 
   @Override
