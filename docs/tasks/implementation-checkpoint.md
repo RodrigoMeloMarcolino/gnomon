@@ -142,6 +142,22 @@ Continuar a fase 05, com o core transacional estável:
 5. integrar somente depois dos gates isolados e executar `spotless:check`, testes, ArchUnit e
    integração conjunta antes de fechar qualquer uma das fases 05–07.
 
+## Workstream 07.5 — portfólio (contrato documental congelado)
+
+O portfólio é paralelo às fases 05–08 e bloqueia a fase 09. A etapa de 2026-07-29 foi somente
+documental: não existem classes, migrations, dependências ou configuração de infraestrutura.
+Os documentos normativos são `docs/features/tenant-portfolio/`, task 07.5 e ADRs 0020–0021.
+
+- Reservar `V6__tenant_portfolio.sql`; a futura migration da fase 08 é
+  `V7__appointment_action_tokens.sql`.
+- Criar o futuro módulo `io.gnomon.portfolio` na direção `api → application → domain ←
+  infrastructure`; o port de tenancy é a fronteira com identidade e AWS SDK fica somente no
+  adapter S3-compatible.
+- Administração é owner/admin; staff é negado. Bucket e master são privados; backend decide toda
+  leitura pública de `display`/`thumbnail`.
+- Seguir as doze entregas do plano, sem pular os testes PostgreSQL, Garage, processamento adverso,
+  reconciliação e smoke completo.
+
 A fase 08 pode começar quando houver vaga, mas cancelamento/remarcação continuam dependentes dos
 tokens da migration aditiva própria e das regras transacionais descritas no checkpoint abaixo.
 
@@ -198,14 +214,14 @@ assinaturas; apenas adicionou implementações, wiring e testes conjuntos.
 
 - Onda 5: Redis fail-open, logging JSON/correlação/OTLP fail-open, painel admin/transições.
 - Onda 6 começa quando surgir vaga:
-  migration `V6__appointment_action_tokens.sql`, tokens, cancelamento/remarcação, hardening
+  migration `V7__appointment_action_tokens.sql`, tokens, cancelamento/remarcação, hardening
   concorrente e regressões públicas.
 - Cancelamento consome tokens após commit.
 - Remarcação bem-sucedida rotaciona ambos; conflito preserva horário, slots e tokens.
 
 ### Onda 7 — gates finais
 
-- GitHub Actions, JaCoCo e ArchUnit.
+- GitHub Actions, JaCoCo e ArchUnit, após 05 + 06 + 07 + 07.5 + 08.
 - Schema drift, constraints e `EXPLAIN`.
 - Smoke E2E:
   tenant → colaborador → offering → atribuição → disponibilidade → booking → conflito →

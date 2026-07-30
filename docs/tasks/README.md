@@ -20,6 +20,7 @@ verdes). Status: `todo` | `doing` | `done`.
 | [06](06-observabilidade.md) | Observabilidade (logs JSON + OTLP) | todo | spec structured-logging, ADR 0015 |
 | [07](07-painel-admin.md) | Painel administrativo (appointments, customers) | todo | spec multi-tenancy, PRD 6.4 |
 | [08](08-cancelamento-remarcacao.md) | Cancelamento e remarcação via token | todo | ADR 0008, livedoc 13–14 |
+| [07.5](07.5-tenant-portfolio.md) | Portfólio multi-tenant (workstream paralelo) | todo | ADRs 0020–0021, feature tenant-portfolio |
 | [09](09-gates-ci.md) | Gates de CI e hardening | todo | docs/ci.md, ADR 0002 |
 
 ## Ordem e dependências
@@ -29,15 +30,18 @@ verdes). Status: `todo` | `doing` | `done`.
                                               ├→ 05 cache
                                       ├→ 06 observabilidade
                                       ├→ 07 admin
+                                      ├→ 07.5 portfólio
                                       └→ 08 cancel/remarcação
-05 + 06 + 07 + 08 → 09
+05 + 06 + 07 + 07.5 + 08 → 09
 ```
 
 - 00.5 (hardening docs-only) é bloqueante da 01: emenda specs/ADRs/tasks com as lições do
   Moira antes de qualquer código de negócio.
 - 00.6 é o checkpoint de troca de agente para Codex; não altera decisões de produto nem
   arquitetura.
-- 05, 06, 07 e 08 são workstreams paralelizáveis após o core da fase 04 estabilizar.
+- 05, 06, 07, 07.5 e 08 são workstreams paralelizáveis após o core da fase 04 estabilizar.
+- 07.5 é bloqueante da fase 09, mas não bloqueia os demais workstreams; a etapa atual é somente
+  documental e reserva a próxima migration V6.
 - 06 pode ter fundação antecipada, mas o contrato completo fecha na própria fase.
 - 09 integra e valida os quatro workstreams pós-core.
 

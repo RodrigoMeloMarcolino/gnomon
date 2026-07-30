@@ -1,7 +1,7 @@
 # PRD — Gnomon
 
-Versão: `0.2.1` (emendas da task 00.5 + decisão do frontend, ADR 0018 + nomenclatura Sun Catcher/Moonlight)
-Data: 2026-07-23
+Versão: `0.2.2` (inclui workstream 07.5 de portfólio, ADRs 0020–0021)
+Data: 2026-07-29
 Status: aprovado para início da implementação
 
 ---
@@ -186,6 +186,19 @@ Regras estruturais:
 - **RF-21** Remarcação pública via token: mesma estratégia transacional da criação; conflito
   nos novos slots mantém o appointment anterior intacto.
 
+### 6.6 Portfólio multi-tenant
+
+- **RF-22** Owner/admin gerencia imagens tenant-owned; staff não possui acesso. Uma imagem é
+  pública apenas quando está `AVAILABLE` e possui `published_at`; publicação exige `alt_text` e
+  cada tenant possui no máximo um destaque publicado.
+- **RF-23** Upload usa PUT pré-assinado curto para bucket privado, com reserva de quota e
+  idempotência. O backend confirma por HEAD e agenda processamento assíncrono; source e master
+  nunca são públicos.
+- **RF-24** O worker sanitiza JPEG/PNG/WebP estáticos e gera master privado e derivadas WebP
+  display/thumbnail. Falhas são recuperáveis e remoção é assíncrona/idempotente.
+- **RF-25** O catálogo público lista somente imagens publicadas e entrega apenas display ou
+  thumbnail por redirect temporário autorizado.
+
 ---
 
 ## 7. Requisitos não funcionais
@@ -206,6 +219,8 @@ Regras estruturais:
   `prod`); nada de secrets commitados.
 - **RNF-09** API versionada sob `/v1` com envelope de erro estável.
 - **RNF-10** Stack alvo: Java 21, Spring Boot 4, PostgreSQL 16+, Keycloak 26+, Redis 7+.
+- **RNF-11** Object storage de portfólio permanece privado e S3-compatible; autorização pública
+  é sempre decidida pela API, sem ACL pública, e processamento não roda no processo web.
 
 ---
 
@@ -221,6 +236,7 @@ Regras estruturais:
 - Cache Redis das leituras públicas.
 - Observabilidade (logs estruturados + OTLP).
 - CI com lint, unit tests, integration tests (Testcontainers) e approval gate.
+- Portfólio multi-tenant com processamento assíncrono, quotas e entrega pública mediada.
 
 ### Fora (evoluções futuras)
 
@@ -251,6 +267,8 @@ Regras estruturais:
 | GET | `/v1/public/tenants/{slug}/offerings` | Catálogo de serviços do tenant |
 | GET | `/v1/public/tenants/{slug}/available-slots?calendar_id=&offering_id=&date=` | Horários disponíveis (UTC) |
 | POST | `/v1/public/tenants/{slug}/appointments` | Cria appointment (exige `Idempotency-Key`) |
+| GET | `/v1/public/tenants/{slug}/portfolio` | Portfólio publicado (ETag) |
+| GET | `/v1/public/tenants/{slug}/portfolio/images/{imageId}/{variant}` | Redirect curto para derivada |
 
 ### Administrativos (Bearer JWT do Keycloak + membership)
 
@@ -268,6 +286,7 @@ Regras estruturais:
 | GET | `/v1/tenants/{tenantSlug}/appointments` | owner/admin; staff: próprio calendário |
 | POST | `/v1/tenants/{tenantSlug}/appointments/{id}/cancel|complete|no-show` | owner/admin/staff (próprio) |
 | GET | `/v1/tenants/{tenantSlug}/customers[...]` | owner/admin |
+| POST/GET/PATCH/DELETE | `/v1/tenants/{tenantSlug}/portfolio/images[...]` | owner/admin |
 
 Erros seguem o envelope `{"error": {"code", "message", "details"}}`.
 
@@ -276,7 +295,8 @@ Erros seguem o envelope `{"error": {"code", "message", "details"}}`.
 ## 10. Modelo de dados (resumo)
 
 Tabelas: `users`, `tenants`, `tenant_memberships`, `collaborators`, `calendars`, `offerings`,
-`calendar_offerings`, `availability_rules`, `customers`, `appointments`, `appointment_slots`.
+`calendar_offerings`, `availability_rules`, `customers`, `appointments`, `appointment_slots`,
+`portfolio_images`, `portfolio_processing_jobs`, `tenant_portfolio_usage`.
 
 Pontos críticos:
 
@@ -298,6 +318,9 @@ Pontos críticos:
   `status IN ('scheduled','cancelled','completed','no_show')`,
   `UNIQUE(tenant_id, idempotency_key)`, hashes de tokens futuros.
 - `appointment_slots`: `UNIQUE(calendar_id, slot_start_at)` — defesa final contra double booking.
+- Portfólio: todas as tabelas tenant-owned carregam `tenant_id`; keys, nunca URLs, são
+  persistidas; jobs têm lease/backoff; uso tem contadores bloqueáveis; há índice parcial para o
+  único destaque publicado por tenant.
 
 Extensões PostgreSQL: `pgcrypto`, `citext`.
 
@@ -323,7 +346,14 @@ Extensões PostgreSQL: `pgcrypto`, `citext`.
    appointment e slots, na mesma transação.
 5. Conflito de constraint → rollback + `409`; sucesso → confirmação com dados do appointment.
 
-### 11.3 Concorrência
+### 11.3 Portfólio
+
+1. Owner/admin reserva quota e recebe PUT pré-assinado.
+2. Frontend envia diretamente ao bucket privado e confirma; API faz HEAD e cria job.
+3. Worker sanitiza, cria derivadas e promove a imagem somente após sucesso completo.
+4. Owner/admin publica manualmente; rota pública lista a imagem e redireciona apenas derivadas.
+
+### 11.4 Concorrência
 
 Dois clientes podem ver o mesmo horário disponível; o primeiro commit vence, o segundo recebe
 `409` e escolhe outro horário. Não há reserva temporária no MVP.
@@ -387,5 +417,6 @@ Ver `docs/tasks/README.md` para o detalhamento. Fases:
 5. Cache Redis
 6. Observabilidade
 7. Painel administrativo
+7.5. Portfólio multi-tenant (paralelo às fases 05–08; bloqueante da fase 09)
 8. Cancelamento e remarcação via token
 9. Gates de CI e hardening
