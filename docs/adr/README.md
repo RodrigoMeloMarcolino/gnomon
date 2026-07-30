@@ -24,6 +24,8 @@ quando herdada.
 | [0017](0017-disciplina-schema-ddl.md) | Disciplina de schema: índices de FK, `updated_at` real, status tipados, zero colunas mortas | Accepted | Nova (dívida Moira, task 00.5) |
 | [0018](0018-frontend-umbra-repo-stack.md) | Frontend em repo separado (`umbra`) e stack web | Accepted | Nova |
 | [0019](0019-taxonomia-ports-e-limites-modulares.md) | Taxonomia de ports e limites modulares verificáveis | Accepted | Nova |
+| [0020](0020-storage-s3-compativel-privado-upload-direto.md) | Storage S3-compatible privado, upload direto e entrega pública mediada | Accepted | Nova |
+| [0021](0021-portfolio-lifecycle-fila-postgresql-worker-reconciliacao.md) | Lifecycle do portfólio, fila PostgreSQL, worker e reconciliação | Accepted | Nova |
 
 ## Convenção
 
