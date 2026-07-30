@@ -21,6 +21,8 @@ spring:
 gnomon:
   booking:
     default-phone-region: ${DEFAULT_PHONE_REGION:BR}
+  cache:
+    enabled: ${CACHE_ENABLED:true}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:}
   security:

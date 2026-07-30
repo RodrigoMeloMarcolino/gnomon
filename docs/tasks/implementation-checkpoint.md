@@ -1,6 +1,6 @@
 # Checkpoint de implementação paralela — fases 01–09 (pós-onda 4)
 
-Atualizado: 2026-07-28
+Atualizado: 2026-07-29
 
 Este arquivo é o handoff operacional para retomar a construção do backend em outra sessão sem
 reconstituir o contexto da conversa. A fonte normativa continua sendo o PRD, os ADRs, as specs e
@@ -111,16 +111,25 @@ Os itens abaixo foram concluídos e são preservados apenas para rastreabilidade
    `/tmp/gnomon-w2-offerings` estavam limpas após os commits. Não há mudança pendente conhecida
    nelas.
 
-## Checkpoint 04.5 — hardening arquitetural
+## Checkpoint 04.5 — hardening arquitetural (concluído)
 
-Antes das ondas 05–07, a fase 04.5 está em execução. Ela preserva integralmente a implementação
-local ainda não commitada de booking e não altera endpoints, JSON, schema ou migrations. O foco é
-a taxonomia de ports, customers como módulo próprio, principal em `shared.security`, contratos de
-integração explícitos e gates ArchUnit reforçados (ADR 0019).
+Antes das ondas 05–07, a fase 04.5 consolidou a taxonomia de ports, customers como módulo
+próprio, principal em `shared.security`, contratos de integração explícitos e gates ArchUnit
+reforçados (ADR 0019), sem alterar endpoints, JSON ou migrations. Em 2026-07-29, os gates
+Spotless, unitário (213), ArchUnit isolado (5), integração (33) e all-tests (246) passaram com
+Java 21 em contêiner.
 
 ## Próxima ação exata
 
-Concluir a 04.5 e somente então iniciar a onda 5, com o core transacional estável:
+Continuar a fase 05, com o core transacional estável:
+
+1. [x] escrever testes unitários para `RedisCacheStore` (hit, miss, TTL/versionamento e falha
+   `DataAccessException`); os seis testes isolados passaram com Java 21;
+2. implementar cache-aside de perfil, calendários e offerings no módulo `catalog`, com chaves e
+   TTL configuráveis pertencentes ao módulo;
+3. só então cachear `available-slots`, usando a data local do calendário para chaves e versões;
+4. registrar invalidações após commit das mutações e do booking, cobrir Redis real em
+   Testcontainers e só fechar a fase após os gates completos.
 
 1. reler `docs/tasks/05-cache-redis.md`, `06-observabilidade.md` e
    `07-painel-admin.md`, além das specs/ADRs apontadas por elas;

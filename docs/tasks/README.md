@@ -15,8 +15,8 @@ verdes). Status: `todo` | `doing` | `done`.
 | [02](02-catalogo.md) | Catálogo: colaboradores, calendários, offerings | done | ADRs 0005–0007, 0012, 0013 |
 | [03](03-disponibilidade.md) | Availability rules + available-slots | done | spec booking, ADRs 0006, 0010, 0016 |
 | [04](04-guest-booking.md) | Guest booking transacional | done | spec booking, ADRs 0008–0012, 0014, 0016, 0017 |
-| [04.5](04.5-hardening-arquitetural.md) | Hardening arquitetural pré-fase 05 | doing | ADRs 0002, 0019 |
-| [05](05-cache-redis.md) | Cache Redis das leituras públicas | todo | ADR 0014, RNF-07 |
+| [04.5](04.5-hardening-arquitetural.md) | Hardening arquitetural pré-fase 05 | done | ADRs 0002, 0019 |
+| [05](05-cache-redis.md) | Cache Redis das leituras públicas | doing | ADR 0014, RNF-07 |
 | [06](06-observabilidade.md) | Observabilidade (logs JSON + OTLP) | todo | spec structured-logging, ADR 0015 |
 | [07](07-painel-admin.md) | Painel administrativo (appointments, customers) | todo | spec multi-tenancy, PRD 6.4 |
 | [08](08-cancelamento-remarcacao.md) | Cancelamento e remarcação via token | todo | ADR 0008, livedoc 13–14 |
