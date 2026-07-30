@@ -7,8 +7,10 @@ import io.gnomon.catalog.application.port.in.UpdateCollaboratorCommand;
 import io.gnomon.catalog.application.port.in.result.CalendarResult;
 import io.gnomon.catalog.application.port.in.result.CollaboratorResult;
 import io.gnomon.catalog.application.port.out.CalendarRepository;
+import io.gnomon.catalog.application.port.out.CatalogAvailabilityCachePort;
 import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
 import io.gnomon.catalog.application.port.out.CollaboratorRepository;
+import io.gnomon.catalog.application.port.out.PublicCatalogCachePort;
 import io.gnomon.catalog.domain.exception.CatalogException;
 import io.gnomon.catalog.domain.model.Calendar;
 import io.gnomon.catalog.domain.model.Collaborator;
@@ -30,24 +32,41 @@ public class CollaboratorService implements CollaboratorUseCase {
   private final CalendarRepository calendars;
   private final CatalogTenantAccessPort tenantAccess;
   private final Clock clock;
+  private final PublicCatalogCachePort cache;
+  private final CatalogAvailabilityCachePort availabilityCache;
+
+  public CollaboratorService(
+      CollaboratorRepository collaborators,
+      CalendarRepository calendars,
+      CatalogTenantAccessPort tenantAccess,
+      Clock clock,
+      PublicCatalogCachePort cache) {
+    this(collaborators, calendars, tenantAccess, clock, cache, (tenantId, calendarId) -> {});
+  }
 
   @Autowired
   public CollaboratorService(
       CollaboratorRepository collaborators,
       CalendarRepository calendars,
-      CatalogTenantAccessPort tenantAccess) {
-    this(collaborators, calendars, tenantAccess, Clock.systemUTC());
+      CatalogTenantAccessPort tenantAccess,
+      PublicCatalogCachePort cache,
+      CatalogAvailabilityCachePort availabilityCache) {
+    this(collaborators, calendars, tenantAccess, Clock.systemUTC(), cache, availabilityCache);
   }
 
   public CollaboratorService(
       CollaboratorRepository collaborators,
       CalendarRepository calendars,
       CatalogTenantAccessPort tenantAccess,
-      Clock clock) {
+      Clock clock,
+      PublicCatalogCachePort cache,
+      CatalogAvailabilityCachePort availabilityCache) {
     this.collaborators = collaborators;
     this.calendars = calendars;
     this.tenantAccess = tenantAccess;
     this.clock = clock;
+    this.cache = cache;
+    this.availabilityCache = availabilityCache;
   }
 
   @Override
@@ -65,6 +84,8 @@ public class CollaboratorService implements CollaboratorUseCase {
                 collaborator.displayName(),
                 access.defaultTimezone(),
                 now));
+    cache.invalidateAfterCommit(access.tenantId());
+    availabilityCache.invalidateCalendarAfterCommit(access.tenantId(), calendar.id());
     return CollaboratorResult.from(collaborator, CalendarResult.from(calendar));
   }
 
@@ -95,7 +116,9 @@ public class CollaboratorService implements CollaboratorUseCase {
     var access = tenantAccess.requireManager(command.actorUserId(), command.tenantSlug());
     Collaborator collaborator = requireInTenant(access.tenantId(), command.collaboratorId());
     collaborator.rename(command.displayName(), clock.instant());
-    return result(collaborators.save(collaborator));
+    CollaboratorResult result = result(collaborators.save(collaborator));
+    cache.invalidateAfterCommit(access.tenantId());
+    return result;
   }
 
   @Override
@@ -113,6 +136,7 @@ public class CollaboratorService implements CollaboratorUseCase {
     calendar.deactivate(now);
     collaborators.save(collaborator);
     calendars.save(calendar);
+    cache.invalidateAfterCommit(access.tenantId());
   }
 
   @Override
@@ -122,7 +146,9 @@ public class CollaboratorService implements CollaboratorUseCase {
     Collaborator collaborator = requireInTenant(access.tenantId(), command.collaboratorId());
     var link = tenantAccess.linkStaff(access.tenantId(), command.userEmail(), clock.instant());
     collaborator.link(link.userId(), clock.instant());
-    return result(collaborators.save(collaborator));
+    CollaboratorResult result = result(collaborators.save(collaborator));
+    cache.invalidateAfterCommit(access.tenantId());
+    return result;
   }
 
   @Override
@@ -134,7 +160,9 @@ public class CollaboratorService implements CollaboratorUseCase {
     if (previousUserId != null) {
       tenantAccess.unlinkStaff(access.tenantId(), previousUserId);
     }
-    return result(collaborators.save(collaborator));
+    CollaboratorResult result = result(collaborators.save(collaborator));
+    cache.invalidateAfterCommit(access.tenantId());
+    return result;
   }
 
   private CollaboratorResult result(Collaborator collaborator) {

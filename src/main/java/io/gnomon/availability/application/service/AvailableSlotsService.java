@@ -3,6 +3,7 @@ package io.gnomon.availability.application.service;
 import io.gnomon.availability.application.port.in.ListAvailableSlotsUseCase;
 import io.gnomon.availability.application.port.out.AvailabilityRuleRepository;
 import io.gnomon.availability.application.port.out.OccupiedSlotPort;
+import io.gnomon.availability.application.port.out.PublicAvailabilityCachePort;
 import io.gnomon.availability.application.port.out.PublicAvailabilityCatalogPort;
 import io.gnomon.availability.domain.service.AvailabilityCalculator;
 import java.time.Clock;
@@ -21,6 +22,7 @@ public class AvailableSlotsService implements ListAvailableSlotsUseCase {
   private final PublicAvailabilityCatalogPort catalog;
   private final AvailabilityRuleRepository rules;
   private final OccupiedSlotPort occupiedSlots;
+  private final PublicAvailabilityCachePort cache;
   private final AvailabilityCalculator calculator;
   private final Clock clock;
 
@@ -29,19 +31,22 @@ public class AvailableSlotsService implements ListAvailableSlotsUseCase {
       PublicAvailabilityCatalogPort catalog,
       AvailabilityRuleRepository rules,
       OccupiedSlotPort occupiedSlots,
+      PublicAvailabilityCachePort cache,
       AvailabilityCalculator calculator) {
-    this(catalog, rules, occupiedSlots, calculator, Clock.systemUTC());
+    this(catalog, rules, occupiedSlots, cache, calculator, Clock.systemUTC());
   }
 
   public AvailableSlotsService(
       PublicAvailabilityCatalogPort catalog,
       AvailabilityRuleRepository rules,
       OccupiedSlotPort occupiedSlots,
+      PublicAvailabilityCachePort cache,
       AvailabilityCalculator calculator,
       Clock clock) {
     this.catalog = catalog;
     this.rules = rules;
     this.occupiedSlots = occupiedSlots;
+    this.cache = cache;
     this.calculator = calculator;
     this.clock = clock;
   }
@@ -49,6 +54,16 @@ public class AvailableSlotsService implements ListAvailableSlotsUseCase {
   @Override
   public List<Instant> list(String tenantSlug, UUID calendarId, UUID offeringId, LocalDate date) {
     var offering = catalog.requireSchedulableOffering(tenantSlug, calendarId, offeringId);
+    return cache.availableSlots(
+        offering.tenantId(),
+        offering.calendarId(),
+        offeringId,
+        date,
+        () -> calculate(offering, date));
+  }
+
+  private List<Instant> calculate(
+      io.gnomon.availability.application.port.out.OfferingContext offering, LocalDate date) {
     Instant fromInclusive = date.atStartOfDay(offering.zoneId()).toInstant();
     Instant toExclusive = date.plusDays(1).atStartOfDay(offering.zoneId()).toInstant();
     var windows =

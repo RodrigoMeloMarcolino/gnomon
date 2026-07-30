@@ -17,14 +17,17 @@ import io.gnomon.catalog.application.port.in.UpdateOfferingUseCase;
 import io.gnomon.catalog.application.port.in.result.OfferingResult;
 import io.gnomon.catalog.application.port.out.CalendarOfferingRepository;
 import io.gnomon.catalog.application.port.out.CalendarRepository;
+import io.gnomon.catalog.application.port.out.CatalogAvailabilityCachePort;
 import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
 import io.gnomon.catalog.application.port.out.OfferingRepository;
+import io.gnomon.catalog.application.port.out.PublicCatalogCachePort;
 import io.gnomon.catalog.domain.exception.CatalogException;
 import io.gnomon.catalog.domain.model.Calendar;
 import io.gnomon.catalog.domain.model.Offering;
 import java.time.Clock;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,14 +52,28 @@ public class OfferingService
   private final OfferingRepository offerings;
   private final CalendarOfferingRepository assignments;
   private final Clock clock;
+  private final PublicCatalogCachePort cache;
+  private final CatalogAvailabilityCachePort availabilityCache;
+
+  public OfferingService(
+      CatalogTenantAccessPort access,
+      CalendarRepository calendars,
+      OfferingRepository offerings,
+      CalendarOfferingRepository assignments,
+      Clock clock,
+      PublicCatalogCachePort cache) {
+    this(access, calendars, offerings, assignments, clock, cache, (tenantId, calendarId) -> {});
+  }
 
   @Autowired
   public OfferingService(
       CatalogTenantAccessPort access,
       CalendarRepository calendars,
       OfferingRepository offerings,
-      CalendarOfferingRepository assignments) {
-    this(access, calendars, offerings, assignments, Clock.systemUTC());
+      CalendarOfferingRepository assignments,
+      PublicCatalogCachePort cache,
+      CatalogAvailabilityCachePort availabilityCache) {
+    this(access, calendars, offerings, assignments, Clock.systemUTC(), cache, availabilityCache);
   }
 
   public OfferingService(
@@ -64,12 +81,16 @@ public class OfferingService
       CalendarRepository calendars,
       OfferingRepository offerings,
       CalendarOfferingRepository assignments,
-      Clock clock) {
+      Clock clock,
+      PublicCatalogCachePort cache,
+      CatalogAvailabilityCachePort availabilityCache) {
     this.access = access;
     this.calendars = calendars;
     this.offerings = offerings;
     this.assignments = assignments;
     this.clock = clock;
+    this.cache = cache;
+    this.availabilityCache = availabilityCache;
   }
 
   @Override
@@ -85,7 +106,9 @@ public class OfferingService
             command.priceCents(),
             clock.instant());
     rejectDuplicateActiveTitle(offering);
-    return OfferingResult.from(offerings.save(offering));
+    OfferingResult result = OfferingResult.from(offerings.save(offering));
+    cache.invalidateAfterCommit(tenant.tenantId());
+    return result;
   }
 
   @Override
@@ -105,6 +128,11 @@ public class OfferingService
   public OfferingResult update(UpdateOfferingCommand command) {
     var tenant = access.requireManager(command.actorUserId(), command.tenantSlug());
     Offering offering = requireAdministrativeOffering(tenant.tenantId(), command.offeringId());
+    boolean invalidatesAvailability =
+        (command.durationMinutes().specified()
+                && !Objects.equals(offering.durationMinutes(), command.durationMinutes().value()))
+            || (command.active().specified()
+                && !Objects.equals(offering.active(), command.active().value()));
     offering.update(
         command.title(),
         command.description(),
@@ -113,7 +141,12 @@ public class OfferingService
         command.active(),
         clock.instant());
     rejectDuplicateActiveTitle(offering);
-    return OfferingResult.from(offerings.save(offering));
+    OfferingResult result = OfferingResult.from(offerings.save(offering));
+    cache.invalidateAfterCommit(tenant.tenantId());
+    if (invalidatesAvailability) {
+      invalidateAssignedCalendars(tenant.tenantId(), offering.id());
+    }
+    return result;
   }
 
   @Override
@@ -123,6 +156,8 @@ public class OfferingService
     Offering offering = requireAdministrativeOffering(tenant.tenantId(), offeringId);
     offering.deactivate(clock.instant());
     offerings.save(offering);
+    cache.invalidateAfterCommit(tenant.tenantId());
+    invalidateAssignedCalendars(tenant.tenantId(), offering.id());
   }
 
   @Override
@@ -139,6 +174,8 @@ public class OfferingService
             .map(id -> requireAdministrativeOffering(tenant.tenantId(), id))
             .toList();
     assignments.replace(tenant.tenantId(), command.calendarId(), offeringIds);
+    cache.invalidateAfterCommit(tenant.tenantId());
+    availabilityCache.invalidateCalendarAfterCommit(tenant.tenantId(), command.calendarId());
     return sorted(selected);
   }
 
@@ -153,18 +190,24 @@ public class OfferingService
               .orElseThrow(
                   () -> new CatalogException("calendar_not_found", "calendar was not found"));
     }
-    return sorted(offerings.findActiveByTenantId(tenant.tenantId(), calendarId));
+    return cache.offerings(
+        tenant.tenantId(),
+        calendarId,
+        () -> sorted(offerings.findActiveByTenantId(tenant.tenantId(), calendarId)));
   }
 
   @Override
   public PublicTenantProfileResult get(String tenantSlug) {
     var tenant = access.requirePublicTenant(tenantSlug);
-    return new PublicTenantProfileResult(
+    return cache.profile(
         tenant.tenantId(),
-        tenant.name(),
-        tenant.slug(),
-        tenant.defaultTimezone(),
-        tenant.currencyCode());
+        () ->
+            new PublicTenantProfileResult(
+                tenant.tenantId(),
+                tenant.name(),
+                tenant.slug(),
+                tenant.defaultTimezone(),
+                tenant.currencyCode()));
   }
 
   @Override
@@ -226,6 +269,13 @@ public class OfferingService
             offering.tenantId(), offering.normalizedTitle(), offering.id())) {
       throw new CatalogException("validation_error", "an active offering already uses this title");
     }
+  }
+
+  private void invalidateAssignedCalendars(UUID tenantId, UUID offeringId) {
+    assignments
+        .findCalendarIdsByTenantIdAndOfferingId(tenantId, offeringId)
+        .forEach(
+            calendarId -> availabilityCache.invalidateCalendarAfterCommit(tenantId, calendarId));
   }
 
   private static List<OfferingResult> sorted(List<Offering> values) {

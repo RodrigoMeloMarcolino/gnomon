@@ -6,6 +6,7 @@ import io.gnomon.availability.application.port.in.UpdateAvailabilityRuleCommand;
 import io.gnomon.availability.application.port.in.result.AvailabilityRuleResult;
 import io.gnomon.availability.application.port.out.AvailabilityCalendarAccessPort;
 import io.gnomon.availability.application.port.out.AvailabilityRuleRepository;
+import io.gnomon.availability.application.port.out.PublicAvailabilityCachePort;
 import io.gnomon.availability.domain.exception.AvailabilityException;
 import io.gnomon.availability.domain.model.AvailabilityRule;
 import java.time.Clock;
@@ -23,19 +24,24 @@ public class AvailabilityRuleService implements AvailabilityRuleUseCase {
   private final AvailabilityRuleRepository rules;
   private final AvailabilityCalendarAccessPort calendarAccess;
   private final Clock clock;
+  private final PublicAvailabilityCachePort cache;
 
   @Autowired
   public AvailabilityRuleService(
-      AvailabilityRuleRepository rules, AvailabilityCalendarAccessPort calendarAccess) {
-    this(rules, calendarAccess, Clock.systemUTC());
+      AvailabilityRuleRepository rules,
+      AvailabilityCalendarAccessPort calendarAccess,
+      PublicAvailabilityCachePort cache) {
+    this(rules, calendarAccess, cache, Clock.systemUTC());
   }
 
   public AvailabilityRuleService(
       AvailabilityRuleRepository rules,
       AvailabilityCalendarAccessPort calendarAccess,
+      PublicAvailabilityCachePort cache,
       Clock clock) {
     this.rules = rules;
     this.calendarAccess = calendarAccess;
+    this.cache = cache;
     this.clock = clock;
   }
 
@@ -53,7 +59,9 @@ public class AvailabilityRuleService implements AvailabilityRuleUseCase {
             command.startTime(),
             command.endTime(),
             clock.instant());
-    return AvailabilityRuleResult.from(rules.save(rule));
+    AvailabilityRuleResult result = AvailabilityRuleResult.from(rules.save(rule));
+    cache.invalidateCalendarAfterCommit(calendar.tenantId(), calendar.calendarId());
+    return result;
   }
 
   @Override
@@ -85,7 +93,9 @@ public class AvailabilityRuleService implements AvailabilityRuleUseCase {
         command.endTime(),
         command.active(),
         clock.instant());
-    return AvailabilityRuleResult.from(rules.save(rule));
+    AvailabilityRuleResult result = AvailabilityRuleResult.from(rules.save(rule));
+    cache.invalidateCalendarAfterCommit(calendar.tenantId(), calendar.calendarId());
+    return result;
   }
 
   @Override
@@ -95,6 +105,7 @@ public class AvailabilityRuleService implements AvailabilityRuleUseCase {
     AvailabilityRule rule = requireRule(calendar.tenantId(), calendarId, ruleId);
     rule.deactivate(clock.instant());
     rules.save(rule);
+    cache.invalidateCalendarAfterCommit(calendar.tenantId(), calendar.calendarId());
   }
 
   private AvailabilityRule requireRule(UUID tenantId, UUID calendarId, UUID ruleId) {
