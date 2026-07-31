@@ -12,16 +12,23 @@ import io.gnomon.catalog.application.port.out.PublicCatalogCachePort;
 import io.gnomon.catalog.domain.exception.CatalogException;
 import io.gnomon.catalog.domain.model.Calendar;
 import io.gnomon.catalog.domain.model.Collaborator;
+import io.gnomon.shared.logging.StructuredEventLogger;
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @Transactional(readOnly = true)
 public class CalendarService implements CalendarUseCase {
+
+  private static final StructuredEventLogger LOGGER =
+      StructuredEventLogger.getLogger(CalendarService.class);
 
   private final CalendarRepository calendars;
   private final CollaboratorRepository collaborators;
@@ -82,6 +89,10 @@ public class CalendarService implements CalendarUseCase {
     CalendarResult result = CalendarResult.from(calendars.save(calendar));
     cache.invalidateAfterCommit(access.tenantId());
     availabilityCache.invalidateCalendarAfterCommit(access.tenantId(), calendar.id());
+    logAfterCommit(
+        "calendar.updated",
+        "calendar updated",
+        Map.of("tenant.id", access.tenantId(), "calendar.id", calendar.id()));
     return result;
   }
 
@@ -95,6 +106,10 @@ public class CalendarService implements CalendarUseCase {
     calendars.save(calendar);
     cache.invalidateAfterCommit(access.tenantId());
     availabilityCache.invalidateCalendarAfterCommit(access.tenantId(), calendar.id());
+    logAfterCommit(
+        "calendar.updated",
+        "calendar updated",
+        Map.of("tenant.id", access.tenantId(), "calendar.id", calendar.id()));
   }
 
   @Override
@@ -132,5 +147,20 @@ public class CalendarService implements CalendarUseCase {
               }
               throw new CatalogException("calendar_not_found", "calendar was not found");
             });
+  }
+
+  private static void logAfterCommit(String eventName, String message, Map<String, ?> attributes) {
+    Runnable log = () -> LOGGER.info(eventName, message, attributes);
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      TransactionSynchronizationManager.registerSynchronization(
+          new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+              log.run();
+            }
+          });
+      return;
+    }
+    log.run();
   }
 }

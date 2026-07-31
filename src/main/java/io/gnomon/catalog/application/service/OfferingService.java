@@ -24,6 +24,7 @@ import io.gnomon.catalog.application.port.out.PublicCatalogCachePort;
 import io.gnomon.catalog.domain.exception.CatalogException;
 import io.gnomon.catalog.domain.model.Calendar;
 import io.gnomon.catalog.domain.model.Offering;
+import io.gnomon.shared.logging.StructuredEventLogger;
 import java.time.Clock;
 import java.util.Comparator;
 import java.util.List;
@@ -33,6 +34,8 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @Transactional(readOnly = true)
@@ -46,6 +49,9 @@ public class OfferingService
         ListPublicOfferingsUseCase,
         GetPublicTenantProfileUseCase,
         SchedulableOfferingUseCase {
+
+  private static final StructuredEventLogger LOGGER =
+      StructuredEventLogger.getLogger(OfferingService.class);
 
   private final CatalogTenantAccessPort access;
   private final CalendarRepository calendars;
@@ -108,6 +114,10 @@ public class OfferingService
     rejectDuplicateActiveTitle(offering);
     OfferingResult result = OfferingResult.from(offerings.save(offering));
     cache.invalidateAfterCommit(tenant.tenantId());
+    logAfterCommit(
+        "offering.created",
+        "offering created",
+        java.util.Map.of("tenant.id", tenant.tenantId(), "offering.id", offering.id()));
     return result;
   }
 
@@ -143,6 +153,10 @@ public class OfferingService
     rejectDuplicateActiveTitle(offering);
     OfferingResult result = OfferingResult.from(offerings.save(offering));
     cache.invalidateAfterCommit(tenant.tenantId());
+    logAfterCommit(
+        "offering.updated",
+        "offering updated",
+        java.util.Map.of("tenant.id", tenant.tenantId(), "offering.id", offering.id()));
     if (invalidatesAvailability) {
       invalidateAssignedCalendars(tenant.tenantId(), offering.id());
     }
@@ -283,5 +297,21 @@ public class OfferingService
         .sorted(Comparator.comparing(Offering::title).thenComparing(Offering::id))
         .map(OfferingResult::from)
         .toList();
+  }
+
+  private static void logAfterCommit(
+      String eventName, String message, java.util.Map<String, ?> attributes) {
+    Runnable log = () -> LOGGER.info(eventName, message, attributes);
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      TransactionSynchronizationManager.registerSynchronization(
+          new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+              log.run();
+            }
+          });
+      return;
+    }
+    log.run();
   }
 }

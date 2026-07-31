@@ -2,6 +2,7 @@ package io.gnomon.shared.logging;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.ThrowableProxyUtil;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -67,6 +68,7 @@ public final class GnomonStructuredLogFormatter implements StructuredLogFormatte
     if (event.getThrowableProxy() != null) {
       document.put("exception.type", event.getThrowableProxy().getClassName());
       document.put("exception.message", event.getThrowableProxy().getMessage());
+      document.put("exception.stacktrace", ThrowableProxyUtil.asString(event.getThrowableProxy()));
     }
     return json(document);
   }

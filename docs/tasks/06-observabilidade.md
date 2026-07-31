@@ -41,10 +41,14 @@ Conforme `docs/specs/structured-logging.md`:
 
 - Fundação em andamento (2026-07-31): formatter JSON próprio com contrato OTel, fachada SLF4J,
   filtro de correlação/access log, headers CORS e eventos de lifecycle já foram adicionados.
+- Continuação (2026-07-31): a borda HTTP agora tem teste de correlação válida/inválida,
+  access log terminal único e envelope 500 seguro; o formatter preserva stack trace apenas no
+  evento estruturado. Eventos de tenancy, provisionamento local, catálogo e availability rules
+  são emitidos somente após commit, com IDs técnicos e sem PII.
 - O contrato de erro da spec foi sincronizado para `internal_server_error`, que já é o código
   efetivamente devolvido pelos exception handlers.
-- Ainda pendentes para encerrar a fase: cobertura HTTP completa, instrumentação pós-commit dos
-  módulos tenancy/catalog/availability, smoke real com booking e a validação completa da stack.
+- Ainda pendentes para encerrar a fase: validar o appender OTLP fail-open e executar o smoke
+  real de booking pela stack Collector→Loki→Grafana.
 
 ## Follow-up registrado (2026-07-24 — semente do Moonlight)
 

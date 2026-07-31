@@ -2,6 +2,7 @@ package io.gnomon.availability.infrastructure.cache;
 
 import io.gnomon.availability.application.port.out.PublicAvailabilityCachePort;
 import io.gnomon.shared.infrastructure.cache.CacheStore;
+import io.gnomon.shared.logging.StructuredEventLogger;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -23,6 +24,8 @@ public final class PublicAvailabilityCache implements PublicAvailabilityCachePor
 
   private static final String KEY_PREFIX = "gnomon:availability:tenant:";
   private static final TypeReference<List<Instant>> INSTANT_LIST = new TypeReference<>() {};
+  private static final StructuredEventLogger LOGGER =
+      StructuredEventLogger.getLogger(PublicAvailabilityCache.class);
 
   private final CacheStore store;
   private final ObjectMapper objectMapper;
@@ -46,8 +49,10 @@ public final class PublicAvailabilityCache implements PublicAvailabilityCachePor
     String key = key(tenantId, calendarId, offeringId, calendarLocalDate);
     Optional<List<Instant>> cached = store.get(key).flatMap(this::deserialize);
     if (cached.isPresent()) {
+      cacheHit();
       return cached.get();
     }
+    cacheMiss();
     List<Instant> slots = databaseLookup.get();
     serialize(slots).ifPresent(value -> store.put(key, value, ttl));
     return slots;
@@ -56,7 +61,10 @@ public final class PublicAvailabilityCache implements PublicAvailabilityCachePor
   @Override
   public void invalidateCalendarAfterCommit(UUID tenantId, UUID calendarId) {
     Runnable invalidate =
-        () -> store.increment(calendarVersionKey(tenantId, calendarId), versionTtl);
+        () -> {
+          store.increment(calendarVersionKey(tenantId, calendarId), versionTtl);
+          cacheInvalidated(tenantId, calendarId);
+        };
     afterCommit(invalidate);
   }
 
@@ -68,6 +76,7 @@ public final class PublicAvailabilityCache implements PublicAvailabilityCachePor
           store.evict(key(tenantId, calendarId, offeringId, calendarLocalDate));
           store.increment(calendarVersionKey(tenantId, calendarId), versionTtl);
           store.increment(dayVersionKey(tenantId, calendarId, calendarLocalDate), versionTtl);
+          cacheInvalidated(tenantId, calendarId);
         };
     afterCommit(invalidate);
   }
@@ -133,5 +142,23 @@ public final class PublicAvailabilityCache implements PublicAvailabilityCachePor
     } catch (JacksonException exception) {
       return Optional.empty();
     }
+  }
+
+  private static void cacheHit() {
+    LOGGER.info(
+        "cache.hit", "availability cache hit", java.util.Map.of("cache.name", "availability"));
+  }
+
+  private static void cacheMiss() {
+    LOGGER.info(
+        "cache.miss", "availability cache miss", java.util.Map.of("cache.name", "availability"));
+  }
+
+  private static void cacheInvalidated(UUID tenantId, UUID calendarId) {
+    LOGGER.info(
+        "cache.invalidated",
+        "availability cache invalidated",
+        java.util.Map.of(
+            "cache.name", "availability", "tenant.id", tenantId, "calendar.id", calendarId));
   }
 }

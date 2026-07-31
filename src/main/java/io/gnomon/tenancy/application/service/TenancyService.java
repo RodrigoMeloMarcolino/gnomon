@@ -1,5 +1,6 @@
 package io.gnomon.tenancy.application.service;
 
+import io.gnomon.shared.logging.StructuredEventLogger;
 import io.gnomon.tenancy.application.port.in.AddMembershipCommand;
 import io.gnomon.tenancy.application.port.in.ChangeMembershipRoleCommand;
 import io.gnomon.tenancy.application.port.in.CreateTenantCommand;
@@ -32,6 +33,8 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @Transactional(readOnly = true)
@@ -41,6 +44,9 @@ public class TenancyService
         GetTenantUseCase,
         UpdateTenantUseCase,
         ManageMembershipUseCase {
+
+  private static final StructuredEventLogger LOGGER =
+      StructuredEventLogger.getLogger(TenancyService.class);
 
   private final TenantRepository tenants;
   private final MembershipRepository memberships;
@@ -102,6 +108,10 @@ public class TenancyService
                 command.name(), command.slug(), command.timezone(), command.currencyCode(), now));
     TenantMembership owner =
         memberships.save(TenantMembership.owner(tenant.id(), command.actorUserId(), now));
+    logAfterCommit(
+        "tenant.created",
+        "tenant created",
+        Map.of("tenant.id", tenant.id(), "membership.id", owner.id()));
     return TenantResult.from(tenant, owner);
   }
 
@@ -182,6 +192,10 @@ public class TenancyService
     TenantMembership membership =
         memberships.save(
             TenantMembership.administrative(tenant.id(), user.id(), role, clock.instant()));
+    logAfterCommit(
+        "membership.added",
+        "tenant membership added",
+        Map.of("tenant.id", tenant.id(), "membership.id", membership.id()));
     return MembershipResult.from(membership, user);
   }
 
@@ -213,6 +227,10 @@ public class TenancyService
       throw new TenancyException("last_owner", "the last owner cannot be removed");
     }
     memberships.delete(membership);
+    logAfterCommit(
+        "membership.removed",
+        "tenant membership removed",
+        Map.of("tenant.id", tenant.id(), "membership.id", membership.id()));
   }
 
   private Tenant requireTenant(String slug) {
@@ -273,5 +291,20 @@ public class TenancyService
               }
               throw new TenancyException("membership_not_found", "membership was not found");
             });
+  }
+
+  private static void logAfterCommit(String eventName, String message, Map<String, ?> attributes) {
+    Runnable log = () -> LOGGER.info(eventName, message, attributes);
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      TransactionSynchronizationManager.registerSynchronization(
+          new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+              log.run();
+            }
+          });
+      return;
+    }
+    log.run();
   }
 }

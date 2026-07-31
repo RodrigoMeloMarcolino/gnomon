@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.LoggingEvent;
+import ch.qos.logback.classic.spi.ThrowableProxy;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.slf4j.event.KeyValuePair;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -50,8 +52,23 @@ class GnomonStructuredLogFormatterTest {
     assertThat(result.get("severity_number").asInt()).isEqualTo(13);
   }
 
+  @Test
+  void format_whenThrowablePresent_shouldKeepStackTraceOutOfTheHumanBody() throws Exception {
+    LoggingEvent event = event(Level.ERROR, "request failed");
+    event.setThrowableProxy(new ThrowableProxy(new IllegalStateException("unexpected failure")));
+
+    JsonNode result = json.readTree(formatter.format(event));
+
+    assertThat(result.get("body").asString()).isEqualTo("request failed");
+    assertThat(result.get("exception.type").asString())
+        .isEqualTo(IllegalStateException.class.getName());
+    assertThat(result.get("exception.stacktrace").asString()).contains("unexpected failure");
+  }
+
   private static LoggingEvent event(Level level, String message) {
     LoggingEvent event = new LoggingEvent();
+    event.setLoggerContext(
+        (ch.qos.logback.classic.LoggerContext) LoggerFactory.getILoggerFactory());
     event.setLoggerName("io.gnomon.test");
     event.setThreadName("test-thread");
     event.setLevel(level);
