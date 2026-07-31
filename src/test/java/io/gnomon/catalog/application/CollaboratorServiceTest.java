@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import io.gnomon.catalog.application.port.in.CreateCollaboratorCommand;
 import io.gnomon.catalog.application.port.in.result.CollaboratorResult;
 import io.gnomon.catalog.application.port.out.CalendarRepository;
+import io.gnomon.catalog.application.port.out.CatalogAvailabilityCachePort;
 import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
 import io.gnomon.catalog.application.port.out.CollaboratorRepository;
 import io.gnomon.catalog.application.port.out.PublicCatalogCachePort;
@@ -36,6 +37,7 @@ class CollaboratorServiceTest {
   @Mock private CalendarRepository calendars;
   @Mock private CatalogTenantAccessPort tenantAccess;
   @Mock private PublicCatalogCachePort cache;
+  @Mock private CatalogAvailabilityCachePort availabilityCache;
 
   private CollaboratorService service;
 
@@ -43,7 +45,12 @@ class CollaboratorServiceTest {
   void setUp() {
     service =
         new CollaboratorService(
-            collaborators, calendars, tenantAccess, Clock.fixed(NOW, ZoneOffset.UTC), cache);
+            collaborators,
+            calendars,
+            tenantAccess,
+            Clock.fixed(NOW, ZoneOffset.UTC),
+            cache,
+            availabilityCache);
   }
 
   @Test
@@ -65,6 +72,11 @@ class CollaboratorServiceTest {
     var ordered = inOrder(collaborators, calendars);
     ordered.verify(collaborators).save(any(Collaborator.class));
     ordered.verify(calendars).save(any(Calendar.class));
+    verify(cache).invalidateAfterCommit(tenantId);
+    var calendarCaptor = ArgumentCaptor.forClass(Calendar.class);
+    verify(calendars).save(calendarCaptor.capture());
+    verify(availabilityCache)
+        .invalidateCalendarAfterCommit(tenantId, calendarCaptor.getValue().id());
   }
 
   @Test
@@ -96,6 +108,7 @@ class CollaboratorServiceTest {
     var calendarCaptor = ArgumentCaptor.forClass(Calendar.class);
     verify(calendars).save(calendarCaptor.capture());
     assertThat(calendarCaptor.getValue().active()).isFalse();
+    verify(cache).invalidateAfterCommit(tenantId);
   }
 
   @Test

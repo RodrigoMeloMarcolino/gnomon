@@ -12,6 +12,7 @@ import io.gnomon.catalog.application.port.in.ReplaceCalendarOfferingsCommand;
 import io.gnomon.catalog.application.port.in.result.OfferingResult;
 import io.gnomon.catalog.application.port.out.CalendarOfferingRepository;
 import io.gnomon.catalog.application.port.out.CalendarRepository;
+import io.gnomon.catalog.application.port.out.CatalogAvailabilityCachePort;
 import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
 import io.gnomon.catalog.application.port.out.OfferingRepository;
 import io.gnomon.catalog.application.port.out.PublicCatalogCachePort;
@@ -20,6 +21,7 @@ import io.gnomon.catalog.application.service.OfferingService;
 import io.gnomon.catalog.domain.exception.CatalogException;
 import io.gnomon.catalog.domain.model.Calendar;
 import io.gnomon.catalog.domain.model.Offering;
+import io.gnomon.catalog.domain.model.Offering.Change;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -48,6 +50,7 @@ class OfferingServiceTest {
   @Mock private OfferingRepository offerings;
   @Mock private CalendarOfferingRepository assignments;
   @Mock private PublicCatalogCachePort cache;
+  @Mock private CatalogAvailabilityCachePort availabilityCache;
 
   private OfferingService service;
 
@@ -55,7 +58,13 @@ class OfferingServiceTest {
   void setUp() {
     service =
         new OfferingService(
-            access, calendars, offerings, assignments, Clock.fixed(NOW, ZoneOffset.UTC), cache);
+            access,
+            calendars,
+            offerings,
+            assignments,
+            Clock.fixed(NOW, ZoneOffset.UTC),
+            cache,
+            availabilityCache);
   }
 
   @Test
@@ -122,6 +131,36 @@ class OfferingServiceTest {
 
     assertThat(result).extracting(OfferingResult::title).containsExactly("Barba", "Corte");
     verify(assignments).replace(TENANT_ID, CALENDAR_ID, Set.of(firstId, secondId));
+    verify(cache).invalidateAfterCommit(TENANT_ID);
+    verify(availabilityCache).invalidateCalendarAfterCommit(TENANT_ID, CALENDAR_ID);
+  }
+
+  @Test
+  void update_whenDurationChanges_shouldInvalidateEveryAssignedCalendar() {
+    UUID offeringId = UUID.randomUUID();
+    UUID firstCalendarId = UUID.randomUUID();
+    UUID secondCalendarId = UUID.randomUUID();
+    Offering offering = offering(offeringId, "Corte");
+    when(access.requireManager(ACTOR_ID, "barbearia-solar")).thenReturn(tenantAccess());
+    when(offerings.findByTenantIdAndId(TENANT_ID, offeringId)).thenReturn(Optional.of(offering));
+    when(offerings.save(offering)).thenReturn(offering);
+    when(assignments.findCalendarIdsByTenantIdAndOfferingId(TENANT_ID, offeringId))
+        .thenReturn(List.of(firstCalendarId, secondCalendarId));
+
+    service.update(
+        new io.gnomon.catalog.application.port.in.UpdateOfferingCommand(
+            ACTOR_ID,
+            "barbearia-solar",
+            offeringId,
+            Change.unchanged(),
+            Change.unchanged(),
+            Change.to(45),
+            Change.unchanged(),
+            Change.unchanged()));
+
+    verify(cache).invalidateAfterCommit(TENANT_ID);
+    verify(availabilityCache).invalidateCalendarAfterCommit(TENANT_ID, firstCalendarId);
+    verify(availabilityCache).invalidateCalendarAfterCommit(TENANT_ID, secondCalendarId);
   }
 
   @Test

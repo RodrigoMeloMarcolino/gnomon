@@ -12,6 +12,7 @@ import io.gnomon.booking.application.exception.BookingException;
 import io.gnomon.booking.application.port.in.CreateAppointmentCommand;
 import io.gnomon.booking.application.port.out.AppointmentFingerprint;
 import io.gnomon.booking.application.port.out.AppointmentRepository;
+import io.gnomon.booking.application.port.out.BookingAvailabilityCachePort;
 import io.gnomon.booking.application.port.out.BookingAvailabilityPort;
 import io.gnomon.booking.application.port.out.BookingCatalogPort;
 import io.gnomon.booking.application.port.out.BookingContext;
@@ -52,6 +53,7 @@ class CreateAppointmentServiceTest {
 
   @Mock private BookingCatalogPort catalog;
   @Mock private BookingAvailabilityPort availability;
+  @Mock private BookingAvailabilityCachePort availabilityCache;
   @Mock private CustomerRepository customers;
   @Mock private AppointmentRepository appointments;
   @Mock private PhoneCanonicalizer phoneCanonicalizer;
@@ -66,6 +68,7 @@ class CreateAppointmentServiceTest {
         new CreateAppointmentService(
             catalog,
             availability,
+            availabilityCache,
             customers,
             appointments,
             phoneCanonicalizer,
@@ -117,6 +120,9 @@ class CreateAppointmentServiceTest {
     verify(appointments)
         .insertSlots(
             TENANT_ID, persisted.id(), CALENDAR_ID, List.of(START_AT, START_AT.plusSeconds(900)));
+    verify(availabilityCache)
+        .invalidateBookingDayAfterCommit(
+            TENANT_ID, CALENDAR_ID, OFFERING_ID, START_AT, ZoneId.of("America/Fortaleza"));
   }
 
   @Test
@@ -134,6 +140,8 @@ class CreateAppointmentServiceTest {
     verify(availability, never()).isAvailable(any(), any(), anyInt(), any(), any(), any());
     verify(appointments, never()).insert(any());
     verify(appointments, never()).insertSlots(any(), any(), any(), any());
+    verify(availabilityCache, never())
+        .invalidateBookingDayAfterCommit(any(), any(), any(), any(), any());
   }
 
   @Test
@@ -149,6 +157,8 @@ class CreateAppointmentServiceTest {
 
     verify(customers, never()).findOrCreate(any(), any(), any());
     verify(appointments, never()).insert(any());
+    verify(availabilityCache, never())
+        .invalidateBookingDayAfterCommit(any(), any(), any(), any(), any());
   }
 
   @Test
@@ -166,6 +176,8 @@ class CreateAppointmentServiceTest {
     assertThat(result.replayed()).isTrue();
     assertThat(result.appointment().id()).isEqualTo(APPOINTMENT_ID);
     verify(appointments, never()).insertSlots(any(), any(), any(), any());
+    verify(availabilityCache, never())
+        .invalidateBookingDayAfterCommit(any(), any(), any(), any(), any());
   }
 
   @Test
@@ -182,6 +194,8 @@ class CreateAppointmentServiceTest {
 
     verify(customers, never()).findOrCreate(any(), any(), any());
     verify(appointments, never()).insert(any());
+    verify(availabilityCache, never())
+        .invalidateBookingDayAfterCommit(any(), any(), any(), any(), any());
   }
 
   @Test

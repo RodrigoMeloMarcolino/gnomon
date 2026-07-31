@@ -1,6 +1,6 @@
 # Checkpoint de implementação paralela — fases 01–09 (pós-onda 4)
 
-Atualizado: 2026-07-29
+Atualizado: 2026-07-30
 
 Este arquivo é o handoff operacional para retomar a construção do backend em outra sessão sem
 reconstituir o contexto da conversa. A fonte normativa continua sendo o PRD, os ADRs, as specs e
@@ -26,6 +26,23 @@ HEAD no primeiro registro deste checkpoint: `73d5585`. A onda 2 foi fechada depo
 Os contratos da onda 3 foram congelados em `dd6cfef`. A fase 03 foi integrada nos commits
 `781596c`, `42579ab`, `e08cce4` e `8d15c20`. A fase 04 foi integrada a partir dos contratos
 `5bc786e`, migration `67ee031` e frentes `837c5ff`, `0caf214` e `bd9b40b`.
+
+## Checkpoint 05 — cache Redis (concluído)
+
+- Cache-aside fail-open para perfil, calendários, offerings e available-slots, com TTLs
+  configuráveis e política mantida nos módulos proprietários.
+- Invalidação pós-commit coberta para offering, atribuição, calendário, availability rule e
+  booking; replay, conflito e rollback não invalidam. Booking continua validando disponibilidade
+  diretamente no PostgreSQL.
+- Regressão de meia-noite coberta: a chave e a invalidação usam a `LocalDate` derivada de
+  `start_at` no fuso do calendário.
+- Testcontainers Redis comprovou miss/hit/recarga, invalidações e fail-open com Redis parado;
+  leituras, booking e `/v1/ready` permanecem funcionais.
+- Seis testes de adapters foram realocados para `infrastructure/integration`, eliminando bytecode
+  incremental obsoleto. Em Java 21, passaram `spotless:check`, 230 testes normais, 5 ArchUnit,
+  36 integrações e `all-tests` com 266 testes.
+- PRD e ADRs permanecem válidos; não houve migration, dependência, contrato ou nova decisão
+  arquitetural. O próximo workstream é a fase 06, observabilidade.
 
 ### Fase 01 — concluída
 

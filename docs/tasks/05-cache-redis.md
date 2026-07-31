@@ -1,6 +1,6 @@
 # Fase 05 — Cache Redis das leituras públicas
 
-Status: doing
+Status: done
 
 ## Objetivo
 
@@ -41,9 +41,9 @@ fail-open quando o Redis estiver indisponível.
 
 ## Critérios de aceite
 
-- [ ] Leituras públicas cacheadas com invalidação correta após mutações.
-- [ ] Fail-open demonstrado em teste.
-- [ ] Derivação de chave (data local do calendário) idêntica entre leitura e invalidação.
+- [x] Leituras públicas cacheadas com invalidação correta após mutações.
+- [x] Fail-open demonstrado em teste.
+- [x] Derivação de chave (data local do calendário) idêntica entre leitura e invalidação.
 
 ## Notas de implementação
 
@@ -77,3 +77,15 @@ fail-open quando o Redis estiver indisponível.
   invalida o perfil público via input port de catálogo. Ainda faltam os cenários de integração
   com Redis real e os gates completos; por isso a fase permanece `doing` e os critérios não foram
   marcados como concluídos.
+- 2026-07-30: fechamento da fase. A integração com Redis real confirmou cache-aside de perfil,
+  calendários, offerings e available-slots; miss, hit e recarga após invalidação; invalidações de
+  offering, atribuição, calendário e availability rule; e booking perto da meia-noite usando o
+  dia local do calendário. Os testes unitários confirmam que os efeitos ocorrem apenas após
+  commit, nunca em replay, conflito ou rollback. O cenário Redis indisponível manteve leituras,
+  booking e `/v1/ready` operacionais sobre PostgreSQL. Os seis testes de adapters foram movidos
+  para os diretórios `infrastructure/integration` compatíveis com os respectivos pacotes, e
+  `./mvnw test` passou incrementalmente, sem `clean`.
+- 2026-07-30: gates Java 21 concluídos: `spotless:check`, `test` (230), `test
+  -Dtest=ArchitectureTest` (5), `verify -Pintegration` (36) e `verify -Pall-tests` (266), todos
+  verdes. PRD e ADRs permanecem válidos; não houve mudança de contrato HTTP, port público,
+  migration, dependência ou decisão arquitetural.
