@@ -24,6 +24,7 @@ import io.gnomon.booking.domain.service.SlotGenerator;
 import io.gnomon.customers.application.port.out.CustomerRepository;
 import io.gnomon.customers.domain.exception.CustomerException;
 import io.gnomon.customers.domain.model.Customer;
+import io.gnomon.shared.domain.model.BookingHorizon;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -59,6 +60,7 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
   private final PhoneCanonicalizer phoneCanonicalizer;
   private final AppointmentFingerprint appointmentFingerprint;
   private final SlotGenerator slotGenerator;
+  private final BookingHorizon bookingHorizon;
   private final Clock clock;
 
   public CreateAppointmentService(
@@ -79,6 +81,7 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
         phoneCanonicalizer,
         appointmentFingerprint,
         slotGenerator,
+        new BookingHorizon(BookingHorizon.DEFAULT_MAX_ADVANCE_DAYS),
         clock);
   }
 
@@ -91,7 +94,8 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
       AppointmentRepository appointments,
       PhoneCanonicalizer phoneCanonicalizer,
       AppointmentFingerprint appointmentFingerprint,
-      SlotGenerator slotGenerator) {
+      SlotGenerator slotGenerator,
+      BookingHorizon bookingHorizon) {
     this(
         catalog,
         availability,
@@ -101,6 +105,7 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
         phoneCanonicalizer,
         appointmentFingerprint,
         slotGenerator,
+        bookingHorizon,
         Clock.systemUTC());
   }
 
@@ -114,6 +119,30 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
       AppointmentFingerprint appointmentFingerprint,
       SlotGenerator slotGenerator,
       Clock clock) {
+    this(
+        catalog,
+        availability,
+        availabilityCache,
+        customers,
+        appointments,
+        phoneCanonicalizer,
+        appointmentFingerprint,
+        slotGenerator,
+        new BookingHorizon(BookingHorizon.DEFAULT_MAX_ADVANCE_DAYS),
+        clock);
+  }
+
+  public CreateAppointmentService(
+      BookingCatalogPort catalog,
+      BookingAvailabilityPort availability,
+      BookingAvailabilityCachePort availabilityCache,
+      CustomerRepository customers,
+      AppointmentRepository appointments,
+      PhoneCanonicalizer phoneCanonicalizer,
+      AppointmentFingerprint appointmentFingerprint,
+      SlotGenerator slotGenerator,
+      BookingHorizon bookingHorizon,
+      Clock clock) {
     this.catalog = catalog;
     this.availability = availability;
     this.availabilityCache = availabilityCache;
@@ -122,6 +151,7 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
     this.phoneCanonicalizer = phoneCanonicalizer;
     this.appointmentFingerprint = appointmentFingerprint;
     this.slotGenerator = slotGenerator;
+    this.bookingHorizon = bookingHorizon;
     this.clock = clock;
   }
 
@@ -145,7 +175,7 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
       String customerEmail = normalizeOptional(command.customerEmail(), true);
       String customerNotes = normalizeOptional(command.customerNotes(), false);
       Instant now = clock.instant();
-      validateStart(command.startAt(), now);
+      validateStart(command.startAt(), now, bookingHorizon);
 
       String fingerprint =
           appointmentFingerprint.sha256(
@@ -293,7 +323,7 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
     return lowercase ? normalized.toLowerCase(Locale.ROOT) : normalized;
   }
 
-  private static void validateStart(Instant startAt, Instant now) {
+  private static void validateStart(Instant startAt, Instant now, BookingHorizon bookingHorizon) {
     Objects.requireNonNull(now, "now");
     if (startAt.getNano() != 0 || Math.floorMod(startAt.getEpochSecond(), 60) != 0) {
       throw new BookingException(
@@ -303,6 +333,10 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
         || !startAt.isAfter(now)) {
       throw new BookingException(
           BookingErrorCodes.SLOT_UNAVAILABLE_VALIDATION, "requested start time is not available");
+    }
+    if (!bookingHorizon.allows(startAt, now)) {
+      throw new BookingException(
+          "validation_error", "requested start time is beyond the booking horizon");
     }
   }
 

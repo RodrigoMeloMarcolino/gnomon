@@ -1,7 +1,7 @@
 # Spec — Core de booking (slots, disponibilidade, criação transacional)
 
 Status: aprovada para implementação (emendada na task 00.5 — ver notas "Emenda 00.5")
-ADRs relacionados: 0006, 0007, 0008, 0009, 0010, 0011, 0012, 0014, 0016, 0017
+ADRs relacionados: 0006, 0007, 0008, 0009, 0010, 0011, 0012, 0014, 0016, 0017, 0022
 Origem: livedoc seções 9–12, 15.6.1, 16.4–16.5, 17 (testes manuais do core)
 
 ---
@@ -22,6 +22,11 @@ customer — tudo com testes fortes.
 
 Fora de escopo: cancelamento/remarcação (fase 08), reserva temporária com TTL, confirmação de
 telefone.
+
+Evolução condicional: a eventual substituição de `appointment_slots` por uma exclusion
+constraint GiST diretamente em `appointments` segue o runbook
+[`appointment-gist-migration.md`](appointment-gist-migration.md). O runbook não altera o modelo
+vigente nem autoriza uma migration agora.
 
 ## 3. Modelo de dados (tabelas do fluxo)
 
@@ -72,10 +77,11 @@ aditiva da fase 08, que é a fase que as utiliza; ADR 0017, zero colunas mortas.
 
 ### `appointment_slots`
 
-`id`, `tenant_id` (FK), `appointment_id` (FK no mesmo tenant), `calendar_id` (FK no mesmo
-tenant), `slot_start_at` (TIMESTAMPTZ).
-Constraint crítica: **`UNIQUE(calendar_id, slot_start_at)`**. Índice `(appointment_id)`
-(FK — ADR 0017). Append-only: sem `updated_at`.
+`tenant_id` (FK), `appointment_id` (FK no mesmo tenant), `calendar_id` (FK no mesmo tenant),
+`slot_start_at` (TIMESTAMPTZ). Constraint crítica: **PRIMARY KEY
+`(tenant_id, calendar_id, slot_start_at)`**. Índice `(tenant_id, appointment_id)` para FK e
+operação de appointment. Append-only: sem `updated_at`; locks antigos são removidos conforme o
+ADR 0022, sem remover o appointment histórico.
 
 > Nota geral (Emenda 00.5): "timestamps" nesta spec significa `created_at` + `updated_at`
 > mantidos por trigger de banco (ADR 0017). Toda constraint nomeada acima tem tradução na
@@ -160,7 +166,7 @@ Fluxo:
       são descartados no MVP.
    b. Cria appointment com `duration_minutes_snapshot` e `calendar_timezone_snapshot`.
    c. Insere todos os slots de 4.1 em `appointment_slots`.
-   d. Violação de `UNIQUE(calendar_id, slot_start_at)` → rollback total →
+   d. Violação da PK `(tenant_id, calendar_id, slot_start_at)` → rollback total →
       409 `slot_unavailable`.
    e. Commit; resposta materializada a partir do estado commitado.
 6. Resposta `201`: appointment com `id`, `start_at`, `end_at`, `status`, dados do serviço,
@@ -183,7 +189,7 @@ nunca vira 500:
 
 | Constraint | Código | HTTP |
 | ---------- | ------ | ---- |
-| `UNIQUE(calendar_id, slot_start_at)` (`appointment_slots`) | `slot_unavailable` | 409 |
+| `PRIMARY KEY(tenant_id, calendar_id, slot_start_at)` (`appointment_slots`) | `slot_unavailable` | 409 |
 | `UNIQUE(tenant_id, idempotency_key)` (`appointments`) | replay ou `idempotency_key_conflict` (conforme fingerprint) | 200 / 409 |
 | `UNIQUE(phone)` (`customers`) | `INSERT ... ON CONFLICT` + leitura interna (não vaza ao cliente) | — |
 | `UNIQUE(tenant_id, lower(title)) WHERE is_active` (`offerings`) | `validation_error` (`title`) | 422 |
@@ -238,7 +244,7 @@ telefone/nome do customer em logs.
 
 ## 9. Critérios de aceite
 
-- [ ] Constraint `UNIQUE(calendar_id, slot_start_at)` migrada e testada sob concorrência real.
+- [ ] PK `PRIMARY KEY(tenant_id, calendar_id, slot_start_at)` migrada e testada sob concorrência real.
 - [ ] Disponibilidade calculada sem persistir slots livres.
 - [ ] Booking síncrono em uma transação curta; 409 em conflito.
 - [ ] Idempotência com replay e conflito por fingerprint; `Idempotency-Key` obrigatório.

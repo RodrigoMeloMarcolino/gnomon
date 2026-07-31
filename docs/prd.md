@@ -96,7 +96,7 @@ users (projeção local: keycloak_sub, email, display_name)
                 │            └──1:1── calendars ──1:N── availability_rules
                 │                          │
                 ├──1:N── offerings         ├──1:N── appointments ──1:N── appointment_slots
-                │            │             │           UNIQUE(calendar_id, slot_start_at)
+                │            │             │           PK(tenant_id, calendar_id, slot_start_at)
                 └────────────┴── calendar_offerings ◄──┘
                                                         │
                                    customers (globais, phone canônico único) ◄──N:1── appointments
@@ -107,7 +107,7 @@ Regras estruturais:
 - **Tenant** é a conta/negócio. Toda tabela tenant-owned carrega `tenant_id`, mesmo quando
   `calendar_id` continuar existindo por regra de negócio.
 - **Calendar** é o dono da agenda: disponibilidade semanal, appointments e o lock de concorrência
-  (`UNIQUE(calendar_id, slot_start_at)`) são por calendário.
+  (`PRIMARY KEY(tenant_id, calendar_id, slot_start_at)`) são por calendário.
 - No MVP, a relação collaborator ↔ calendar é **1:1** (todo colaborador tem exatamente um
   calendário; o calendário nasce junto com o colaborador). N calendários por colaborador é
   evolução futura e não exige mudança estrutural.
@@ -162,7 +162,7 @@ Regras estruturais:
   telefone, busca ou cria o customer global, calcula `end_at` a partir do snapshot de duração,
   valida aderência à disponibilidade e insere appointment + slots ocupados em uma única
   transação curta.
-- **RF-14** Violação de `UNIQUE(calendar_id, slot_start_at)` faz rollback total e retorna
+- **RF-14** Violação da PK `(tenant_id, calendar_id, slot_start_at)` faz rollback total e retorna
   `409 Conflict` com código de horário indisponível.
 - **RF-15** Booking público **exige** header `Idempotency-Key` (ADR 0014, emenda da task 00.5;
   ausência → 422): mesma chave + mesmo payload → replay do appointment original; mesma chave +
@@ -317,7 +317,10 @@ Pontos críticos:
   `duration_minutes_snapshot` (>0, %15), `calendar_timezone_snapshot`,
   `status IN ('scheduled','cancelled','completed','no_show')`,
   `UNIQUE(tenant_id, idempotency_key)`, hashes de tokens futuros.
-- `appointment_slots`: `UNIQUE(calendar_id, slot_start_at)` — defesa final contra double booking.
+- `appointment_slots`: `PRIMARY KEY(tenant_id, calendar_id, slot_start_at)` — defesa final contra
+  double booking; locks antigos expiram conforme ADR 0022. A alternativa GiST futura é
+  condicional e possui
+  [runbook próprio](specs/appointment-gist-migration.md).
 - Portfólio: todas as tabelas tenant-owned carregam `tenant_id`; keys, nunca URLs, são
   persistidas; jobs têm lease/backoff; uso tem contadores bloqueáveis; há índice parcial para o
   único destaque publicado por tenant.

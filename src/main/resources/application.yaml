@@ -24,6 +24,13 @@ spring:
 gnomon:
   booking:
     default-phone-region: ${DEFAULT_PHONE_REGION:BR}
+    max-advance-days: ${BOOKING_MAX_ADVANCE_DAYS:180}
+    slot-retention:
+      enabled: ${BOOKING_SLOT_RETENTION_ENABLED:true}
+      retention: ${BOOKING_SLOT_RETENTION:30d}
+      cleanup-interval: ${BOOKING_SLOT_RETENTION_CLEANUP_INTERVAL:1h}
+      batch-size: ${BOOKING_SLOT_RETENTION_BATCH_SIZE:10000}
+      max-batches-per-run: ${BOOKING_SLOT_RETENTION_MAX_BATCHES_PER_RUN:100}
   cache:
     enabled: ${CACHE_ENABLED:true}
     catalog:

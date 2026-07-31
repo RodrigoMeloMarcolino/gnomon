@@ -16,7 +16,8 @@ Owner/admin acompanham a agenda do tenant; staff acompanha a própria agenda.
   `POST .../appointments/{id}/cancel`, `/complete`, `/no-show`
   (apenas de `scheduled`, conforme a máquina de estados da spec booking seção 3; transição
   inválida → 409; cancel libera os slots na mesma transação — antecipa a regra de liberação de
-  slots da fase 08 para o caminho admin; `completed`/`no_show` preservam os slots históricos).
+  slots da fase 08 para o caminho admin; `completed`/`no_show` preservam o appointment histórico,
+  enquanto os locks expiram conforme o ADR 0022).
 - `GET /v1/tenants/{tenantSlug}/customers` e `/customers/{id}`: customers com appointments no
   tenant (inferência via appointments), campos globais mínimos.
 - Eventos admin P1 de logging (`appointment.cancelled/completed/no_show`).

@@ -92,8 +92,7 @@ class AppointmentJdbcAdapterTest {
     Appointment appointment = appointment();
     var failure =
         new DataIntegrityViolationException(
-            "batch failed",
-            new SQLException("violates constraint UQ_APPOINTMENT_SLOTS_CALENDAR_START"));
+            "batch failed", new SQLException("violates constraint PK_APPOINTMENT_SLOTS"));
     when(jdbcTemplate.batchUpdate(eq(AppointmentJdbcAdapter.INSERT_SLOT), any(List.class)))
         .thenThrow(failure);
     var adapter = new AppointmentJdbcAdapter(jdbcTemplate);

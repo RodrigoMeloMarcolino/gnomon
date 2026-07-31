@@ -221,6 +221,27 @@ class CreateAppointmentServiceTest {
     verify(appointments, never()).findByTenantIdAndIdempotencyKey(any(), any());
   }
 
+  @Test
+  void create_whenStartIsBeyondBookingHorizon_shouldReturnValidationError() {
+    CreateAppointmentCommand command =
+        new CreateAppointmentCommand(
+            "barbearia-solar",
+            "intent-1",
+            CALENDAR_ID,
+            OFFERING_ID,
+            NOW.plusSeconds(181L * 24 * 60 * 60),
+            "Ana",
+            "(85) 99999-9999",
+            "ana@example.com",
+            null);
+
+    assertThatThrownBy(() -> service.create(command))
+        .isInstanceOf(BookingException.class)
+        .extracting(exception -> ((BookingException) exception).code())
+        .isEqualTo("validation_error");
+    verify(appointments, never()).findByTenantIdAndIdempotencyKey(any(), any());
+  }
+
   private void givenNormalizedRequest() {
     when(phoneCanonicalizer.canonicalize("(85) 99999-9999")).thenReturn("+5585999999999");
     when(appointmentFingerprint.sha256(any())).thenReturn(FINGERPRINT);

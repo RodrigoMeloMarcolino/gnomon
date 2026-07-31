@@ -40,10 +40,15 @@ verdes). Status: `todo` | `doing` | `done`.
 - 00.6 é o checkpoint de troca de agente para Codex; não altera decisões de produto nem
   arquitetura.
 - 05, 06, 07, 07.5 e 08 são workstreams paralelizáveis após o core da fase 04 estabilizar.
-- 07.5 é bloqueante da fase 09, mas não bloqueia os demais workstreams; a etapa atual é somente
-  documental e reserva a próxima migration V6.
+- 07.5 é bloqueante da fase 09, mas não bloqueia os demais workstreams; sua migration futura é
+  V7 porque V6 foi usada pelo hardening de slots do ADR 0022.
 - 06 pode ter fundação antecipada, mas o contrato completo fecha na própria fase.
 - 09 integra e valida os quatro workstreams pós-core.
+
+## Evoluções condicionais fora do roadmap
+
+- [Migração futura para exclusion constraint GiST](../specs/appointment-gist-migration.md):
+  somente após os gatilhos e benchmarks do ADR 0022; não possui número Flyway reservado.
 
 ## Regras do roadmap
 

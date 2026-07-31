@@ -11,7 +11,7 @@ slots ocupados na mesma transação e double booking impossível via constraint.
 
 - Migrations: `customers`, `appointments`, `appointment_slots` (spec booking seção 3) com
   `UNIQUE(phone)`, `UNIQUE(tenant_id, idempotency_key)` e
-  **`UNIQUE(calendar_id, slot_start_at)`**. **Sem** `cancel_token_hash`/`reschedule_token_hash`
+  **PRIMARY KEY(tenant_id, calendar_id, slot_start_at)**. **Sem** `cancel_token_hash`/`reschedule_token_hash`
   (nascem na fase 08 — ADR 0017); `status` com `CHECK IN (...)`; índices de todas as FKs.
 - Domínio puro: `generateSlots` (spec booking 4.1) e `canonicalPhone` (4.3).
 - `CreateAppointmentUseCase` completo (spec booking 5.2): validações de escopo/atribuição,
@@ -61,7 +61,7 @@ slots ocupados na mesma transação e double booking impossível via constraint.
   leem `appointment_slots` no PostgreSQL através de `PostgresOccupiedSlotAdapter`.
 - O endpoint `POST /v1/public/tenants/{slug}/appointments` usa payload `snake_case`, exige
   `Idempotency-Key`, retorna `201` na criação e `200` no replay. Precheck indisponível retorna
-  `422 slot_unavailable`; disputa decidida pela unique do banco retorna
+  `422 slot_unavailable`; disputa decidida pela PK do banco retorna
   `409 slot_unavailable`.
 - Eventos P0 `appointment.booking_succeeded`, `appointment.booking_replayed`,
   `appointment.booking_rejected` e `appointment.booking_conflict` foram adicionados sem PII.
@@ -81,3 +81,5 @@ slots ocupados na mesma transação e double booking impossível via constraint.
 
 - Formatação estruturada JSON, correlação e OTLP dos eventos entram na fase 06.
 - Rate limiting público e gates de carga/schema drift permanecem para o hardening da fase 09.
+- Se os gatilhos do ADR 0022 forem atingidos, avaliar e executar somente pelos gates do
+  [runbook de migração GiST](../specs/appointment-gist-migration.md).

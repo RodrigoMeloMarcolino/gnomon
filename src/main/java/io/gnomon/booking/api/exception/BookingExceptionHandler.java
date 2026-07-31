@@ -41,7 +41,7 @@ public class BookingExceptionHandler {
 
   @ExceptionHandler(DataIntegrityViolationException.class)
   ResponseEntity<ApiErrorResponse> handleIntegrity(DataIntegrityViolationException exception) {
-    if (contains(exception, "uq_appointment_slots_calendar_start")) {
+    if (contains(exception, "pk_appointment_slots")) {
       return error(HttpStatus.CONFLICT, "slot_unavailable", "requested slot is unavailable");
     }
     if (contains(exception, "uq_appointments_tenant_idempotency_key")) {

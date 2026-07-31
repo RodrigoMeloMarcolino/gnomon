@@ -65,8 +65,7 @@ class BookingSchemaMigrationTest {
     assertIndexes(
         "appointment_slots",
         "idx_appointment_slots_tenant_appointment",
-        "idx_appointment_slots_appointment_id",
-        "idx_appointment_slots_tenant_calendar");
+        "idx_appointment_slots_slot_start_at");
   }
 
   @Test
@@ -98,11 +97,46 @@ class BookingSchemaMigrationTest {
                 FROM information_schema.columns
                 WHERE table_schema = 'public'
                   AND table_name = 'appointment_slots'
-                  AND column_name = 'updated_at'
+          AND column_name = 'updated_at'
                 """);
         var result = statement.executeQuery()) {
       assertThat(result.next()).isTrue();
       assertThat(result.getInt(1)).isZero();
+    }
+
+    try (var connection = connection();
+        var statement =
+            connection.prepareStatement(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = 'appointment_slots'
+                """)) {
+      var columns = new HashSet<String>();
+      try (var result = statement.executeQuery()) {
+        while (result.next()) {
+          columns.add(result.getString(1));
+        }
+      }
+      assertThat(columns)
+          .doesNotContain("id")
+          .contains("tenant_id", "calendar_id", "slot_start_at");
+    }
+
+    try (var connection = connection();
+        var statement =
+            connection.prepareStatement(
+                """
+                SELECT pg_get_constraintdef(oid)
+                FROM pg_constraint
+                WHERE conname = 'pk_appointment_slots'
+                """)) {
+      try (var result = statement.executeQuery()) {
+        assertThat(result.next()).isTrue();
+        assertThat(result.getString(1))
+            .contains("PRIMARY KEY (tenant_id, calendar_id, slot_start_at)");
+      }
     }
   }
 
@@ -135,7 +169,7 @@ class BookingSchemaMigrationTest {
                     catalog.calendarId(),
                     Instant.parse("2027-07-01T12:00:00Z")))
         .isInstanceOf(SQLException.class)
-        .hasMessageContaining("uq_appointment_slots_calendar_start");
+        .hasMessageContaining("pk_appointment_slots");
   }
 
   @Test

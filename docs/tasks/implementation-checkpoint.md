@@ -106,7 +106,7 @@ Validações finais verdes:
 ### Fase 04 — concluída
 
 - Migration `V5__booking.sql` com customers globais, appointments tenant-scoped e slots
-  ocupados protegidos por `UNIQUE(calendar_id, slot_start_at)`.
+  ocupados protegidos por `PRIMARY KEY(tenant_id, calendar_id, slot_start_at)` via V6/ADR 0022.
 - Domínio puro de slots, telefone E.164 e fingerprint SHA-256; libphonenumber com região default
   configurável.
 - Booking público transacional com `Idempotency-Key` obrigatório, replay `200`, criação `201`,
@@ -165,8 +165,8 @@ O portfólio é paralelo às fases 05–08 e bloqueia a fase 09. A etapa de 2026
 documental: não existem classes, migrations, dependências ou configuração de infraestrutura.
 Os documentos normativos são `docs/features/tenant-portfolio/`, task 07.5 e ADRs 0020–0021.
 
-- Reservar `V6__tenant_portfolio.sql`; a futura migration da fase 08 é
-  `V7__appointment_action_tokens.sql`.
+- `V6__slot_scalability.sql` aplica o ADR 0022; a futura migration do portfólio é
+  `V7__tenant_portfolio.sql` e a migration da fase 08 é `V8__appointment_action_tokens.sql`.
 - Criar o futuro módulo `io.gnomon.portfolio` na direção `api → application → domain ←
   infrastructure`; o port de tenancy é a fronteira com identidade e AWS SDK fica somente no
   adapter S3-compatible.
@@ -177,6 +177,14 @@ Os documentos normativos são `docs/features/tenant-portfolio/`, task 07.5 e ADR
 
 A fase 08 pode começar quando houver vaga, mas cancelamento/remarcação continuam dependentes dos
 tokens da migration aditiva própria e das regras transacionais descritas no checkpoint abaixo.
+
+## Evolução condicional — GiST em appointments
+
+A substituição futura de `appointment_slots` por uma exclusion constraint GiST diretamente em
+`appointments` não pertence às fases atuais e não tem número Flyway reservado. O plano
+executável, incluindo auditoria, janela bloqueante de DDL, convivência, cutover, rollback,
+particionamento e testes, está em
+[`docs/specs/appointment-gist-migration.md`](../specs/appointment-gist-migration.md).
 
 ## Registro dos contratos congelados da onda 3
 
@@ -231,7 +239,7 @@ assinaturas; apenas adicionou implementações, wiring e testes conjuntos.
 
 - Onda 5: Redis fail-open, logging JSON/correlação/OTLP fail-open, painel admin/transições.
 - Onda 6 começa quando surgir vaga:
-  migration `V7__appointment_action_tokens.sql`, tokens, cancelamento/remarcação, hardening
+  migration `V8__appointment_action_tokens.sql`, tokens, cancelamento/remarcação, hardening
   concorrente e regressões públicas.
 - Cancelamento consome tokens após commit.
 - Remarcação bem-sucedida rotaciona ambos; conflito preserva horário, slots e tokens.
