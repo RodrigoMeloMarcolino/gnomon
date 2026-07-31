@@ -41,7 +41,7 @@ Mapeamento para Loki: labels apenas de baixa cardinalidade (`service_name`, `eve
 - **Exatamente um access log terminal por requisição**: `http.request.completed` ou
   `http.request.failed`, com route template (ex.: `/v1/public/tenants/{slug}/appointments`),
   método, status e `duration_ms`. O access log do Tomcat é desligado para não duplicar.
-- Resposta 500 segura: envelope padrão `{"error": {"code": "internal_error", ...}}`, sem stack
+- Resposta 500 segura: envelope padrão `{"error": {"code": "internal_server_error", ...}}`, sem stack
   trace no body; stack apenas no log.
 
 ## 4. Níveis

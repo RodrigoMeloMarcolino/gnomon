@@ -1,15 +1,16 @@
 package io.gnomon.shared.infrastructure.cache;
 
+import io.gnomon.shared.logging.StructuredEventLogger;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 final class RedisCacheStore implements CacheStore {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(RedisCacheStore.class);
+  private static final StructuredEventLogger LOGGER =
+      StructuredEventLogger.getLogger(RedisCacheStore.class);
 
   private final StringRedisTemplate redis;
 
@@ -22,7 +23,7 @@ final class RedisCacheStore implements CacheStore {
     try {
       return Optional.ofNullable(redis.opsForValue().get(key));
     } catch (DataAccessException exception) {
-      unavailable(exception);
+      unavailable("get", exception);
       return Optional.empty();
     }
   }
@@ -32,7 +33,7 @@ final class RedisCacheStore implements CacheStore {
     try {
       redis.opsForValue().set(key, value, ttl);
     } catch (DataAccessException exception) {
-      unavailable(exception);
+      unavailable("put", exception);
     }
   }
 
@@ -41,7 +42,7 @@ final class RedisCacheStore implements CacheStore {
     try {
       redis.delete(key);
     } catch (DataAccessException exception) {
-      unavailable(exception);
+      unavailable("evict", exception);
     }
   }
 
@@ -54,12 +55,15 @@ final class RedisCacheStore implements CacheStore {
       }
       return version == null ? 0 : version;
     } catch (DataAccessException exception) {
-      unavailable(exception);
+      unavailable("increment", exception);
       return 0;
     }
   }
 
-  private static void unavailable(DataAccessException exception) {
-    LOGGER.warn("event_name=\"cache.unavailable\" cache backend is unavailable", exception);
+  private static void unavailable(String operation, DataAccessException exception) {
+    LOGGER.warn(
+        "cache.unavailable",
+        "cache backend is unavailable",
+        Map.of("cache.name", "redis", "cache.operation", operation));
   }
 }

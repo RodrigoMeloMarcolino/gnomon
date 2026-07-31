@@ -1,5 +1,6 @@
 package io.gnomon.shared.security.config;
 
+import io.gnomon.shared.logging.RequestCorrelationFilter;
 import io.gnomon.shared.security.filter.LocalUserProvisioningFilter;
 import io.gnomon.tenancy.application.port.in.ProvisionLocalUserUseCase;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,6 +22,7 @@ import org.springframework.security.oauth2.server.resource.web.authentication.Be
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -37,7 +39,8 @@ public class SecurityConfig {
       HttpSecurity http,
       AuthenticationEntryPoint authenticationEntryPoint,
       AccessDeniedHandler accessDeniedHandler,
-      LocalUserProvisioningFilter localUserProvisioningFilter)
+      LocalUserProvisioningFilter localUserProvisioningFilter,
+      RequestCorrelationFilter requestCorrelationFilter)
       throws Exception {
     return http.csrf(csrf -> csrf.disable())
         .cors(Customizer.withDefaults())
@@ -60,6 +63,7 @@ public class SecurityConfig {
                     .authenticationEntryPoint(authenticationEntryPoint)
                     .accessDeniedHandler(accessDeniedHandler)
                     .jwt(Customizer.withDefaults()))
+        .addFilterBefore(requestCorrelationFilter, SecurityContextHolderFilter.class)
         .addFilterAfter(localUserProvisioningFilter, BearerTokenAuthenticationFilter.class)
         .build();
   }
@@ -73,13 +77,24 @@ public class SecurityConfig {
   }
 
   @Bean
+  RequestCorrelationFilter requestCorrelationFilter() {
+    return new RequestCorrelationFilter();
+  }
+
+  @Bean
   public CorsConfigurationSource corsConfigurationSource(
       @Value("${gnomon.cors.allowed-origins:}") String allowedOrigins) {
     var configuration = new CorsConfiguration();
     configuration.setAllowedOrigins(parseOrigins(allowedOrigins));
     configuration.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(
-        List.of(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_TYPE, "Idempotency-Key"));
+        List.of(
+            HttpHeaders.AUTHORIZATION,
+            HttpHeaders.CONTENT_TYPE,
+            "Idempotency-Key",
+            "X-Request-ID",
+            "X-Correlation-ID"));
+    configuration.setExposedHeaders(List.of("X-Request-ID", "X-Correlation-ID"));
     configuration.setMaxAge(3600L);
 
     var source = new UrlBasedCorsConfigurationSource();

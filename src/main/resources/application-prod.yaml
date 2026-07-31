@@ -12,6 +12,11 @@ spring:
     # Em prod as migrations são aplicadas pela pipeline (./mvnw flyway:migrate), não no startup.
     enabled: false
 
+logging:
+  structured:
+    format:
+      console: io.gnomon.shared.logging.GnomonStructuredLogFormatter
+
 gnomon:
   security:
     require-verified-email: ${REQUIRE_VERIFIED_EMAIL:true}

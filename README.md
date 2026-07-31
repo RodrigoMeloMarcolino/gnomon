@@ -15,13 +15,13 @@ horas.
 
 ## Estado atual
 
-Checkpoint de continuidade: fases `00`, `00.5`, `00.6`, `01` e `02` concluídas; a próxima fase
-é `03` — disponibilidade. Além da fundação técnica, o código atual entrega autenticação JWT com
+Checkpoint de continuidade: fases `00` a `05` estão concluídas; a próxima fase é `06` —
+observabilidade. Além da fundação técnica, o código atual entrega autenticação JWT com
 Keycloak, projeção JIT de usuários, tenants e memberships com autorização local, colaboradores,
 calendários, offerings, atribuições e catálogo público.
 
-Disponibilidade, booking, cache Redis funcional e observabilidade completa permanecem como
-contratos especificados em `docs/` para as fases seguintes.
+Disponibilidade, booking e cache Redis já estão funcionais. A observabilidade está em implantação
+conforme `docs/specs/structured-logging.md`.
 
 ## Stack
 
@@ -169,13 +169,9 @@ Erros HTTP seguem o envelope:
 
 ## Logging estruturado
 
-Contrato planejado para a fase `06`: a aplicação emitirá um evento por linha em `stdout` em JSON,
-seguindo contrato compatível com o OpenTelemetry Logs Data Model (ver
-`docs/specs/structured-logging.md`). Toda resposta HTTP incluirá `X-Request-ID` e
-`X-Correlation-ID`.
-
-No estado atual, a observabilidade completa ainda não está implementada; os logs seguem o padrão
-do Spring Boot. `docker-compose.observability.yaml` será criado na fase `06`.
+O formatter JSON estruturado segue o contrato compatível com o OpenTelemetry Logs Data Model
+(ver `docs/specs/structured-logging.md`). Toda resposta HTTP inclui `X-Request-ID` e
+`X-Correlation-ID`; em `local` o console permanece legível por padrão.
 
 Configuração principal:
 
@@ -183,13 +179,12 @@ Configuração principal:
 LOG_LEVEL=INFO
 LOG_FORMAT=json
 OTEL_SERVICE_NAME=gnomon
-OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://localhost:4318/v1/logs
 ```
 
 ### Pipeline local Collector, Loki e Grafana
 
-Disponível a partir da fase `06`. Quando essa fase for concluída, a stack de observabilidade
-subirá separadamente:
+Durante a fase `06`, a stack de observabilidade sobe separadamente:
 
 ```powershell
 docker compose -f docker-compose.observability.yaml up -d
