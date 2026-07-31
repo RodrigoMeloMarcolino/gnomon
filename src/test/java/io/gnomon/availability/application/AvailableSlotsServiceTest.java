@@ -10,8 +10,10 @@ import io.gnomon.availability.application.port.out.OfferingContext;
 import io.gnomon.availability.application.port.out.PublicAvailabilityCachePort;
 import io.gnomon.availability.application.port.out.PublicAvailabilityCatalogPort;
 import io.gnomon.availability.application.service.AvailableSlotsService;
+import io.gnomon.availability.domain.exception.AvailabilityException;
 import io.gnomon.availability.domain.model.AvailabilityRule;
 import io.gnomon.availability.domain.service.AvailabilityCalculator;
+import io.gnomon.shared.domain.model.BookingHorizon;
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Instant;
@@ -91,5 +93,32 @@ class AvailableSlotsServiceTest {
     verify(occupiedSlots).findOccupied(TENANT_ID, CALENDAR_ID, fromInclusive, toExclusive);
     verify(calculator)
         .availableStarts(List.of(rule.toWindow()), 30, Set.of(occupied), DATE, ZONE, NOW);
+  }
+
+  @Test
+  void list_whenDateIsBeyondBookingHorizon_shouldRejectBeforeReadingRules() {
+    var service =
+        new AvailableSlotsService(
+            catalog,
+            rules,
+            occupiedSlots,
+            cache,
+            calculator,
+            new BookingHorizon(180),
+            Clock.fixed(NOW, ZoneOffset.UTC));
+    when(catalog.requireSchedulableOffering("barbearia-solar", CALENDAR_ID, OFFERING_ID))
+        .thenReturn(new OfferingContext(TENANT_ID, CALENDAR_ID, ZONE, 30));
+
+    assertThat(
+            org.assertj.core.api.Assertions.catchThrowable(
+                () ->
+                    service.list(
+                        "barbearia-solar", CALENDAR_ID, OFFERING_ID, LocalDate.of(2028, 1, 1))))
+        .isInstanceOf(AvailabilityException.class);
+    verify(rules, org.mockito.Mockito.never())
+        .findActiveByTenantIdAndCalendarIdAndWeekday(
+            org.mockito.ArgumentMatchers.any(),
+            org.mockito.ArgumentMatchers.any(),
+            org.mockito.ArgumentMatchers.any());
   }
 }

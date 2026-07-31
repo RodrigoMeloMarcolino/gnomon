@@ -2,9 +2,11 @@ package io.gnomon.catalog.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.gnomon.catalog.application.port.out.CalendarRepository;
+import io.gnomon.catalog.application.port.out.CatalogAvailabilityCachePort;
 import io.gnomon.catalog.application.port.out.CatalogTenantAccessPort;
 import io.gnomon.catalog.application.port.out.CollaboratorRepository;
 import io.gnomon.catalog.application.port.out.PublicCatalogCachePort;
@@ -30,6 +32,7 @@ class CalendarServiceTest {
   @Mock private CollaboratorRepository collaborators;
   @Mock private CatalogTenantAccessPort tenantAccess;
   @Mock private PublicCatalogCachePort cache;
+  @Mock private CatalogAvailabilityCachePort availabilityCache;
 
   @Test
   void get_whenStaffTargetsAnotherCalendar_shouldReject() {
@@ -76,5 +79,34 @@ class CalendarServiceTest {
     assertThat(result.tenantId()).isEqualTo(tenant);
     assertThat(result.calendarId()).isEqualTo(calendar.id());
     assertThat(result.zoneId().getId()).isEqualTo("America/Fortaleza");
+  }
+
+  @Test
+  void update_whenCalendarChanges_shouldInvalidateCatalogAndAvailability() {
+    Instant now = Instant.parse("2026-07-28T18:00:00Z");
+    UUID actor = UUID.randomUUID();
+    UUID tenant = UUID.randomUUID();
+    Calendar calendar =
+        Calendar.create(tenant, UUID.randomUUID(), "Agenda", "America/Fortaleza", now);
+    when(tenantAccess.requireMember(actor, "tenant"))
+        .thenReturn(
+            new TenantAccess(tenant, "Tenant", "tenant", "America/Fortaleza", "BRL", "owner"));
+    when(calendars.findByTenantIdAndId(tenant, calendar.id())).thenReturn(Optional.of(calendar));
+    when(calendars.save(calendar)).thenReturn(calendar);
+    var service =
+        new CalendarService(
+            calendars,
+            collaborators,
+            tenantAccess,
+            Clock.fixed(now, ZoneOffset.UTC),
+            cache,
+            availabilityCache);
+
+    service.update(
+        new io.gnomon.catalog.application.port.in.UpdateCalendarCommand(
+            actor, "tenant", calendar.id(), "Nova agenda", "America/Fortaleza", true));
+
+    verify(cache).invalidateAfterCommit(tenant);
+    verify(availabilityCache).invalidateCalendarAfterCommit(tenant, calendar.id());
   }
 }

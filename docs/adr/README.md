@@ -15,7 +15,7 @@ quando herdada.
 | [0008](0008-guest-booking-sem-conta.md) | Guest booking sem conta obrigatória | Accepted | ADR 0002 |
 | [0009](0009-customer-global-telefone-canonico.md) | Customer global por telefone canônico | Accepted | ADRs 0003/0004 |
 | [0010](0010-slots-15min-nao-persistir-disponiveis.md) | Slots de 15 min; não persistir slots disponíveis | Accepted | ADRs 0005/0006 |
-| [0011](0011-double-booking-constraint-calendario.md) | Double booking via `UNIQUE(calendar_id, slot_start_at)` | Accepted | ADR 0007 |
+| [0011](0011-double-booking-constraint-calendario.md) | Double booking via database constraint (superseded) | Superseded by ADR 0022 | ADR 0007 |
 | [0012](0012-snapshot-duracao-multiplo-15.md) | Snapshot de duração; durações múltiplas de 15 | Accepted | ADRs 0008/0009 |
 | [0013](0013-moeda-tenant-price-cents.md) | Moeda do tenant e preços em centavos | Accepted | ADR 0011 |
 | [0014](0014-api-v1-envelope-erro-idempotencia.md) | Rotas `/v1`, envelope de erro e idempotência de booking | Accepted | ADRs 0013/0014 |
@@ -26,6 +26,7 @@ quando herdada.
 | [0019](0019-taxonomia-ports-e-limites-modulares.md) | Taxonomia de ports e limites modulares verificáveis | Accepted | Nova |
 | [0020](0020-storage-s3-compativel-privado-upload-direto.md) | Storage S3-compatible privado, upload direto e entrega pública mediada | Accepted | Nova |
 | [0021](0021-portfolio-lifecycle-fila-postgresql-worker-reconciliacao.md) | Lifecycle do portfólio, fila PostgreSQL, worker e reconciliação | Accepted | Nova |
+| [0022](0022-retencao-e-escalabilidade-dos-slots.md) | Retenção e escalabilidade dos locks de slots | Accepted | Nova |
 
 ## Convenção
 

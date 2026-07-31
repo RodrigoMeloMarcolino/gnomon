@@ -14,7 +14,7 @@ agenda com um calendário específico do tenant. É preciso eleger o novo dono d
 
 1. **`calendars` é o dono da agenda**: `availability_rules`, `appointments` e
    `appointment_slots` referenciam `calendar_id`. O lock de concorrência sobe para
-   `UNIQUE(calendar_id, slot_start_at)` (ADR 0011).
+   `PRIMARY KEY(tenant_id, calendar_id, slot_start_at)` (ADR 0022).
 2. **1:1 collaborator ↔ calendar no MVP**: todo colaborador criado recebe automaticamente um
    calendário (`UNIQUE(tenant_id, collaborator_id)` em `calendars`). O calendário carrega
    `name` público (default: nome do colaborador) e `is_active`.

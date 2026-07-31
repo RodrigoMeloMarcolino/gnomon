@@ -135,7 +135,7 @@ public class AppointmentJdbcAdapter implements AppointmentRepository {
     try {
       jdbcTemplate.batchUpdate(INSERT_SLOT, arguments);
     } catch (DataIntegrityViolationException exception) {
-      if (BookingConstraintNames.contains(exception, "uq_appointment_slots_calendar_start")) {
+      if (BookingConstraintNames.contains(exception, "pk_appointment_slots")) {
         throw new BookingException("slot_unavailable", "slot is no longer available");
       }
       if (isKnownSlotValidationConstraint(exception)) {

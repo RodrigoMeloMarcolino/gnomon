@@ -182,9 +182,9 @@ This is a **Java 21 + Spring Boot 4 + Maven** project. Non-negotiable rules:
 3. **Customer ≠ User**: customers are global, reused by canonical phone, and have no login,
    password, JWT, roles, or ownership (ADR 0009). Guest booking stays unauthenticated (ADR 0008).
 4. **Scheduling core**: 15-minute discrete slots; availability computed dynamically; only
-   occupied slots persisted; double booking prevented by `UNIQUE(calendar_id, slot_start_at)`;
-   booking + customer reuse + slot insertion in one short transaction; constraint violation →
-   HTTP 409 (ADRs 0010/0011).
+   occupied slots persisted; double booking prevented by
+   `PRIMARY KEY(tenant_id, calendar_id, slot_start_at)`; booking + customer reuse + slot
+   insertion in one short transaction; constraint violation → HTTP 409 (ADRs 0010/0022).
 5. **Thin controllers**: no business rules in `@RestController` classes. Controllers receive
    requests, validate input (`jakarta.validation`), call use cases, translate responses.
 6. **Package by feature**: `io.gnomon.<module>` with `api` / `application` / `domain` /

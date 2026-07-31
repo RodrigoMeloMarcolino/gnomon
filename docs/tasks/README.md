@@ -16,7 +16,7 @@ verdes). Status: `todo` | `doing` | `done`.
 | [03](03-disponibilidade.md) | Availability rules + available-slots | done | spec booking, ADRs 0006, 0010, 0016 |
 | [04](04-guest-booking.md) | Guest booking transacional | done | spec booking, ADRs 0008–0012, 0014, 0016, 0017 |
 | [04.5](04.5-hardening-arquitetural.md) | Hardening arquitetural pré-fase 05 | done | ADRs 0002, 0019 |
-| [05](05-cache-redis.md) | Cache Redis das leituras públicas | doing | ADR 0014, RNF-07 |
+| [05](05-cache-redis.md) | Cache Redis das leituras públicas | done | ADR 0014, RNF-07 |
 | [06](06-observabilidade.md) | Observabilidade (logs JSON + OTLP) | todo | spec structured-logging, ADR 0015 |
 | [07](07-painel-admin.md) | Painel administrativo (appointments, customers) | todo | spec multi-tenancy, PRD 6.4 |
 | [08](08-cancelamento-remarcacao.md) | Cancelamento e remarcação via token | todo | ADR 0008, livedoc 13–14 |
@@ -40,10 +40,15 @@ verdes). Status: `todo` | `doing` | `done`.
 - 00.6 é o checkpoint de troca de agente para Codex; não altera decisões de produto nem
   arquitetura.
 - 05, 06, 07, 07.5 e 08 são workstreams paralelizáveis após o core da fase 04 estabilizar.
-- 07.5 é bloqueante da fase 09, mas não bloqueia os demais workstreams; a etapa atual é somente
-  documental e reserva a próxima migration V6.
+- 07.5 é bloqueante da fase 09, mas não bloqueia os demais workstreams; sua migration futura é
+  V7 porque V6 foi usada pelo hardening de slots do ADR 0022.
 - 06 pode ter fundação antecipada, mas o contrato completo fecha na própria fase.
 - 09 integra e valida os quatro workstreams pós-core.
+
+## Evoluções condicionais fora do roadmap
+
+- [Migração futura para exclusion constraint GiST](../specs/appointment-gist-migration.md):
+  somente após os gatilhos e benchmarks do ADR 0022; não possui número Flyway reservado.
 
 ## Regras do roadmap
 

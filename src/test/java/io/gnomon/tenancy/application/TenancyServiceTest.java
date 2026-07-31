@@ -11,6 +11,7 @@ import io.gnomon.tenancy.application.port.in.ChangeMembershipRoleCommand;
 import io.gnomon.tenancy.application.port.in.CreateTenantCommand;
 import io.gnomon.tenancy.application.port.in.result.TenantResult;
 import io.gnomon.tenancy.application.port.out.MembershipRepository;
+import io.gnomon.tenancy.application.port.out.TenantPublicCatalogCachePort;
 import io.gnomon.tenancy.application.port.out.TenantRepository;
 import io.gnomon.tenancy.application.port.out.UserRepository;
 import io.gnomon.tenancy.application.service.TenancyService;
@@ -39,12 +40,15 @@ class TenancyServiceTest {
   @Mock private TenantRepository tenants;
   @Mock private MembershipRepository memberships;
   @Mock private UserRepository users;
+  @Mock private TenantPublicCatalogCachePort publicCatalogCache;
 
   private TenancyService service;
 
   @BeforeEach
   void setUp() {
-    service = new TenancyService(tenants, memberships, users, Clock.fixed(NOW, ZoneOffset.UTC));
+    service =
+        new TenancyService(
+            tenants, memberships, users, Clock.fixed(NOW, ZoneOffset.UTC), publicCatalogCache);
   }
 
   @Test
@@ -127,6 +131,23 @@ class TenancyServiceTest {
             service.changeRole(
                 new ChangeMembershipRoleCommand(actor.id(), tenant.slug(), other.id(), "admin")),
         "membership_required");
+  }
+
+  @Test
+  void update_whenOwnerChangesPublicTenantData_shouldInvalidateCatalog() {
+    User actor = user("owner@example.com");
+    Tenant tenant = tenant();
+    TenantMembership owner = membership(tenant.id(), actor.id(), MembershipRole.OWNER);
+    when(tenants.findBySlug(tenant.slug())).thenReturn(Optional.of(tenant));
+    when(memberships.findByTenantIdAndUserId(tenant.id(), actor.id()))
+        .thenReturn(Optional.of(owner));
+    when(tenants.save(tenant)).thenReturn(tenant);
+
+    service.update(
+        new io.gnomon.tenancy.application.port.in.UpdateTenantCommand(
+            actor.id(), tenant.slug(), "Updated", "America/Fortaleza", "BRL", "active"));
+
+    verify(publicCatalogCache).invalidateAfterCommit(tenant.id());
   }
 
   private static void assertCode(Runnable action, String expectedCode) {
