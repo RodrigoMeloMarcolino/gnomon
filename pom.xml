@@ -24,6 +24,7 @@
     <testcontainers.version>2.0.5</testcontainers.version>
     <rest-assured.version>6.0.1</rest-assured.version>
     <libphonenumber.version>9.0.32</libphonenumber.version>
+    <opentelemetry.instrumentation.version>2.30.0</opentelemetry.instrumentation.version>
     <!-- Preloaded as a Java agent: JDK 21 containers do not allow Mockito self-attach. -->
     <argLine/>
     <!-- Tags JUnit: testes de integração rodam só com -Pintegration ou -Pall-tests -->
@@ -37,6 +38,13 @@
         <groupId>org.testcontainers</groupId>
         <artifactId>testcontainers-bom</artifactId>
         <version>${testcontainers.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.opentelemetry.instrumentation</groupId>
+        <artifactId>opentelemetry-instrumentation-bom</artifactId>
+        <version>${opentelemetry.instrumentation.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -96,6 +104,10 @@
       <groupId>com.googlecode.libphonenumber</groupId>
       <artifactId>libphonenumber</artifactId>
       <version>${libphonenumber.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry.instrumentation</groupId>
+      <artifactId>opentelemetry-spring-boot-starter</artifactId>
     </dependency>
 
     <dependency>

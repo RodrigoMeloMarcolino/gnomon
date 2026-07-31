@@ -21,6 +21,33 @@ spring:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/gnomon}
           audiences: gnomon-api
 
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+
+otel:
+  service:
+    name: ${OTEL_SERVICE_NAME:gnomon}
+  traces:
+    exporter: none
+  metrics:
+    exporter: none
+  instrumentation:
+    common:
+      default-enabled: false
+    logback-appender-1.0:
+      enabled: true
+  blrp:
+    max:
+      queue:
+        size: ${OTEL_BLRP_MAX_QUEUE_SIZE:2048}
+      export:
+        batch:
+          size: ${OTEL_BLRP_MAX_EXPORT_BATCH_SIZE:512}
+  exporter:
+    otlp:
+      timeout: ${OTEL_EXPORTER_OTLP_LOGS_TIMEOUT:5s}
+
 gnomon:
   booking:
     default-phone-region: ${DEFAULT_PHONE_REGION:BR}
@@ -44,3 +71,6 @@ gnomon:
 
 server:
   port: ${SERVER_PORT:8080}
+  tomcat:
+    accesslog:
+      enabled: false

@@ -3,3 +3,6 @@
 logging:
   level:
     io.gnomon: debug
+  structured:
+    format:
+      console: io.gnomon.shared.logging.GnomonStructuredLogFormatter

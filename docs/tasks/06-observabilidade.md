@@ -1,6 +1,6 @@
 # Fase 06 — Observabilidade (logs JSON + OTLP)
 
-Status: todo
+Status: doing
 
 ## Objetivo
 
@@ -39,7 +39,12 @@ Conforme `docs/specs/structured-logging.md`:
 
 ## Notas de implementação
 
-(preencher ao concluir)
+- Fundação em andamento (2026-07-31): formatter JSON próprio com contrato OTel, fachada SLF4J,
+  filtro de correlação/access log, headers CORS e eventos de lifecycle já foram adicionados.
+- O contrato de erro da spec foi sincronizado para `internal_server_error`, que já é o código
+  efetivamente devolvido pelos exception handlers.
+- Ainda pendentes para encerrar a fase: cobertura HTTP completa, instrumentação pós-commit dos
+  módulos tenancy/catalog/availability, smoke real com booking e a validação completa da stack.
 
 ## Follow-up registrado (2026-07-24 — semente do Moonlight)
 

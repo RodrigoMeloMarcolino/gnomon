@@ -25,14 +25,13 @@ import io.gnomon.customers.application.port.out.CustomerRepository;
 import io.gnomon.customers.domain.exception.CustomerException;
 import io.gnomon.customers.domain.model.Customer;
 import io.gnomon.shared.domain.model.BookingHorizon;
+import io.gnomon.shared.logging.StructuredEventLogger;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,7 +48,8 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
   public static final String SLOT_UNAVAILABLE_VALIDATION =
       BookingErrorCodes.SLOT_UNAVAILABLE_VALIDATION;
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(CreateAppointmentService.class);
+  private static final StructuredEventLogger LOGGER =
+      StructuredEventLogger.getLogger(CreateAppointmentService.class);
   private static final int IDEMPOTENCY_KEY_MAX_LENGTH = 255;
 
   private final BookingCatalogPort catalog;
@@ -387,25 +387,25 @@ public class CreateAppointmentService implements CreateAppointmentUseCase {
           case "slot_unavailable", "idempotency_key_conflict" -> "appointment.booking_conflict";
           default -> "appointment.booking_rejected";
         };
-    LOGGER
-        .atWarn()
-        .addKeyValue("event_name", eventName)
-        .addKeyValue("tenant.id", safeId(tenantId))
-        .addKeyValue("calendar.id", safeId(calendarId))
-        .addKeyValue("appointment.id", safeId(appointmentId))
-        .addKeyValue("error.type", publicErrorCode(exception.code()))
-        .log("appointment booking was not completed");
+    LOGGER.warn(
+        eventName,
+        "appointment booking was not completed",
+        java.util.Map.of(
+            "tenant.id", safeId(tenantId),
+            "calendar.id", safeId(calendarId),
+            "appointment.id", safeId(appointmentId),
+            "error.type", publicErrorCode(exception.code())));
   }
 
   private static void logInfo(
       String eventName, String message, UUID tenantId, UUID calendarId, UUID appointmentId) {
-    LOGGER
-        .atInfo()
-        .addKeyValue("event_name", eventName)
-        .addKeyValue("tenant.id", safeId(tenantId))
-        .addKeyValue("calendar.id", safeId(calendarId))
-        .addKeyValue("appointment.id", safeId(appointmentId))
-        .log(message);
+    LOGGER.info(
+        eventName,
+        message,
+        java.util.Map.of(
+            "tenant.id", safeId(tenantId),
+            "calendar.id", safeId(calendarId),
+            "appointment.id", safeId(appointmentId)));
   }
 
   private static String safeId(UUID id) {
