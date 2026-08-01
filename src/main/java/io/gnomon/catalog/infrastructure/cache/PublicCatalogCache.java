@@ -5,6 +5,7 @@ import io.gnomon.catalog.application.port.in.result.OfferingResult;
 import io.gnomon.catalog.application.port.in.result.PublicCalendarResult;
 import io.gnomon.catalog.application.port.out.PublicCatalogCachePort;
 import io.gnomon.shared.infrastructure.cache.CacheStore;
+import io.gnomon.shared.logging.StructuredEventLogger;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +21,8 @@ import tools.jackson.databind.ObjectMapper;
 public final class PublicCatalogCache implements PublicCatalogCachePort {
 
   private static final String KEY_PREFIX = "gnomon:catalog:tenant:";
+  private static final StructuredEventLogger LOGGER =
+      StructuredEventLogger.getLogger(PublicCatalogCache.class);
 
   private final CacheStore store;
   private final ObjectMapper objectMapper;
@@ -55,7 +58,14 @@ public final class PublicCatalogCache implements PublicCatalogCachePort {
 
   /** Advances the tenant catalog version only after the originating mutation commits. */
   public void invalidateAfterCommit(UUID tenantId) {
-    Runnable invalidate = () -> store.increment(versionKey(tenantId), versionTtl);
+    Runnable invalidate =
+        () -> {
+          store.increment(versionKey(tenantId), versionTtl);
+          LOGGER.info(
+              "cache.invalidated",
+              "catalog cache invalidated",
+              java.util.Map.of("cache.name", "catalog", "tenant.id", tenantId));
+        };
     if (TransactionSynchronizationManager.isSynchronizationActive()) {
       TransactionSynchronizationManager.registerSynchronization(
           new TransactionSynchronization() {
@@ -72,8 +82,10 @@ public final class PublicCatalogCache implements PublicCatalogCachePort {
   private <T> T load(String key, Class<T> type, Supplier<T> databaseLookup) {
     Optional<T> cached = store.get(key).flatMap(value -> deserialize(value, type));
     if (cached.isPresent()) {
+      cacheHit();
       return cached.get();
     }
+    cacheMiss();
     T value = databaseLookup.get();
     serialize(value).ifPresent(serialized -> store.put(key, serialized, ttl));
     return value;
@@ -82,8 +94,10 @@ public final class PublicCatalogCache implements PublicCatalogCachePort {
   private <T> T load(String key, TypeReference<T> type, Supplier<T> databaseLookup) {
     Optional<T> cached = store.get(key).flatMap(value -> deserialize(value, type));
     if (cached.isPresent()) {
+      cacheHit();
       return cached.get();
     }
+    cacheMiss();
     T value = databaseLookup.get();
     serialize(value).ifPresent(serialized -> store.put(key, serialized, ttl));
     return value;
@@ -120,5 +134,13 @@ public final class PublicCatalogCache implements PublicCatalogCachePort {
     } catch (JacksonException exception) {
       return Optional.empty();
     }
+  }
+
+  private static void cacheHit() {
+    LOGGER.info("cache.hit", "catalog cache hit", java.util.Map.of("cache.name", "catalog"));
+  }
+
+  private static void cacheMiss() {
+    LOGGER.info("cache.miss", "catalog cache miss", java.util.Map.of("cache.name", "catalog"));
   }
 }

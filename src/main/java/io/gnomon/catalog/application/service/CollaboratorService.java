@@ -14,6 +14,7 @@ import io.gnomon.catalog.application.port.out.PublicCatalogCachePort;
 import io.gnomon.catalog.domain.exception.CatalogException;
 import io.gnomon.catalog.domain.model.Calendar;
 import io.gnomon.catalog.domain.model.Collaborator;
+import io.gnomon.shared.logging.StructuredEventLogger;
 import java.time.Clock;
 import java.util.List;
 import java.util.Map;
@@ -23,10 +24,15 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @Transactional(readOnly = true)
 public class CollaboratorService implements CollaboratorUseCase {
+
+  private static final StructuredEventLogger LOGGER =
+      StructuredEventLogger.getLogger(CollaboratorService.class);
 
   private final CollaboratorRepository collaborators;
   private final CalendarRepository calendars;
@@ -86,6 +92,14 @@ public class CollaboratorService implements CollaboratorUseCase {
                 now));
     cache.invalidateAfterCommit(access.tenantId());
     availabilityCache.invalidateCalendarAfterCommit(access.tenantId(), calendar.id());
+    logAfterCommit(
+        "collaborator.created",
+        "collaborator created",
+        Map.of("tenant.id", access.tenantId(), "collaborator.id", collaborator.id()));
+    logAfterCommit(
+        "calendar.created",
+        "calendar created",
+        Map.of("tenant.id", access.tenantId(), "calendar.id", calendar.id()));
     return CollaboratorResult.from(collaborator, CalendarResult.from(calendar));
   }
 
@@ -118,6 +132,10 @@ public class CollaboratorService implements CollaboratorUseCase {
     collaborator.rename(command.displayName(), clock.instant());
     CollaboratorResult result = result(collaborators.save(collaborator));
     cache.invalidateAfterCommit(access.tenantId());
+    logAfterCommit(
+        "collaborator.updated",
+        "collaborator updated",
+        Map.of("tenant.id", access.tenantId(), "collaborator.id", collaborator.id()));
     return result;
   }
 
@@ -137,6 +155,10 @@ public class CollaboratorService implements CollaboratorUseCase {
     collaborators.save(collaborator);
     calendars.save(calendar);
     cache.invalidateAfterCommit(access.tenantId());
+    logAfterCommit(
+        "collaborator.updated",
+        "collaborator updated",
+        Map.of("tenant.id", access.tenantId(), "collaborator.id", collaborator.id()));
   }
 
   @Override
@@ -148,6 +170,10 @@ public class CollaboratorService implements CollaboratorUseCase {
     collaborator.link(link.userId(), clock.instant());
     CollaboratorResult result = result(collaborators.save(collaborator));
     cache.invalidateAfterCommit(access.tenantId());
+    logAfterCommit(
+        "collaborator.updated",
+        "collaborator updated",
+        Map.of("tenant.id", access.tenantId(), "collaborator.id", collaborator.id()));
     return result;
   }
 
@@ -162,6 +188,10 @@ public class CollaboratorService implements CollaboratorUseCase {
     }
     CollaboratorResult result = result(collaborators.save(collaborator));
     cache.invalidateAfterCommit(access.tenantId());
+    logAfterCommit(
+        "collaborator.updated",
+        "collaborator updated",
+        Map.of("tenant.id", access.tenantId(), "collaborator.id", collaborator.id()));
     return result;
   }
 
@@ -187,5 +217,20 @@ public class CollaboratorService implements CollaboratorUseCase {
               }
               throw new CatalogException("collaborator_not_found", "collaborator was not found");
             });
+  }
+
+  private static void logAfterCommit(String eventName, String message, Map<String, ?> attributes) {
+    Runnable log = () -> LOGGER.info(eventName, message, attributes);
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      TransactionSynchronizationManager.registerSynchronization(
+          new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+              log.run();
+            }
+          });
+      return;
+    }
+    log.run();
   }
 }

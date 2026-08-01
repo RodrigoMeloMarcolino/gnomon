@@ -9,6 +9,7 @@ import io.gnomon.availability.application.port.out.AvailabilityRuleRepository;
 import io.gnomon.availability.application.port.out.PublicAvailabilityCachePort;
 import io.gnomon.availability.domain.exception.AvailabilityException;
 import io.gnomon.availability.domain.model.AvailabilityRule;
+import io.gnomon.shared.logging.StructuredEventLogger;
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.util.List;
@@ -16,10 +17,15 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @Transactional(readOnly = true)
 public class AvailabilityRuleService implements AvailabilityRuleUseCase {
+
+  private static final StructuredEventLogger LOGGER =
+      StructuredEventLogger.getLogger(AvailabilityRuleService.class);
 
   private final AvailabilityRuleRepository rules;
   private final AvailabilityCalendarAccessPort calendarAccess;
@@ -61,6 +67,13 @@ public class AvailabilityRuleService implements AvailabilityRuleUseCase {
             clock.instant());
     AvailabilityRuleResult result = AvailabilityRuleResult.from(rules.save(rule));
     cache.invalidateCalendarAfterCommit(calendar.tenantId(), calendar.calendarId());
+    logAfterCommit(
+        "availability_rule.created",
+        "availability rule created",
+        java.util.Map.of(
+            "tenant.id", calendar.tenantId(),
+            "calendar.id", calendar.calendarId(),
+            "availability_rule.id", rule.id()));
     return result;
   }
 
@@ -95,6 +108,13 @@ public class AvailabilityRuleService implements AvailabilityRuleUseCase {
         clock.instant());
     AvailabilityRuleResult result = AvailabilityRuleResult.from(rules.save(rule));
     cache.invalidateCalendarAfterCommit(calendar.tenantId(), calendar.calendarId());
+    logAfterCommit(
+        "availability_rule.updated",
+        "availability rule updated",
+        java.util.Map.of(
+            "tenant.id", calendar.tenantId(),
+            "calendar.id", calendar.calendarId(),
+            "availability_rule.id", rule.id()));
     return result;
   }
 
@@ -106,6 +126,13 @@ public class AvailabilityRuleService implements AvailabilityRuleUseCase {
     rule.deactivate(clock.instant());
     rules.save(rule);
     cache.invalidateCalendarAfterCommit(calendar.tenantId(), calendar.calendarId());
+    logAfterCommit(
+        "availability_rule.updated",
+        "availability rule updated",
+        java.util.Map.of(
+            "tenant.id", calendar.tenantId(),
+            "calendar.id", calendar.calendarId(),
+            "availability_rule.id", rule.id()));
   }
 
   private AvailabilityRule requireRule(UUID tenantId, UUID calendarId, UUID ruleId) {
@@ -131,5 +158,21 @@ public class AvailabilityRuleService implements AvailabilityRuleUseCase {
       throw new AvailabilityException("validation_error", "weekday must be between 1 and 7");
     }
     return DayOfWeek.of(value);
+  }
+
+  private static void logAfterCommit(
+      String eventName, String message, java.util.Map<String, ?> attributes) {
+    Runnable log = () -> LOGGER.info(eventName, message, attributes);
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      TransactionSynchronizationManager.registerSynchronization(
+          new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+              log.run();
+            }
+          });
+      return;
+    }
+    log.run();
   }
 }
