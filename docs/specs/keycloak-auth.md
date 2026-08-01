@@ -58,6 +58,17 @@ Regras da `SecurityFilterChain`:
 
 Validações obrigatórias do token: assinatura (JWKS do realm), `exp`, `iss` exato, `aud`.
 
+### Integração Umbra local (ADR 0023)
+
+- issuer: `http://localhost:8081/realms/gnomon`; client: `gnomon-web`;
+- fluxo `code`, scopes `openid profile email`, PKCE `S256` e audience `gnomon-api`;
+- callback: `http://localhost:3000/auth/callback`; silent callback:
+  `http://localhost:3000/auth/silent-callback`; pós-logout: `http://localhost:3000/`;
+- Umbra usa `automaticSilentRenew=true`; refresh token é permitido pelo realm e iframe é o
+  fallback do cliente OIDC;
+- CORS da API e `webOrigins` do Keycloak são configurações diferentes, ambas explícitas e sem
+  wildcard. A API não permite `PUT`.
+
 ## 4. JIT provisioning (projeção local)
 
 Filtro `OncePerRequestFilter` executado após a autenticação bem-sucedida:

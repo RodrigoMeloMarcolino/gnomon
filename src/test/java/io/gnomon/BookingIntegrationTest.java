@@ -79,7 +79,7 @@ class BookingIntegrationTest {
     mockMvc
         .perform(
             post("/v1/public/tenants/{slug}/appointments", scenario.tenantSlug())
-                .header("Idempotency-Key", "intent-1")
+                .header("Idempotency-Key", "10000000-0000-4000-8000-000000000001")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isCreated())
@@ -89,12 +89,13 @@ class BookingIntegrationTest {
 
     UUID appointmentId =
         jdbcTemplate.queryForObject(
-            "SELECT id FROM appointments WHERE idempotency_key = 'intent-1'", UUID.class);
+            "SELECT id FROM appointments WHERE idempotency_key = '10000000-0000-4000-8000-000000000001'",
+            UUID.class);
 
     mockMvc
         .perform(
             post("/v1/public/tenants/{slug}/appointments", scenario.tenantSlug())
-                .header("Idempotency-Key", "intent-1")
+                .header("Idempotency-Key", "10000000-0000-4000-8000-000000000001")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
@@ -103,7 +104,7 @@ class BookingIntegrationTest {
     mockMvc
         .perform(
             post("/v1/public/tenants/{slug}/appointments", scenario.tenantSlug())
-                .header("Idempotency-Key", "intent-1")
+                .header("Idempotency-Key", "10000000-0000-4000-8000-000000000001")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     payload(
@@ -125,7 +126,7 @@ class BookingIntegrationTest {
     mockMvc
         .perform(
             post("/v1/public/tenants/{slug}/appointments", scenario.tenantSlug())
-                .header("Idempotency-Key", "seconds")
+                .header("Idempotency-Key", "10000000-0000-4000-8000-000000000002")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     payload(
@@ -149,8 +150,8 @@ class BookingIntegrationTest {
 
     List<MvcResult> results =
         race(
-            request(scenario.tenantSlug(), "same-intent", payload),
-            request(scenario.tenantSlug(), "same-intent", payload));
+            request(scenario.tenantSlug(), "10000000-0000-4000-8000-000000000003", payload),
+            request(scenario.tenantSlug(), "10000000-0000-4000-8000-000000000003", payload));
 
     assertThat(statuses(results)).containsExactlyInAnyOrder(200, 201);
     assertThat(count("appointments")).isOne();

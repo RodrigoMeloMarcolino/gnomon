@@ -118,6 +118,11 @@ class SecurityConfigTest {
     assertThat(configuration).isNotNull();
     assertThat(configuration.getAllowedOrigins())
         .containsExactly("http://localhost:3000", "https://umbra.example");
+    assertThat(configuration.getAllowedMethods())
+        .containsExactly("GET", "POST", "PATCH", "DELETE", "OPTIONS")
+        .doesNotContain("PUT");
+    assertThat(configuration.getAllowedHeaders())
+        .contains("Authorization", "Content-Type", "Idempotency-Key");
   }
 
   @Test

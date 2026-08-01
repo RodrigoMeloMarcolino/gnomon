@@ -20,3 +20,7 @@ logging:
 gnomon:
   security:
     require-verified-email: ${REQUIRE_VERIFIED_EMAIL:true}
+
+springdoc:
+  swagger-ui:
+    enabled: false

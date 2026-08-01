@@ -76,6 +76,17 @@ A API sobe em `http://localhost:8080` depois que o PostgreSQL fica saudável, e 
 são aplicadas no startup. O build da imagem compila o projeto dentro do container (multi-stage),
 sem exigir JDK ou Maven no host.
 
+Para validar a integração Umbra com dados estáveis, execute depois que a API estiver pronta:
+
+```powershell
+bash scripts/smoke-umbra.sh
+```
+
+O smoke ressemeia apenas o tenant `umbra-smoke`, verifica catálogo e slots, e exige criação de
+booking (`201`) seguida de replay (`200`). O OpenAPI está em
+`http://localhost:8080/v3/api-docs.yaml`; em `local`/`docker`, o Swagger UI está em
+`http://localhost:8080/swagger-ui.html`.
+
 Se alguma porta do host estiver ocupada (5432, 6379, 8081, 8080), copie `.env.example` para
 `.env` e sobrescreva `POSTGRES_PORT`, `REDIS_PORT`, `KEYCLOAK_PORT` ou `API_PORT`.
 

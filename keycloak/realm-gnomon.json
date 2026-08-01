@@ -14,8 +14,8 @@
       "publicClient": true,
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
-      "redirectUris": ["http://localhost:3000/*", "http://127.0.0.1:3000/*"],
-      "webOrigins": ["http://localhost:3000", "http://127.0.0.1:3000"],
+      "redirectUris": ["http://localhost:3000/auth/callback", "http://localhost:3000/auth/silent-callback"],
+      "webOrigins": ["http://localhost:3000"],
       "attributes": {
         "pkce.code.challenge.method": "S256"
       },
@@ -49,6 +49,7 @@
       "email": "dev@gnomon.local",
       "enabled": true,
       "emailVerified": true,
+      "id": "10000000-0000-4000-8000-000000000001",
       "firstName": "Dev",
       "lastName": "Gnomon",
       "credentials": [

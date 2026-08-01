@@ -116,7 +116,7 @@ class RedisCacheIntegrationTest {
     mockMvc
         .perform(
             post("/v1/public/tenants/{slug}/appointments", scenario.tenantSlug())
-                .header("Idempotency-Key", "late-local-day")
+                .header("Idempotency-Key", "10000000-0000-4000-8000-000000000005")
                 .contentType("application/json")
                 .content(bookingPayload(scenario)))
         .andExpect(status().isCreated());

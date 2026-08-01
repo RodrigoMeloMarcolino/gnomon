@@ -34,6 +34,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 @ExtendWith(MockitoExtension.class)
 class PublicAppointmentControllerHttpTest {
 
+  private static final String IDEMPOTENCY_KEY = "10000000-0000-4000-8000-000000000001";
+
   private static final UUID TENANT_ID = UUID.fromString("20000000-0000-0000-0000-000000000001");
   private static final UUID CALENDAR_ID = UUID.fromString("30000000-0000-0000-0000-000000000001");
   private static final UUID OFFERING_ID = UUID.fromString("40000000-0000-0000-0000-000000000001");
@@ -60,7 +62,7 @@ class PublicAppointmentControllerHttpTest {
     mockMvc
         .perform(
             post("/v1/public/tenants/barbearia-solar/appointments")
-                .header("Idempotency-Key", "intent-1")
+                .header("Idempotency-Key", IDEMPOTENCY_KEY)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(validBody()))
         .andExpect(status().isCreated())
@@ -109,7 +111,7 @@ class PublicAppointmentControllerHttpTest {
     mockMvc
         .perform(
             post("/v1/public/tenants/barbearia-solar/appointments")
-                .header("Idempotency-Key", "intent-1")
+                .header("Idempotency-Key", IDEMPOTENCY_KEY)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(validBody()))
         .andExpect(status().isOk())
@@ -133,9 +135,21 @@ class PublicAppointmentControllerHttpTest {
     mockMvc
         .perform(
             post("/v1/public/tenants/barbearia-solar/appointments")
-                .header("Idempotency-Key", "intent-1")
+                .header("Idempotency-Key", IDEMPOTENCY_KEY)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(validBody().replace("2027-07-01T09:00:00-03:00", "2027-07-01T09:00:00")))
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(jsonPath("$.error.code").value("validation_error"));
+  }
+
+  @Test
+  void create_whenIdempotencyKeyIsNotCanonicalUuid_shouldReturnCanonical422() throws Exception {
+    mockMvc
+        .perform(
+            post("/v1/public/tenants/barbearia-solar/appointments")
+                .header("Idempotency-Key", "intent-1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(validBody()))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(jsonPath("$.error.code").value("validation_error"));
   }
