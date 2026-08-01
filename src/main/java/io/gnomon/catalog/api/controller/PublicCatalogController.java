@@ -1,6 +1,6 @@
 package io.gnomon.catalog.api.controller;
 
-import io.gnomon.catalog.api.response.OfferingResponse;
+import io.gnomon.catalog.api.response.PublicOfferingResponse;
 import io.gnomon.catalog.api.response.PublicTenantProfileResponse;
 import io.gnomon.catalog.application.port.in.GetPublicTenantProfileUseCase;
 import io.gnomon.catalog.application.port.in.ListPublicOfferingsUseCase;
@@ -36,11 +36,11 @@ public class PublicCatalogController {
   }
 
   @GetMapping("/offerings")
-  List<OfferingResponse> listOfferings(
+  List<PublicOfferingResponse> listOfferings(
       @PathVariable @Pattern(regexp = "^[a-z0-9]+(?:-[a-z0-9]+)*$") String tenantSlug,
       @RequestParam(name = "calendar_id", required = false) UUID calendarId) {
     return listPublicOfferings.list(tenantSlug, calendarId).stream()
-        .map(OfferingResponse::from)
+        .map(PublicOfferingResponse::from)
         .toList();
   }
 }

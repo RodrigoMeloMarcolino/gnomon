@@ -4,6 +4,7 @@ import io.gnomon.shared.security.authentication.LocalUserPrincipal;
 import io.gnomon.tenancy.api.request.CreateTenantRequest;
 import io.gnomon.tenancy.api.request.UpdateTenantRequest;
 import io.gnomon.tenancy.api.response.TenantResponse;
+import io.gnomon.tenancy.api.response.TenantSelectionResponse;
 import io.gnomon.tenancy.application.port.in.CreateTenantCommand;
 import io.gnomon.tenancy.application.port.in.CreateTenantUseCase;
 import io.gnomon.tenancy.application.port.in.GetTenantUseCase;
@@ -62,8 +63,10 @@ public class TenantController {
   }
 
   @GetMapping
-  List<TenantResponse> list(@AuthenticationPrincipal LocalUserPrincipal principal) {
-    return listMyTenants.list(principal.userId()).stream().map(TenantResponse::from).toList();
+  List<TenantSelectionResponse> list(@AuthenticationPrincipal LocalUserPrincipal principal) {
+    return listMyTenants.list(principal.userId()).stream()
+        .map(TenantSelectionResponse::from)
+        .toList();
   }
 
   @GetMapping("/{tenantSlug}")

@@ -2,6 +2,7 @@ package io.gnomon.shared.api.exception;
 
 import io.gnomon.shared.api.response.ApiErrorResponse;
 import io.gnomon.shared.api.response.FieldValidationError;
+import jakarta.validation.ConstraintViolationException;
 import java.util.Comparator;
 import java.util.List;
 import org.slf4j.Logger;
@@ -52,6 +53,20 @@ public class GlobalExceptionHandler {
                                 new FieldValidationError(
                                     result.getMethodParameter().getParameterName(),
                                     error.getDefaultMessage())))
+            .sorted(Comparator.comparing(FieldValidationError::field))
+            .toList();
+    return validationError(details);
+  }
+
+  @ExceptionHandler(ConstraintViolationException.class)
+  ResponseEntity<ApiErrorResponse> handleConstraintViolation(
+      ConstraintViolationException exception) {
+    List<FieldValidationError> details =
+        exception.getConstraintViolations().stream()
+            .map(
+                violation ->
+                    new FieldValidationError(
+                        violation.getPropertyPath().toString(), violation.getMessage()))
             .sorted(Comparator.comparing(FieldValidationError::field))
             .toList();
     return validationError(details);

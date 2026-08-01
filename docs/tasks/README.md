@@ -22,6 +22,7 @@ verdes). Status: `todo` | `doing` | `done`.
 | [08](08-cancelamento-remarcacao.md) | Cancelamento e remarcação via token | todo | ADR 0008, livedoc 13–14 |
 | [07.5](07.5-tenant-portfolio.md) | Portfólio multi-tenant (workstream paralelo) | todo | ADRs 0020–0021, feature tenant-portfolio |
 | [09](09-gates-ci.md) | Gates de CI e hardening | todo | docs/ci.md, ADR 0002 |
+| [INT-01](integration-umbra-01.5.md) | Fundação de integração Umbra | doing | ADR 0023; fases 01–04 e 09 |
 
 ## Ordem e dependências
 

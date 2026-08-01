@@ -99,7 +99,7 @@ class CatalogControllerHttpTest {
         .perform(get("/v1/public/tenants/tenant/calendars"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].id").value(calendarId.toString()))
-        .andExpect(jsonPath("$[0].collaboratorName").value("Maria"))
+        .andExpect(jsonPath("$[0].collaborator_name").value("Maria"))
         .andExpect(jsonPath("$[0].userId").doesNotExist());
   }
 

@@ -270,6 +270,11 @@ Regras estruturais:
 | GET | `/v1/public/tenants/{slug}/portfolio` | Portfólio publicado (ETag) |
 | GET | `/v1/public/tenants/{slug}/portfolio/images/{imageId}/{variant}` | Redirect curto para derivada |
 
+O contrato de integração Umbra é derivado do código em `/v3/api-docs` e
+`/v3/api-docs.yaml`. Perfil, calendários, offerings e a seleção `GET /v1/tenants` usam
+`snake_case`; os contratos administrativos existentes preservam `camelCase`. O
+`Idempotency-Key` é UUID canônico (ADR 0023).
+
 ### Administrativos (Bearer JWT do Keycloak + membership)
 
 | Método | Rota | Role mínima |

@@ -197,12 +197,7 @@ public class OfferingService
   public List<OfferingResult> list(String tenantSlug, UUID calendarId) {
     var tenant = access.requirePublicTenant(tenantSlug);
     if (calendarId != null) {
-      Calendar calendar =
-          calendars
-              .findByTenantIdAndId(tenant.tenantId(), calendarId)
-              .filter(Calendar::active)
-              .orElseThrow(
-                  () -> new CatalogException("calendar_not_found", "calendar was not found"));
+      requireActivePublicCalendar(tenant.tenantId(), calendarId);
     }
     return cache.offerings(
         tenant.tenantId(),
@@ -275,6 +270,13 @@ public class OfferingService
               }
               throw new CatalogException("calendar_not_found", "calendar was not found");
             });
+  }
+
+  private Calendar requireActivePublicCalendar(UUID tenantId, UUID calendarId) {
+    return calendars
+        .findByTenantIdAndId(tenantId, calendarId)
+        .filter(Calendar::active)
+        .orElseThrow(() -> new CatalogException("calendar_not_found", "calendar was not found"));
   }
 
   private void rejectDuplicateActiveTitle(Offering offering) {

@@ -24,6 +24,7 @@
     <testcontainers.version>2.0.5</testcontainers.version>
     <rest-assured.version>6.0.1</rest-assured.version>
     <libphonenumber.version>9.0.32</libphonenumber.version>
+    <springdoc.version>3.0.3</springdoc.version>
     <opentelemetry.instrumentation.version>2.30.0</opentelemetry.instrumentation.version>
     <!-- Preloaded as a Java agent: JDK 21 containers do not allow Mockito self-attach. -->
     <argLine/>
@@ -108,6 +109,11 @@
     <dependency>
       <groupId>io.opentelemetry.instrumentation</groupId>
       <artifactId>opentelemetry-spring-boot-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>${springdoc.version}</version>
     </dependency>
 
     <dependency>

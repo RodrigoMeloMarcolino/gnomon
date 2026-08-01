@@ -64,5 +64,23 @@ services:
       keycloak:
         condition: service_started
 
+  smoke-seed:
+    image: postgres:16-alpine
+    profiles: ["smoke"]
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-gnomon}
+      PGUSER: ${POSTGRES_USER:-gnomon}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-gnomon}
+    volumes:
+      - ./scripts/fixtures/umbra-smoke.sql:/fixture/umbra-smoke.sql:ro
+    command: ["psql", "--set", "ON_ERROR_STOP=1", "--file", "/fixture/umbra-smoke.sql"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_started
+
 volumes:
   postgres-data:

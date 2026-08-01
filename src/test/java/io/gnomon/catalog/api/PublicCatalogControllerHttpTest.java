@@ -58,7 +58,8 @@ class PublicCatalogControllerHttpTest {
         .perform(get("/v1/public/tenants/barbearia-solar"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(TENANT_ID.toString()))
-        .andExpect(jsonPath("$.currencyCode").value("BRL"))
+        .andExpect(jsonPath("$.currency_code").value("BRL"))
+        .andExpect(jsonPath("$.currencyCode").doesNotExist())
         .andExpect(jsonPath("$.role").doesNotExist())
         .andExpect(jsonPath("$.userId").doesNotExist())
         .andExpect(jsonPath("$.success").doesNotExist());
@@ -75,7 +76,8 @@ class PublicCatalogControllerHttpTest {
                 .queryParam("calendar_id", CALENDAR_ID.toString()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].id").value(OFFERING_ID.toString()))
-        .andExpect(jsonPath("$[0].active").value(true));
+        .andExpect(jsonPath("$[0].duration_minutes").value(30))
+        .andExpect(jsonPath("$[0].active").doesNotExist());
 
     verify(listPublicOfferings).list("barbearia-solar", CALENDAR_ID);
   }

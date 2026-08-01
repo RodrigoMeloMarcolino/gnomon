@@ -27,6 +27,7 @@ quando herdada.
 | [0020](0020-storage-s3-compativel-privado-upload-direto.md) | Storage S3-compatible privado, upload direto e entrega pública mediada | Accepted | Nova |
 | [0021](0021-portfolio-lifecycle-fila-postgresql-worker-reconciliacao.md) | Lifecycle do portfólio, fila PostgreSQL, worker e reconciliação | Accepted | Nova |
 | [0022](0022-retencao-e-escalabilidade-dos-slots.md) | Retenção e escalabilidade dos locks de slots | Accepted | Nova |
+| [0023](0023-openapi-e-compatibilidade-umbra.md) | OpenAPI e compatibilidade de integração Umbra | Accepted | Nova |
 
 ## Convenção
 

@@ -45,6 +45,12 @@ cliente após timeout quando slot/payload diferiam — a constraint de slot só 
 horário. Clientes web/mobile geram um UUID por intent de booking, o que é trivial. Origem:
 task `docs/tasks/00.5-hardening-licoes-moira.md`.
 
+## Emenda (2026-08-01)
+
+O header deve ser um UUID canônico minúsculo. Formato inválido também retorna `422
+validation_error`; a normalização ocorre antes do fingerprint e do comando de booking. Esta
+restrição é o contrato de integração do Umbra (ADR 0023).
+
 ## Rastreabilidade
 
 - Herda: Moira ADRs 0013 (parte idempotência) e 0014; livedoc seções 19–20.
