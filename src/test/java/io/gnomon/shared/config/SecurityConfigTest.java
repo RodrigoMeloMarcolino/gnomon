@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -19,6 +21,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -32,6 +35,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 @SpringJUnitConfig
 @ContextConfiguration(classes = {SecurityConfig.class, SecurityConfigTest.TestWebConfig.class})
+@TestPropertySource(properties = "gnomon.cors.allowed-origins=http://localhost:3000")
 @WebAppConfiguration
 class SecurityConfigTest {
 
@@ -75,6 +79,69 @@ class SecurityConfigTest {
   @Test
   void publicCatalogRoute_withoutToken_shouldBeAccessible() throws Exception {
     mockMvc.perform(get("/v1/public/tenants/tenant/calendars")).andExpect(status().isOk());
+  }
+
+  @Test
+  void corsPreflight_publicGet_shouldBeAllowed() throws Exception {
+    mockMvc
+        .perform(
+            options("/v1/public/tenants/umbra-smoke")
+                .header("Origin", "http://localhost:3000")
+                .header("Access-Control-Request-Method", "GET"))
+        .andExpect(status().isOk())
+        .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"));
+  }
+
+  @Test
+  void corsPreflight_publicBooking_shouldAllowContentTypeAndIdempotencyKey() throws Exception {
+    mockMvc
+        .perform(
+            options("/v1/public/tenants/umbra-smoke/appointments")
+                .header("Origin", "http://localhost:3000")
+                .header("Access-Control-Request-Method", "POST")
+                .header("Access-Control-Request-Headers", "Content-Type, Idempotency-Key"))
+        .andExpect(status().isOk())
+        .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"))
+        .andExpect(
+            header()
+                .string(
+                    "Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("POST")));
+  }
+
+  @Test
+  void corsPreflight_authenticatedRequest_shouldAllowAuthorization() throws Exception {
+    mockMvc
+        .perform(
+            options("/v1/tenants")
+                .header("Origin", "http://localhost:3000")
+                .header("Access-Control-Request-Method", "GET")
+                .header("Access-Control-Request-Headers", "Authorization"))
+        .andExpect(status().isOk())
+        .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"));
+  }
+
+  @Test
+  void corsPreflight_unauthorizedOrigin_shouldBeRejected() throws Exception {
+    mockMvc
+        .perform(
+            options("/v1/public/tenants/umbra-smoke")
+                .header("Origin", "https://evil.example")
+                .header("Access-Control-Request-Method", "GET"))
+        .andExpect(status().isForbidden())
+        .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+  }
+
+  @Test
+  void corsPreflight_adminPut_shouldBeRejectedWithoutPermissiveHeaders() throws Exception {
+    mockMvc
+        .perform(
+            options(
+                    "/v1/tenants/umbra-smoke/calendars/30000000-0000-4000-8000-000000000001/offerings")
+                .header("Origin", "http://localhost:3000")
+                .header("Access-Control-Request-Method", "PUT")
+                .header("Access-Control-Request-Headers", "Authorization, Content-Type"))
+        .andExpect(status().isForbidden())
+        .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
   }
 
   @Test

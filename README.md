@@ -148,7 +148,7 @@ Em `GET .../available-slots`, o parâmetro `date` representa a data local do cal
 resposta contém instantes canônicos em UTC com offset, por exemplo:
 
 ```json
-["2027-07-01T12:00:00Z"]
+{"available_start_times":["2027-07-01T12:00:00Z"]}
 ```
 
 Em `POST .../appointments`, `start_at` deve incluir offset de timezone. Exemplo:

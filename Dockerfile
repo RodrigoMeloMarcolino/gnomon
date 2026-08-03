@@ -6,10 +6,10 @@ WORKDIR /build
 
 # Resolve dependências em camada separada (cache de rebuilds).
 COPY pom.xml .
-RUN --mount=type=cache,target=/root/.m2 mvn -B -q dependency:go-offline
+RUN mvn -B -q dependency:go-offline
 
 COPY src ./src
-RUN --mount=type=cache,target=/root/.m2 mvn -B -q package -DskipTests \
+RUN mvn -B -q package -DskipTests \
     && cp target/gnomon-api-*.jar /app.jar
 
 # ---- Runtime ----

@@ -14,6 +14,10 @@ spring:
         jwt:
           jwk-set-uri: ${JWK_SET_URI:http://keycloak:8081/realms/gnomon/protocol/openid-connect/certs}
 
+springdoc:
+  swagger-ui:
+    enabled: true
+
 logging:
   structured:
     format:

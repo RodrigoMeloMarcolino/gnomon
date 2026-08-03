@@ -169,11 +169,11 @@ class BookingIntegrationTest {
         race(
             request(
                 scenario.tenantSlug(),
-                "competing-a",
+                "10000000-0000-4000-8000-000000000010",
                 payload(calendarId, scenario.offeringId(), scenario.startAt(), "+5585999990004")),
             request(
                 scenario.tenantSlug(),
-                "competing-b",
+                "10000000-0000-4000-8000-000000000011",
                 payload(calendarId, scenario.offeringId(), scenario.startAt(), "+5585999990005")));
 
     assertThat(statuses(results)).containsExactlyInAnyOrder(201, 409);
@@ -193,11 +193,11 @@ class BookingIntegrationTest {
         race(
             request(
                 scenario.tenantSlug(),
-                "overlap-a",
+                "10000000-0000-4000-8000-000000000012",
                 payload(calendarId, scenario.offeringId(), scenario.startAt(), "+5585999990006")),
             request(
                 scenario.tenantSlug(),
-                "overlap-b",
+                "10000000-0000-4000-8000-000000000013",
                 payload(
                     calendarId,
                     scenario.offeringId(),
@@ -219,7 +219,7 @@ class BookingIntegrationTest {
         race(
             request(
                 scenario.tenantSlug(),
-                "calendar-a",
+                "10000000-0000-4000-8000-000000000014",
                 payload(
                     scenario.calendarIds().get(0),
                     scenario.offeringId(),
@@ -227,7 +227,7 @@ class BookingIntegrationTest {
                     phone)),
             request(
                 scenario.tenantSlug(),
-                "calendar-b",
+                "10000000-0000-4000-8000-000000000015",
                 payload(
                     scenario.calendarIds().get(1),
                     scenario.offeringId(),
