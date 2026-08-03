@@ -41,7 +41,7 @@ public final class StructuredEventLogger {
           case ERROR -> logger.atError();
         };
     builder.addKeyValue("event_name", eventName);
-    attributes.forEach(builder::addKeyValue);
+    SensitiveDataRedactor.redactMap(attributes).forEach(builder::addKeyValue);
     if (error != null) {
       builder.setCause(error);
     }

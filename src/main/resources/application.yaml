@@ -32,6 +32,8 @@ otel:
     exporter: none
   metrics:
     exporter: none
+  logs:
+    exporter: ${OTEL_LOGS_EXPORTER:none}
   instrumentation:
     common:
       default-enabled: false
@@ -47,6 +49,8 @@ otel:
   exporter:
     otlp:
       timeout: ${OTEL_EXPORTER_OTLP_LOGS_TIMEOUT:5s}
+      logs:
+        protocol: ${OTEL_EXPORTER_OTLP_LOGS_PROTOCOL:http/protobuf}
 
 gnomon:
   booking:
