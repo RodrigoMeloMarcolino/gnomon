@@ -11,6 +11,10 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
+springdoc:
+  swagger-ui:
+    enabled: true
+
 gnomon:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}

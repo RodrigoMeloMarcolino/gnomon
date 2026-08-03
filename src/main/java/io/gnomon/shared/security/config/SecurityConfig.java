@@ -52,6 +52,8 @@ public class SecurityConfig {
                         "/v1/public/**",
                         "/v1/health",
                         "/v1/ready",
+                        "/v3/api-docs",
+                        "/v3/api-docs.yaml",
                         "/v3/api-docs/**",
                         "/swagger-ui.html",
                         "/swagger-ui/**",

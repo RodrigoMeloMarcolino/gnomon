@@ -233,7 +233,7 @@ Pacote: `io.gnomon.booking`.
 O commit `5bc786e` congelou esses contratos antes das três worktrees. A integração preservou as
 assinaturas; apenas adicionou implementações, wiring e testes conjuntos.
 
-## INT-01 — fundação Umbra (em andamento)
+## INT-01 — fundação Umbra (concluída em 2026-08-01)
 
 - ADR 0023 define OpenAPI gerado, `snake_case` nos contratos de integração e compatibilidade.
 - Springdoc publica JSON/YAML; Swagger UI é restrito a `local`/`docker`.
@@ -241,6 +241,10 @@ assinaturas; apenas adicionou implementações, wiring e testes conjuntos.
   `PUT` bloqueado.
 - O fixture `umbra-smoke` é externo ao Flyway e o script correspondente prova criação e replay
   de booking com IDs estáveis.
+- O fechamento adicionou gate semântico do OpenAPI JSON/YAML, exemplos do fixture, segurança
+  administrativa, preflights CORS (incluindo ausência de PUT), Swagger UI por profile e smoke
+  determinístico em Compose isolado. As falhas de booking causadas por chaves textuais foram
+  resolvidas trocando-as por UUIDs canônicos, sem relaxar a validação de produção.
 
 ## Sequência restante
 
