@@ -28,6 +28,6 @@ services:
     volumes:
       - ./observability/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/loki.yaml:ro
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT:-3001}:3000"
     depends_on:
       - loki

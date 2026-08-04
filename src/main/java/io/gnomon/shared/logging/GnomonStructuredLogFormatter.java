@@ -5,21 +5,16 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxyUtil;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.slf4j.event.KeyValuePair;
 import org.springframework.boot.logging.structured.StructuredLogFormatter;
 import org.springframework.core.env.Environment;
 
 /** JSON Lines formatter for the stable Gnomon event contract. */
 public final class GnomonStructuredLogFormatter implements StructuredLogFormatter<ILoggingEvent> {
-
-  private static final Set<String> SENSITIVE_SEGMENTS =
-      Set.of("password", "token", "authorization", "key", "secret");
 
   private final String serviceName;
 
@@ -64,7 +59,7 @@ public final class GnomonStructuredLogFormatter implements StructuredLogFormatte
     if (spanId != null) {
       document.put("span_id", spanId);
     }
-    document.put("attributes", redactMap(attributes));
+    document.put("attributes", SensitiveDataRedactor.redactMap(attributes));
     if (event.getThrowableProxy() != null) {
       document.put("exception.type", event.getThrowableProxy().getClassName());
       document.put("exception.message", event.getThrowableProxy().getMessage());
@@ -98,46 +93,6 @@ public final class GnomonStructuredLogFormatter implements StructuredLogFormatte
   private static String environmentServiceName() {
     String value = System.getenv("OTEL_SERVICE_NAME");
     return value == null || value.isBlank() ? "gnomon" : value;
-  }
-
-  private static Map<String, Object> redactMap(Map<String, ?> source) {
-    Map<String, Object> result = new LinkedHashMap<>();
-    source.forEach(
-        (key, value) -> result.put(key, isSensitive(key) ? "[REDACTED]" : redact(value)));
-    return result;
-  }
-
-  private static Object redact(Object value) {
-    if (value instanceof Map<?, ?> map) {
-      Map<String, Object> result = new LinkedHashMap<>();
-      map.forEach(
-          (key, nestedValue) -> {
-            String nestedKey = String.valueOf(key);
-            result.put(nestedKey, isSensitive(nestedKey) ? "[REDACTED]" : redact(nestedValue));
-          });
-      return result;
-    }
-    if (value instanceof Collection<?> collection) {
-      return collection.stream().map(GnomonStructuredLogFormatter::redact).toList();
-    }
-    if (value != null && value.getClass().isArray()) {
-      List<Object> values = new ArrayList<>();
-      int length = java.lang.reflect.Array.getLength(value);
-      for (int index = 0; index < length; index++) {
-        values.add(redact(java.lang.reflect.Array.get(value, index)));
-      }
-      return values;
-    }
-    return value;
-  }
-
-  private static boolean isSensitive(String key) {
-    for (String segment : key.toLowerCase().split("[._-]")) {
-      if (SENSITIVE_SEGMENTS.contains(segment)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   private static String json(Object value) {

@@ -49,6 +49,17 @@ Conforme `docs/specs/structured-logging.md`:
   efetivamente devolvido pelos exception handlers.
 - Ainda pendentes para encerrar a fase: validar o appender OTLP fail-open e executar o smoke
   real de booking pela stack Collector→Loki→Grafana.
+- Continuação (2026-08-03): `OTEL_LOGS_EXPORTER` agora tem default explícito `none`; o Compose
+  principal aceita endpoint OTLP interno para o Collector e Grafana usa `${GRAFANA_PORT:-3001}`.
+  A redação recursiva foi extraída para `SensitiveDataRedactor` e é aplicada pela fachada antes
+  de os key-value pairs chegarem a qualquer appender. A exportação usa explicitamente
+  `http/protobuf`, e o smoke Umbra passou a iniciar Collector/Loki/Grafana na mesma rede, fazer
+  booking com `X-Correlation-ID` e consultar o Loki por esse contexto. A execução local desse
+  smoke está bloqueada pelo ambiente: o Docker Compose falha ao construir a imagem por ausência
+  do plugin `docker-buildx`; a stack temporária foi encerrada. Ainda falta comprovar o caminho
+  completo e o comportamento fail-open em um host com Buildx disponível; a fase permanece
+  `doing`. Os gates locais `spotless:check` e `test` passaram com Java 21 em contêiner (282
+  testes executados).
 
 ## Follow-up registrado (2026-07-24 — semente do Moonlight)
 

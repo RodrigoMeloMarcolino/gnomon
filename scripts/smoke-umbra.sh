@@ -12,13 +12,15 @@ date_local="$(TZ=America/Fortaleza date -d 'tomorrow' +%F)"
 calendar_id="30000000-0000-4000-8000-000000000001"
 offering_id="40000000-0000-4000-8000-000000000001"
 idempotency_key="90000000-0000-4000-8000-000000000001"
+correlation_id="umbra-smoke-${idempotency_key}"
+compose=(docker compose -p "$compose_project" -f docker-compose.yaml -f docker-compose.observability.yaml)
 
 cleanup() {
-  docker compose -p "$compose_project" down -v --remove-orphans >/dev/null 2>&1 || true
+  "${compose[@]}" down -v --remove-orphans >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 
-docker compose -p "$compose_project" --profile full up -d --build >/dev/null
+OTEL_LOGS_EXPORTER=otlp "${compose[@]}" --profile full up -d --build >/dev/null
 
 ready=0
 for _ in $(seq 1 60); do
@@ -75,7 +77,7 @@ put_headers="$(curl --silent --show-error --dump-header - --output /dev/null \
   -H 'Access-Control-Request-Headers: Authorization, Content-Type')"
 ! grep -Fqi 'access-control-allow-origin:' <<<"$put_headers"
 
-docker compose -p "$compose_project" --profile full --profile smoke run --rm smoke-seed >/dev/null
+"${compose[@]}" --profile full --profile smoke run --rm smoke-seed >/dev/null
 
 profile="$(curl --fail --silent --show-error "$api_url/v1/public/tenants/umbra-smoke")"
 calendars="$(curl --fail --silent --show-error "$api_url/v1/public/tenants/umbra-smoke/calendars")"
@@ -89,11 +91,22 @@ start_at="$(jq -r '.available_start_times[] | select(endswith("T12:00:00Z"))' <<
 test -n "$start_at"
 
 payload="$(jq -n --arg calendar_id "$calendar_id" --arg offering_id "$offering_id" --arg start_at "$start_at" '{calendar_id:$calendar_id, offering_id:$offering_id, start_at:$start_at, customer_name:"Umbra Smoke", customer_phone:"+5585999990000"}')"
-first="$(curl --fail --silent --show-error -H 'Content-Type: application/json' -H "Idempotency-Key: $idempotency_key" -d "$payload" -w '\n%{http_code}' "$api_url/v1/public/tenants/umbra-smoke/appointments")"
-second="$(curl --fail --silent --show-error -H 'Content-Type: application/json' -H "Idempotency-Key: $idempotency_key" -d "$payload" -w '\n%{http_code}' "$api_url/v1/public/tenants/umbra-smoke/appointments")"
+first="$(curl --fail --silent --show-error -H 'Content-Type: application/json' -H "Idempotency-Key: $idempotency_key" -H "X-Correlation-ID: $correlation_id" -d "$payload" -w '\n%{http_code}' "$api_url/v1/public/tenants/umbra-smoke/appointments")"
+second="$(curl --fail --silent --show-error -H 'Content-Type: application/json' -H "Idempotency-Key: $idempotency_key" -H "X-Correlation-ID: $correlation_id" -d "$payload" -w '\n%{http_code}' "$api_url/v1/public/tenants/umbra-smoke/appointments")"
 first_id="$(head -n-1 <<<"$first" | jq -r .id)"
 second_id="$(head -n-1 <<<"$second" | jq -r .id)"
 test "$(tail -n1 <<<"$first")" = 201
 test "$(tail -n1 <<<"$second")" = 200
 test "$first_id" = "$second_id"
+logql_query="{service_name=\"gnomon\"} | correlation_id=\"$correlation_id\""
+for _ in $(seq 1 30); do
+  logql="$(curl --get --fail --silent --show-error \
+    --data-urlencode "query=$logql_query" \
+    'http://localhost:3100/loki/api/v1/query')"
+  if jq -e '.data.result | length > 0' <<<"$logql" >/dev/null; then
+    break
+  fi
+  sleep 1
+done
+jq -e '.data.result | length > 0' <<<"$logql" >/dev/null
 printf 'Umbra smoke passed: appointment %s\n' "$first_id"
