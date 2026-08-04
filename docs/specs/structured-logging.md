@@ -57,7 +57,8 @@ Mapeamento para Loki: labels apenas de baixa cardinalidade (`service_name`, `eve
 ## 5. Exporters
 
 - **stdout JSON obrigatório** (Logback com encoder JSON).
-- **OTLP opcional**: `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` definido habilita appender OTLP com
+- **OTLP opcional**: requer `OTEL_LOGS_EXPORTER=otlp` e
+  `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` definido; habilita appender OTLP com
   batch assíncrono, fila limitada e **fail-open** (erro de exportação nunca afeta request nem
   readiness).
 - Cada ambiente escolhe OTLP direto **ou** coleta de stdout pelo agente da plataforma — nunca
@@ -68,10 +69,10 @@ Configuração:
 
 ```text
 LOG_LEVEL=INFO
-LOG_FORMAT=json          # console em dev local
 OTEL_SERVICE_NAME=gnomon
+OTEL_LOGS_EXPORTER=otlp
 OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://localhost:4318/v1/logs
-OTEL_EXPORTER_OTLP_TIMEOUT=5
+OTEL_EXPORTER_OTLP_LOGS_TIMEOUT=5s
 ```
 
 ## 6. Política de dados sensíveis
@@ -93,15 +94,16 @@ Tenancy/auth (P0): `tenant.created`, `membership.added`, `membership.removed`,
 `auth.user_provisioned`, `auth.access_denied`.
 
 Admin (P1): `offering.created/updated`, `collaborator.created/updated`,
-`calendar.created/updated`, `availability_rule.created/updated`, `appointment.cancelled`,
-`appointment.completed`, `appointment.no_show`.
+`calendar.created/updated`, `availability_rule.created/updated`. Os eventos
+`appointment.cancelled`, `appointment.completed` e `appointment.no_show` pertencem à fase 07,
+quando essas transições administrativas existirem.
 
 Cache (P1): `cache.hit`, `cache.miss`, `cache.unavailable` (WARN com fallback), `cache.invalidated`.
 
 ## 8. Pipeline local
 
 `docker-compose.observability.yaml` (preservado do Moira): Collector OTLP em `localhost:4318`,
-Loki em `localhost:3100`, Grafana em `http://localhost:3000` (admin/admin dev). Consulta por
+Loki em `localhost:3100`, Grafana em `http://localhost:3001` (admin/admin dev). Consulta por
 correlação:
 
 ```logql

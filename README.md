@@ -188,9 +188,10 @@ Configuração principal:
 
 ```text
 LOG_LEVEL=INFO
-LOG_FORMAT=json
 OTEL_SERVICE_NAME=gnomon
+OTEL_LOGS_EXPORTER=otlp
 OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://localhost:4318/v1/logs
+OTEL_EXPORTER_OTLP_LOGS_TIMEOUT=5s
 ```
 
 ### Pipeline local Collector, Loki e Grafana
@@ -202,7 +203,7 @@ docker compose -f docker-compose.observability.yaml up -d
 ```
 
 O Collector recebe OTLP em `localhost:4318`, o Loki responde em `localhost:3100` e o Grafana em
-`http://localhost:3000` (`admin`/`admin` apenas para desenvolvimento).
+`http://localhost:3001` (`admin`/`admin` apenas para desenvolvimento).
 
 ## Qualidade
 

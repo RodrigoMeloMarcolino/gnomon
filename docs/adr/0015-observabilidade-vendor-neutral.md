@@ -34,7 +34,9 @@ vendor-neutral e independe da stack — deve ser preservada no Gnomon com tecnol
 ## Consequências
 
 - Domínio e use cases não conhecem setup/exporters de logging; apenas a API SLF4J.
-- Configuração por ambiente: `LOG_LEVEL`, `LOG_FORMAT` (`json`/`console`), variáveis `OTEL_*`.
+- Configuração por ambiente: `LOG_LEVEL` e variáveis `OTEL_*`; o formato estruturado é definido
+  pelo perfil Spring, sem a variável inoperante `LOG_FORMAT`. OTLP só é ativado com
+  `OTEL_LOGS_EXPORTER=otlp`; o timeout é `OTEL_EXPORTER_OTLP_LOGS_TIMEOUT`.
 - Cada ambiente escolhe OTLP direto **ou** coleta de stdout para um mesmo backend — nunca
   ambos (ingestão duplicada).
 

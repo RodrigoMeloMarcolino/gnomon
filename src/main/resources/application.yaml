@@ -37,7 +37,7 @@ otel:
   instrumentation:
     common:
       default-enabled: false
-    logback-appender-1.0:
+    logback-appender:
       enabled: true
   blrp:
     max:

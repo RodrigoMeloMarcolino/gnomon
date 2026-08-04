@@ -35,7 +35,7 @@ Conforme `docs/specs/structured-logging.md`:
 ## Critérios de aceite
 
 - [ ] Critérios da spec seção 10 verdes.
-- [ ] Consulta LogQL por `correlation_id` retorna a jornada completa de um booking.
+- [ ] Consulta LogQL por `correlation_id` retorna booking, replay e access logs correlacionados.
 
 ## Notas de implementação
 
@@ -60,6 +60,22 @@ Conforme `docs/specs/structured-logging.md`:
   completo e o comportamento fail-open em um host com Buildx disponível; a fase permanece
   `doing`. Os gates locais `spotless:check` e `test` passaram com Java 21 em contêiner (282
   testes executados).
+- Continuação (2026-08-04): o `AccessDeniedHandler` emite `auth.access_denied` apenas com
+  método, status e o MDC já ativo; foi adicionado teste de integração OTLP contra receptor HTTP
+  JDK que responde `503`, com health/readiness preservados. O smoke agora exige no Loki
+  `appointment.booking_succeeded`, `appointment.booking_replayed` e dois access logs da mesma
+  correlação, valida uma linha JSON do stdout e interrompe o Collector por mais que o timeout
+  OTLP antes de consultar health/readiness. Os eventos `appointment.cancelled`,
+  `appointment.completed` e `appointment.no_show` ficam para a fase 07. A fase só muda para
+  `done` após todos os gates e esse smoke real passarem.
+- Validação (2026-08-04): `spotless:check`, `test`, `ArchitectureTest`, os dois arquivos
+  `docker compose config` e o teste isolado `OtlpLoggingFailOpenIntegrationTest` passaram com
+  Java 21. A suíte `verify -Pintegration` foi iniciada contra o daemon Docker e seus dois
+  primeiros grupos (`AvailabilitySchemaMigrationTest` e `BookingIntegrationTest`) passaram,
+  mas não concluiu nesta sessão. O smoke real foi iniciado com Docker acessível, porém o build
+  da imagem falhou antes da API subir porque o executável configurado de Buildx não existe em
+  `/usr/local/lib/docker/cli-plugins/docker-buildx`; não houve, portanto, consulta Loki que
+  autorize encerrar a fase.
 
 ## Follow-up registrado (2026-07-24 — semente do Moonlight)
 

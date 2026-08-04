@@ -9,13 +9,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import io.gnomon.shared.logging.RequestCorrelationFilter;
 import io.gnomon.shared.security.config.SecurityConfig;
 import io.gnomon.tenancy.application.port.in.ProvisionLocalUserUseCase;
 import io.gnomon.tenancy.application.port.in.result.LocalUserResult;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,10 +50,26 @@ class SecurityConfigTest {
   @Autowired private WebApplicationContext context;
 
   private MockMvc mockMvc;
+  private final Logger securityLogger = (Logger) LoggerFactory.getLogger(SecurityConfig.class);
+  private final Logger accessLogger =
+      (Logger) LoggerFactory.getLogger(RequestCorrelationFilter.class);
+  private final ListAppender<ILoggingEvent> appender = new ListAppender<>();
 
   @BeforeEach
   void setUp() {
     mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
+    appender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
+    appender.start();
+    securityLogger.addAppender(appender);
+    accessLogger.addAppender(appender);
+  }
+
+  @AfterEach
+  void tearDown() {
+    securityLogger.detachAppender(appender);
+    accessLogger.detachAppender(appender);
+    appender.stop();
+    MDC.clear();
   }
 
   @Test
@@ -193,21 +217,51 @@ class SecurityConfigTest {
   }
 
   @Test
-  void accessDeniedHandler_shouldReturnStableErrorEnvelope() throws Exception {
+  void accessDeniedHandler_shouldLogSafeEventAndReturnStableErrorEnvelope() throws Exception {
     var response = new org.springframework.mock.web.MockHttpServletResponse();
+    var request =
+        new org.springframework.mock.web.MockHttpServletRequest("POST", "/v1/private/secret");
+    request.addHeader("Authorization", "Bearer sensitive-jwt");
 
-    new SecurityConfig()
-        .accessDeniedHandler()
-        .handle(
-            new org.springframework.mock.web.MockHttpServletRequest(),
+    new RequestCorrelationFilter()
+        .doFilter(
+            request,
             response,
-            new org.springframework.security.access.AccessDeniedException("denied"));
+            (filteredRequest, filteredResponse) ->
+                new SecurityConfig()
+                    .accessDeniedHandler()
+                    .handle(
+                        (jakarta.servlet.http.HttpServletRequest) filteredRequest,
+                        (HttpServletResponse) filteredResponse,
+                        new org.springframework.security.access.AccessDeniedException("denied")));
 
     assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_FORBIDDEN);
     assertThat(response.getContentType()).startsWith("application/json");
     assertThat(response.getContentAsString())
         .isEqualTo(
             "{\"error\":{\"code\":\"forbidden\",\"message\":\"forbidden\",\"details\":null}}");
+    assertThat(appender.list)
+        .filteredOn(event -> event.getKeyValuePairs() != null)
+        .extracting(SecurityConfigTest::eventName)
+        .containsExactlyInAnyOrder("auth.access_denied", "http.request.completed");
+    assertThat(appender.list)
+        .filteredOn(event -> "auth.access_denied".equals(eventName(event)))
+        .singleElement()
+        .satisfies(
+            event -> {
+              assertThat(event.getMDCPropertyMap()).containsKeys("request.id", "correlation.id");
+              assertThat(event.getFormattedMessage()).doesNotContain("secret", "sensitive-jwt");
+              assertThat(event.getKeyValuePairs().toString())
+                  .doesNotContain("secret", "sensitive-jwt");
+            });
+  }
+
+  private static String eventName(ILoggingEvent event) {
+    return event.getKeyValuePairs().stream()
+        .filter(pair -> "event_name".equals(pair.key))
+        .map(pair -> String.valueOf(pair.value))
+        .findFirst()
+        .orElseThrow();
   }
 
   @Configuration
