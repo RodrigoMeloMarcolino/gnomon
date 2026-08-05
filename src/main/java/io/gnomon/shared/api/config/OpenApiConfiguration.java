@@ -51,23 +51,16 @@ public class OpenApiConfiguration {
           .getPaths()
           .values()
           .forEach(
-              path ->
-                  path.readOperations()
+              (pathTemplate, path) ->
+                  path.getOperationsMap()
                       .forEach(
-                          operation -> {
-                            String pathTemplate =
-                                openApi.getPaths().entrySet().stream()
-                                    .filter(entry -> entry.getValue() == path)
-                                    .map(Map.Entry::getKey)
-                                    .findFirst()
-                                    .orElse("");
-                            customizeOperation(pathTemplate, operation);
-                          }));
+                          (method, operation) ->
+                              customizeOperation(pathTemplate, method.name(), operation)));
       renamePublicSchemas(openApi);
     };
   }
 
-  private static void customizeOperation(String path, Operation operation) {
+  private static void customizeOperation(String path, String method, Operation operation) {
     boolean publicOperation = path.startsWith("/v1/public/");
     boolean infrastructureOperation =
         path.equals("/v1/health") || path.equals("/v1/ready") || path.startsWith("/v3/");
@@ -80,7 +73,9 @@ public class OpenApiConfiguration {
     }
 
     addResponse(operation, "422", errorResponse("Request validation failed"));
-    if (path.endsWith("/appointments")) {
+    boolean publicBookingPost =
+        method.equals("POST") && path.startsWith("/v1/public/") && path.endsWith("/appointments");
+    if (publicBookingPost) {
       addResponse(operation, "409", errorResponse("Booking conflicts with an existing request"));
       addResponse(
           operation,
@@ -108,7 +103,7 @@ public class OpenApiConfiguration {
     if (operation.getParameters() != null) {
       operation.getParameters().forEach(OpenApiConfiguration::addUmbraExample);
     }
-    if (path.endsWith("/appointments") && operation.getRequestBody() != null) {
+    if (publicBookingPost && operation.getRequestBody() != null) {
       MediaType mediaType = operation.getRequestBody().getContent().get("application/json");
       if (mediaType != null) {
         mediaType.setExample(

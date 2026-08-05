@@ -113,4 +113,37 @@ public record Appointment(
     COMPLETED,
     NO_SHOW
   }
+
+  public Appointment cancel() {
+    return transitionTo(Status.CANCELLED);
+  }
+
+  public Appointment complete() {
+    return transitionTo(Status.COMPLETED);
+  }
+
+  public Appointment markNoShow() {
+    return transitionTo(Status.NO_SHOW);
+  }
+
+  private Appointment transitionTo(Status target) {
+    if (status != Status.SCHEDULED) {
+      throw new BookingDomainException(
+          "appointment_status_conflict", "only scheduled appointments can change status");
+    }
+    return new Appointment(
+        id,
+        tenantId,
+        calendarId,
+        offeringId,
+        customerId,
+        startAt,
+        endAt,
+        durationMinutesSnapshot,
+        calendarTimezoneSnapshot,
+        target,
+        customerNotes,
+        idempotencyKey,
+        idempotencyFingerprint);
+  }
 }

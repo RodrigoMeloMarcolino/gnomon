@@ -86,6 +86,26 @@ class AppointmentTest {
         .hasMessageContaining("lowercase SHA-256");
   }
 
+  @Test
+  void transitions_fromScheduled_shouldProduceRequestedTerminalStatus() {
+    Appointment scheduled = appointment(START, START.plusSeconds(30 * 60L), 30, "UTC", "key", null);
+
+    assertThat(scheduled.cancel().status()).isEqualTo(Appointment.Status.CANCELLED);
+    assertThat(scheduled.complete().status()).isEqualTo(Appointment.Status.COMPLETED);
+    assertThat(scheduled.markNoShow().status()).isEqualTo(Appointment.Status.NO_SHOW);
+  }
+
+  @Test
+  void transition_fromTerminalStatus_shouldReject() {
+    Appointment cancelled =
+        appointment(START, START.plusSeconds(30 * 60L), 30, "UTC", "key", null).cancel();
+
+    assertThatThrownBy(cancelled::complete)
+        .isInstanceOf(BookingDomainException.class)
+        .extracting(exception -> ((BookingDomainException) exception).code())
+        .isEqualTo("appointment_status_conflict");
+  }
+
   private static Appointment appointment(
       Instant startAt,
       Instant endAt,

@@ -44,6 +44,13 @@ class CollaboratorPersistenceAdapter implements CollaboratorRepository {
   }
 
   @Override
+  public Optional<Collaborator> findByTenantIdAndUserId(UUID tenantId, UUID userId) {
+    return repository
+        .findByTenantIdAndUserId(tenantId, userId)
+        .map(CollaboratorJpaEntity::toDomain);
+  }
+
+  @Override
   public List<Collaborator> findByTenantId(UUID tenantId) {
     return repository.findByTenantIdOrderByDisplayNameAscIdAsc(tenantId).stream()
         .map(CollaboratorJpaEntity::toDomain)
