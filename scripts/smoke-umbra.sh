@@ -109,4 +109,29 @@ for _ in $(seq 1 30); do
   sleep 1
 done
 jq -e '.data.result | length > 0' <<<"$logql" >/dev/null
+log_text="$(jq -r '[.data.result[].values[][]] | join("\\n")' <<<"$logql")"
+grep -Fq 'appointment.booking_succeeded' <<<"$log_text"
+grep -Fq 'appointment.booking_replayed' <<<"$log_text"
+test "$(grep -o 'http.request.completed' <<<"$log_text" | wc -l)" -ge 2
+
+api_stdout="$("${compose[@]}" logs --no-log-prefix api)"
+api_log_line="$(jq -Rrc 'fromjson? | select(. != null) | select(.["service.name"] == "gnomon")' <<<"$api_stdout" | head -n1)"
+test -n "$api_log_line"
+jq -e '
+  (.timestamp | type == "string") and
+  (.severity_text | type == "string") and
+  (.severity_number | type == "number") and
+  (.body | type == "string") and
+  (.event_name | type == "string") and
+  (."service.name" == "gnomon") and
+  (.attributes | type == "object") and
+  (.attributes["request.id"] | type == "string") and
+  (.attributes["correlation.id"] | type == "string")
+' <<<"$api_log_line" >/dev/null
+
+"${compose[@]}" stop collector >/dev/null
+# O default OTLP é 5 s; manter a API disponível além desse prazo prova fail-open no Compose real.
+sleep "${OTLP_FAIL_OPEN_WAIT_SECONDS:-7}"
+curl --fail --silent --show-error "$api_url/v1/health" >/dev/null
+curl --fail --silent --show-error "$api_url/v1/ready" >/dev/null
 printf 'Umbra smoke passed: appointment %s\n' "$first_id"

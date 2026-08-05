@@ -1,6 +1,7 @@
 package io.gnomon.shared.security.config;
 
 import io.gnomon.shared.logging.RequestCorrelationFilter;
+import io.gnomon.shared.logging.StructuredEventLogger;
 import io.gnomon.shared.security.filter.LocalUserProvisioningFilter;
 import io.gnomon.tenancy.application.port.in.ProvisionLocalUserUseCase;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,6 +34,9 @@ import tools.jackson.databind.ObjectMapper;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+  private static final StructuredEventLogger LOGGER =
+      StructuredEventLogger.getLogger(SecurityConfig.class);
 
   @Bean
   SecurityFilterChain securityFilterChain(
@@ -119,8 +123,17 @@ public class SecurityConfig {
 
   @Bean
   public AccessDeniedHandler accessDeniedHandler() {
-    return (request, response, exception) ->
-        writeError(response, HttpServletResponse.SC_FORBIDDEN, "forbidden", "forbidden");
+    return (request, response, exception) -> {
+      LOGGER.info(
+          "auth.access_denied",
+          "access denied",
+          java.util.Map.of(
+              "http.method",
+              request.getMethod(),
+              "http.status_code",
+              HttpServletResponse.SC_FORBIDDEN));
+      writeError(response, HttpServletResponse.SC_FORBIDDEN, "forbidden", "forbidden");
+    };
   }
 
   private static List<String> parseOrigins(String origins) {
