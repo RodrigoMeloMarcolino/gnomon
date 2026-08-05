@@ -138,24 +138,15 @@ Java 21 em contêiner.
 
 ## Próxima ação exata
 
-Continuar a fase 05, com o core transacional estável:
+Continuar a fase 07 a partir da implementação tenant-scoped de appointments e customers:
 
-1. [x] escrever testes unitários para `RedisCacheStore` (hit, miss, TTL/versionamento e falha
-   `DataAccessException`); os seis testes isolados passaram com Java 21;
-2. implementar cache-aside de perfil, calendários e offerings no módulo `catalog`, com chaves e
-   TTL configuráveis pertencentes ao módulo;
-3. só então cachear `available-slots`, usando a data local do calendário para chaves e versões;
-4. registrar invalidações após commit das mutações e do booking, cobrir Redis real em
-   Testcontainers e só fechar a fase após os gates completos.
+1. completar os testes HTTP e de integração de filtros, paginação, isolamento, staff, locks e
+   concorrência;
+2. executar todos os gates com Java 21 e Docker/Testcontainers;
+3. somente então marcar a fase 07 como `done`.
 
-1. reler `docs/tasks/05-cache-redis.md`, `06-observabilidade.md` e
-   `07-painel-admin.md`, além das specs/ADRs apontadas por elas;
-2. congelar contratos compartilhados de invalidação de cache, contexto estruturado de logs e
-   leitura/transição administrativa de appointments;
-3. abrir worktrees isoladas a partir do commit de contratos e paralelizar Redis fail-open,
-   observabilidade vendor-neutral e painel admin tenant-scoped;
-4. manter migrations/configurações globais, integração e documentação sob ownership do agente
-   principal;
+A fase 06 permanece `doing`: o smoke real Collector → Loki → Grafana ainda requer host com
+Docker Buildx funcional.
 5. integrar somente depois dos gates isolados e executar `spotless:check`, testes, ArchUnit e
    integração conjunta antes de fechar qualquer uma das fases 05–07.
 

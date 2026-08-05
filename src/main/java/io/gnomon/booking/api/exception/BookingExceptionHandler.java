@@ -26,9 +26,19 @@ public class BookingExceptionHandler {
     }
     HttpStatus status =
         switch (exception.code()) {
-          case "tenant_not_found", "calendar_not_found", "offering_not_found" ->
+          case "tenant_not_found",
+              "calendar_not_found",
+              "offering_not_found",
+              "appointment_not_found" ->
               HttpStatus.NOT_FOUND;
-          case "slot_unavailable", "idempotency_key_conflict" -> HttpStatus.CONFLICT;
+          case "slot_unavailable", "idempotency_key_conflict", "appointment_status_conflict" ->
+              HttpStatus.CONFLICT;
+          case "appointment_access_denied",
+              "staff_calendar_mismatch",
+              "insufficient_role",
+              "catalog_access_denied",
+              "membership_required" ->
+              HttpStatus.FORBIDDEN;
           case "phone_invalid", "validation_error" -> HttpStatus.UNPROCESSABLE_CONTENT;
           default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };

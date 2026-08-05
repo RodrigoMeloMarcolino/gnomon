@@ -13,4 +13,12 @@ public interface AppointmentRepository {
   boolean insert(Appointment appointment);
 
   void insertSlots(UUID tenantId, UUID appointmentId, UUID calendarId, List<Instant> slotStarts);
+
+  Optional<Appointment> findByTenantIdAndIdForUpdate(UUID tenantId, UUID id);
+
+  boolean existsById(UUID id);
+
+  void updateStatus(UUID tenantId, UUID id, Appointment.Status status);
+
+  void deleteSlots(UUID tenantId, UUID appointmentId);
 }

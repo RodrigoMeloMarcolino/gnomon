@@ -71,6 +71,9 @@ public class AppointmentJdbcAdapter implements AppointmentRepository {
       VALUES (?, ?, ?, ?)
       """;
 
+  private static final String SELECT_BY_ID_FOR_UPDATE =
+      SELECT_BY_IDEMPOTENCY_KEY.replace("AND idempotency_key = ?", "AND id = ? FOR UPDATE");
+
   private final JdbcTemplate jdbcTemplate;
 
   public AppointmentJdbcAdapter(JdbcTemplate jdbcTemplate) {
@@ -144,6 +147,38 @@ public class AppointmentJdbcAdapter implements AppointmentRepository {
       }
       throw exception;
     }
+  }
+
+  @Override
+  public Optional<Appointment> findByTenantIdAndIdForUpdate(UUID tenantId, UUID id) {
+    return jdbcTemplate
+        .query(SELECT_BY_ID_FOR_UPDATE, AppointmentJdbcAdapter::mapAppointment, tenantId, id)
+        .stream()
+        .findFirst();
+  }
+
+  @Override
+  public boolean existsById(UUID id) {
+    return Boolean.TRUE.equals(
+        jdbcTemplate.queryForObject(
+            "SELECT EXISTS (SELECT 1 FROM appointments WHERE id = ?)", Boolean.class, id));
+  }
+
+  @Override
+  public void updateStatus(UUID tenantId, UUID id, Appointment.Status status) {
+    jdbcTemplate.update(
+        "UPDATE appointments SET status = ? WHERE tenant_id = ? AND id = ?",
+        status.name().toLowerCase(Locale.ROOT),
+        tenantId,
+        id);
+  }
+
+  @Override
+  public void deleteSlots(UUID tenantId, UUID appointmentId) {
+    jdbcTemplate.update(
+        "DELETE FROM appointment_slots WHERE tenant_id = ? AND appointment_id = ?",
+        tenantId,
+        appointmentId);
   }
 
   private static Appointment mapAppointment(ResultSet resultSet, int rowNumber)

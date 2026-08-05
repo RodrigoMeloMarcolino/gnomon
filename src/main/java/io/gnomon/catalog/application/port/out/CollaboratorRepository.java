@@ -13,5 +13,7 @@ public interface CollaboratorRepository {
 
   Optional<Collaborator> findByTenantIdAndId(UUID tenantId, UUID id);
 
+  Optional<Collaborator> findByTenantIdAndUserId(UUID tenantId, UUID userId);
+
   List<Collaborator> findByTenantId(UUID tenantId);
 }

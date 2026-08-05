@@ -1,6 +1,6 @@
 # Fase 07 — Painel administrativo (appointments e customers)
 
-Status: todo
+Status: doing
 
 ## Objetivo
 
@@ -38,6 +38,20 @@ Owner/admin acompanham a agenda do tenant; staff acompanha a própria agenda.
 - [ ] Cancelamento admin libera horário comprovadamente.
 - [ ] Listagens admin com paginação obrigatória (sem varredura completa — dívida Moira).
 
+## Contrato implementado
+
+- Appointments administrativos usam intervalo RFC 3339 (`from` inclusivo, `to` exclusivo),
+  máximo de 31 dias, paginação `page`/`size` (0/20, máximo 100), filtros `calendar_id` e
+  `status`, e ordenação `start_at ASC, id ASC`.
+- Owner/admin enxergam o tenant inteiro; staff é automaticamente limitado ao calendário do
+  colaborador vinculado. Filtro divergente retorna `403 staff_calendar_mismatch`.
+- Transições aceitas: `scheduled → cancelled|completed|no_show`; operações terminais retornam
+  `409 appointment_status_conflict`. Cancelamento remove os locks na mesma transação; os demais
+  preservam-nos. Eventos técnicos são publicados no log após commit.
+- Customers são globais, mas a leitura exige appointment relacionado no tenant; staff recebe
+  `403 insufficient_role`.
+
 ## Notas de implementação
 
-(preencher ao concluir)
+- Não há migration: as consultas reutilizam os índices de appointments existentes.
+- Pendente: ampliar a suíte HTTP/integração para filtros, isolamento, concorrência e slots.

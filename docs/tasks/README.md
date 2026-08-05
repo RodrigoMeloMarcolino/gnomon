@@ -18,7 +18,7 @@ verdes). Status: `todo` | `doing` | `done`.
 | [04.5](04.5-hardening-arquitetural.md) | Hardening arquitetural pré-fase 05 | done | ADRs 0002, 0019 |
 | [05](05-cache-redis.md) | Cache Redis das leituras públicas | done | ADR 0014, RNF-07 |
 | [06](06-observabilidade.md) | Observabilidade (logs JSON + OTLP) | doing | spec structured-logging, ADR 0015 |
-| [07](07-painel-admin.md) | Painel administrativo (appointments, customers) | todo | spec multi-tenancy, PRD 6.4 |
+| [07](07-painel-admin.md) | Painel administrativo (appointments, customers) | doing | spec multi-tenancy, PRD 6.4 |
 | [08](08-cancelamento-remarcacao.md) | Cancelamento e remarcação via token | todo | ADR 0008, livedoc 13–14 |
 | [07.5](07.5-tenant-portfolio.md) | Portfólio multi-tenant (workstream paralelo) | todo | ADRs 0020–0021, feature tenant-portfolio |
 | [09](09-gates-ci.md) | Gates de CI e hardening | todo | docs/ci.md, ADR 0002 |

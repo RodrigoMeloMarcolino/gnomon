@@ -11,5 +11,7 @@ public interface SpringDataCollaboratorRepository
 
   Optional<CollaboratorJpaEntity> findByTenantIdAndId(UUID tenantId, UUID id);
 
+  Optional<CollaboratorJpaEntity> findByTenantIdAndUserId(UUID tenantId, UUID userId);
+
   List<CollaboratorJpaEntity> findByTenantIdOrderByDisplayNameAscIdAsc(UUID tenantId);
 }
