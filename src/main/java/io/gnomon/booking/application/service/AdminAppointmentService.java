@@ -7,9 +7,9 @@ import io.gnomon.booking.application.port.in.AdminAppointmentUseCase;
 import io.gnomon.booking.application.port.out.AdminAppointmentQueryPort;
 import io.gnomon.booking.application.port.out.AdminTenantAccessPort;
 import io.gnomon.booking.application.port.out.AppointmentRepository;
+import io.gnomon.booking.application.port.out.StaffCalendarAccessPort;
 import io.gnomon.booking.domain.exception.BookingDomainException;
 import io.gnomon.booking.domain.model.Appointment;
-import io.gnomon.catalog.application.port.out.StaffCalendarAccessPort;
 import io.gnomon.shared.logging.StructuredEventLogger;
 import java.time.Duration;
 import java.time.Instant;
@@ -65,7 +65,7 @@ public class AdminAppointmentService implements AdminAppointmentUseCase {
   public AdminAppointment get(UUID userId, String slug, UUID id) {
     var access = tenants.requireMember(userId, slug);
     AdminAppointment value =
-        queries.findByTenantIdAndId(access.tenantId(), id).orElseGet(() -> absentAppointment(id));
+        queries.findByTenantIdAndId(access.tenantId(), id).orElseThrow(() -> absentAppointment(id));
     authorizeCalendar(access.tenantId(), access.role(), userId, value.calendarId());
     return value;
   }
@@ -77,7 +77,7 @@ public class AdminAppointmentService implements AdminAppointmentUseCase {
     Appointment current =
         appointments
             .findByTenantIdAndIdForUpdate(access.tenantId(), id)
-            .orElseGet(() -> absentAppointment(id));
+            .orElseThrow(() -> absentAppointment(id));
     authorizeCalendar(access.tenantId(), access.role(), userId, current.calendarId());
     Appointment changed;
     try {
@@ -132,7 +132,7 @@ public class AdminAppointmentService implements AdminAppointmentUseCase {
     return own;
   }
 
-  private AdminAppointment absentAppointment(UUID id) {
+  private RuntimeException absentAppointment(UUID id) {
     if (appointments.existsById(id))
       throw new BookingException(
           "appointment_access_denied", "appointment belongs to another tenant");

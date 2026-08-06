@@ -1,18 +1,19 @@
-package io.gnomon.catalog.infrastructure.integration.booking;
+package io.gnomon.catalog.application.service;
 
+import io.gnomon.catalog.application.port.in.StaffCalendarAccessUseCase;
 import io.gnomon.catalog.application.port.out.CalendarRepository;
 import io.gnomon.catalog.application.port.out.CollaboratorRepository;
-import io.gnomon.catalog.application.port.out.StaffCalendarAccessPort;
 import java.util.Optional;
 import java.util.UUID;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
-class StaffCalendarAccessAdapter implements StaffCalendarAccessPort {
+@Service
+public class StaffCalendarAccessService implements StaffCalendarAccessUseCase {
   private final CollaboratorRepository collaborators;
   private final CalendarRepository calendars;
 
-  StaffCalendarAccessAdapter(CollaboratorRepository collaborators, CalendarRepository calendars) {
+  public StaffCalendarAccessService(
+      CollaboratorRepository collaborators, CalendarRepository calendars) {
     this.collaborators = collaborators;
     this.calendars = calendars;
   }
