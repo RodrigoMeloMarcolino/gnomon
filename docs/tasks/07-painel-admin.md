@@ -60,5 +60,10 @@ Owner/admin acompanham a agenda do tenant; staff acompanha a própria agenda.
 - As fronteiras cross-module iniciais foram endurecidas: tenancy agora publica
   `TenantAccessUseCase`, catalog publica `StaffCalendarAccessUseCase`, e booking/customers usam
   adapters locais sem depender dos `port.out` de catalog.
-- Pendente: separar query/transição em services coesos e ampliar a suíte HTTP/integração para
-  filtros, isolamento, concorrência e slots antes de marcar a fase como `done`.
+- Concluído no slice de 2026-08-06: leitura e transição foram separadas em
+  `AdminAppointmentQueryService`/`AdminAppointmentTransitionService` e nos respectivos input
+  ports. A transição continua transacional, usa lock pessimista e publica o evento somente após
+  commit; as exceções de domínio continuam traduzidas para `BookingException` na fronteira de
+  aplicação, sem mudança no contrato HTTP.
+- Pendente: ampliar a suíte HTTP/integração para filtros, isolamento, concorrência e slots antes
+  de marcar a fase como `done`.

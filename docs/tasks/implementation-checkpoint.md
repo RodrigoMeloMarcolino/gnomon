@@ -165,6 +165,20 @@ Docker Buildx funcional.
   `AdminAppointmentTransitionService` e migrar as exceções/handlers para application exceptions,
   sem alterar o contrato HTTP.
 
+### Slice 07-A — separação query/transição (concluído em 2026-08-06)
+
+- `AdminAppointmentQueryUseCase` e `AdminAppointmentTransitionUseCase` substituíram o port único;
+  o controller administrativo agora injeta cada caso de uso conforme a operação.
+- `AdminAppointmentQueryService` mantém validação de intervalo/paginação/status e isolamento
+  tenant/staff em transações somente leitura.
+- `AdminAppointmentTransitionService` concentra `SELECT ... FOR UPDATE`, mudança de estado,
+  liberação de slots no cancelamento e evento técnico após commit.
+- `BookingDomainException` é traduzida no service de transição para `BookingException`,
+  preservando o handler e o contrato HTTP existente.
+- Compilação Java 21, `spotless:check` e `test` passaram no container Maven.
+- Próximo slice: testes HTTP/PostgreSQL da fase 07 para filtros, paginação, isolamento cross-tenant,
+  autorização staff, concorrência de transições e liberação/preservação de slots.
+
 ## Workstream 07.5 — portfólio (contrato documental congelado)
 
 O portfólio é paralelo às fases 05–08 e bloqueia a fase 09. A etapa de 2026-07-29 foi somente
