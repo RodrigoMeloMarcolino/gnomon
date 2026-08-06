@@ -1,6 +1,6 @@
 # Checkpoint de implementação paralela — fases 01–09 (pós-onda 4)
 
-Atualizado: 2026-07-30
+Atualizado: 2026-08-06
 
 Este arquivo é o handoff operacional para retomar a construção do backend em outra sessão sem
 reconstituir o contexto da conversa. A fonte normativa continua sendo o PRD, os ADRs, as specs e
@@ -149,6 +149,21 @@ A fase 06 permanece `doing`: o smoke real Collector → Loki → Grafana ainda r
 Docker Buildx funcional.
 5. integrar somente depois dos gates isolados e executar `spotless:check`, testes, ArchUnit e
    integração conjunta antes de fechar qualquer uma das fases 05–07.
+
+## Remediação arquitetural — checkpoint 2026-08-06
+
+- Os dois erros de compilação encontrados na retomada da fase 07 foram corrigidos.
+- Tenancy expõe o input port `TenantAccessUseCase`; catalog expõe
+  `StaffCalendarAccessUseCase`; booking e customers mantêm portas de saída locais e adapters de
+  integração próprios.
+- `spotless:check`, compilação Java 21 e `test` passaram após limpeza de `target`; ArchUnit ficou
+  verde com 5 regras.
+- A fase 07 permanece `doing`: ainda faltam os testes HTTP/PostgreSQL de filtros, paginação,
+  isolamento cross-tenant, autorização staff, concorrência de transições e liberação/preservação
+  de slots.
+- O próximo slice seguro é separar `AdminAppointmentQueryService` de
+  `AdminAppointmentTransitionService` e migrar as exceções/handlers para application exceptions,
+  sem alterar o contrato HTTP.
 
 ## Workstream 07.5 — portfólio (contrato documental congelado)
 

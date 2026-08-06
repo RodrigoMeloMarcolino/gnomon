@@ -54,4 +54,11 @@ Owner/admin acompanham a agenda do tenant; staff acompanha a própria agenda.
 ## Notas de implementação
 
 - Não há migration: as consultas reutilizam os índices de appointments existentes.
-- Pendente: ampliar a suíte HTTP/integração para filtros, isolamento, concorrência e slots.
+- A restauração inicial da fase corrigiu os dois erros de compilação do checkpoint: fallback de
+  `AdminAppointment` separado do fallback de `Appointment`, e iteração do OpenAPI por entrada de
+  path usando `readOperationsMap()`.
+- As fronteiras cross-module iniciais foram endurecidas: tenancy agora publica
+  `TenantAccessUseCase`, catalog publica `StaffCalendarAccessUseCase`, e booking/customers usam
+  adapters locais sem depender dos `port.out` de catalog.
+- Pendente: separar query/transição em services coesos e ampliar a suíte HTTP/integração para
+  filtros, isolamento, concorrência e slots antes de marcar a fase como `done`.

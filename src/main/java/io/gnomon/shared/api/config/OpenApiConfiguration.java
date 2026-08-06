@@ -49,13 +49,15 @@ public class OpenApiConfiguration {
     return openApi -> {
       openApi
           .getPaths()
-          .values()
+          .entrySet()
           .forEach(
-              (pathTemplate, path) ->
-                  path.getOperationsMap()
+              entry ->
+                  entry
+                      .getValue()
+                      .readOperationsMap()
                       .forEach(
                           (method, operation) ->
-                              customizeOperation(pathTemplate, method.name(), operation)));
+                              customizeOperation(entry.getKey(), method.name(), operation)));
       renamePublicSchemas(openApi);
     };
   }
