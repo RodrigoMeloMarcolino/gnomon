@@ -81,6 +81,13 @@ class AdminAppointmentJdbcAdapter implements AdminAppointmentQueryPort {
         .findFirst();
   }
 
+  @Override
+  public boolean existsById(UUID id) {
+    return Boolean.TRUE.equals(
+        jdbc.queryForObject(
+            "SELECT EXISTS (SELECT 1 FROM appointments WHERE id = ?)", Boolean.class, id));
+  }
+
   private static AdminAppointment map(ResultSet rs, int row) throws SQLException {
     return new AdminAppointment(
         rs.getObject("id", UUID.class),

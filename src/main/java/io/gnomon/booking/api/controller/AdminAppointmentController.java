@@ -2,7 +2,8 @@ package io.gnomon.booking.api.controller;
 
 import io.gnomon.booking.api.response.AdminAppointmentResponse;
 import io.gnomon.booking.api.response.PageResponse;
-import io.gnomon.booking.application.port.in.AdminAppointmentUseCase;
+import io.gnomon.booking.application.port.in.AdminAppointmentQueryUseCase;
+import io.gnomon.booking.application.port.in.AdminAppointmentTransitionUseCase;
 import io.gnomon.shared.security.authentication.LocalUserPrincipal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -20,10 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/v1/tenants/{tenantSlug}/appointments")
 public class AdminAppointmentController {
-  private final AdminAppointmentUseCase appointments;
+  private final AdminAppointmentQueryUseCase queries;
+  private final AdminAppointmentTransitionUseCase transitions;
 
-  public AdminAppointmentController(AdminAppointmentUseCase appointments) {
-    this.appointments = appointments;
+  public AdminAppointmentController(
+      AdminAppointmentQueryUseCase queries, AdminAppointmentTransitionUseCase transitions) {
+    this.queries = queries;
+    this.transitions = transitions;
   }
 
   @GetMapping
@@ -37,7 +41,7 @@ public class AdminAppointmentController {
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size) {
     return PageResponse.from(
-        appointments.list(
+        queries.list(
             user.userId(),
             tenantSlug,
             from.toInstant(),
@@ -53,7 +57,7 @@ public class AdminAppointmentController {
       @AuthenticationPrincipal LocalUserPrincipal user,
       @PathVariable String tenantSlug,
       @PathVariable UUID id) {
-    return AdminAppointmentResponse.from(appointments.get(user.userId(), tenantSlug, id));
+    return AdminAppointmentResponse.from(queries.get(user.userId(), tenantSlug, id));
   }
 
   @PostMapping("/{id}/cancel")
@@ -61,7 +65,7 @@ public class AdminAppointmentController {
       @AuthenticationPrincipal LocalUserPrincipal user,
       @PathVariable String tenantSlug,
       @PathVariable UUID id) {
-    return transition(user, tenantSlug, id, AdminAppointmentUseCase.Transition.CANCEL);
+    return transition(user, tenantSlug, id, AdminAppointmentTransitionUseCase.Transition.CANCEL);
   }
 
   @PostMapping("/{id}/complete")
@@ -69,7 +73,7 @@ public class AdminAppointmentController {
       @AuthenticationPrincipal LocalUserPrincipal user,
       @PathVariable String tenantSlug,
       @PathVariable UUID id) {
-    return transition(user, tenantSlug, id, AdminAppointmentUseCase.Transition.COMPLETE);
+    return transition(user, tenantSlug, id, AdminAppointmentTransitionUseCase.Transition.COMPLETE);
   }
 
   @PostMapping("/{id}/no-show")
@@ -77,15 +81,15 @@ public class AdminAppointmentController {
       @AuthenticationPrincipal LocalUserPrincipal user,
       @PathVariable String tenantSlug,
       @PathVariable UUID id) {
-    return transition(user, tenantSlug, id, AdminAppointmentUseCase.Transition.NO_SHOW);
+    return transition(user, tenantSlug, id, AdminAppointmentTransitionUseCase.Transition.NO_SHOW);
   }
 
   private AdminAppointmentResponse transition(
       LocalUserPrincipal user,
       String slug,
       UUID id,
-      AdminAppointmentUseCase.Transition transition) {
+      AdminAppointmentTransitionUseCase.Transition transition) {
     return AdminAppointmentResponse.from(
-        appointments.transition(user.userId(), slug, id, transition));
+        transitions.transition(user.userId(), slug, id, transition));
   }
 }

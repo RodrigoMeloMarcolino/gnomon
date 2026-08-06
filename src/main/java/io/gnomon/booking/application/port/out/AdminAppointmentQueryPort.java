@@ -11,4 +11,6 @@ public interface AdminAppointmentQueryPort {
       UUID tenantId, Instant from, Instant to, UUID calendarId, String status, int page, int size);
 
   Optional<AdminAppointment> findByTenantIdAndId(UUID tenantId, UUID id);
+
+  boolean existsById(UUID id);
 }
