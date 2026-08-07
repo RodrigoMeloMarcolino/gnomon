@@ -40,8 +40,7 @@ public class AdminAppointmentTransitionService implements AdminAppointmentTransi
 
   @Override
   @Transactional
-  public AdminAppointment transition(
-      UUID userId, String slug, UUID id, Transition transition) {
+  public AdminAppointment transition(UUID userId, String slug, UUID id, Transition transition) {
     var access = tenants.requireMember(userId, slug);
     Appointment current =
         appointments
@@ -91,7 +90,9 @@ public class AdminAppointmentTransitionService implements AdminAppointmentTransi
         staffCalendars
             .findCalendarIdForStaff(tenantId, userId)
             .orElseThrow(
-                () -> new BookingException("insufficient_role", "staff must be linked to a calendar"));
+                () ->
+                    new BookingException(
+                        "insufficient_role", "staff must be linked to a calendar"));
     if (!requested.equals(own))
       throw new BookingException(
           "staff_calendar_mismatch", "staff can only access their own calendar");

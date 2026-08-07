@@ -65,5 +65,9 @@ Owner/admin acompanham a agenda do tenant; staff acompanha a própria agenda.
   ports. A transição continua transacional, usa lock pessimista e publica o evento somente após
   commit; as exceções de domínio continuam traduzidas para `BookingException` na fronteira de
   aplicação, sem mudança no contrato HTTP.
-- Pendente: ampliar a suíte HTTP/integração para filtros, isolamento, concorrência e slots antes
-  de marcar a fase como `done`.
+- Continuação em 2026-08-06: adicionada `AdminPanelIntegrationTest` com filtros combinados e
+  paginação, escopo automático de staff, isolamento de appointments/customers, cancelamento com
+  liberação de slots e corrida de transições. A suíte normal e Spotless passaram em Java 21; a
+  execução Testcontainers ficou bloqueada nesta sessão pela ausência do daemon Docker.
+- Pendente: executar essa suíte contra PostgreSQL real, confirmar o contrato de erro em todas as
+  matrizes cross-tenant e então marcar a fase como `done`.
