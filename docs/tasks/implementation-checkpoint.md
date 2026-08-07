@@ -179,6 +179,17 @@ Docker Buildx funcional.
 - Próximo slice: testes HTTP/PostgreSQL da fase 07 para filtros, paginação, isolamento cross-tenant,
   autorização staff, concorrência de transições e liberação/preservação de slots.
 
+### Slice 07-B — suíte do painel administrativo (implementado em 2026-08-06)
+
+- `AdminPanelIntegrationTest` cobre listagem tenant-scoped com filtros/paginação, staff limitado
+  ao próprio calendário, leitura cross-tenant, customers inferidos por appointments, cancelamento
+  com remoção de locks e corrida de transições com uma única mudança efetiva.
+- Compilação Java 21, `spotless:check` e `test` passaram.
+- A execução de `-Pintegration` não pôde iniciar porque o ambiente desta sessão não expôs o
+  daemon Docker ao Testcontainers; é a próxima validação obrigatória antes de fechar a fase 07.
+- Próxima ação exata: repetir `./mvnw verify -Pintegration` em host com Docker/Testcontainers e
+  corrigir qualquer divergência revelada pelo PostgreSQL real.
+
 ## Workstream 07.5 — portfólio (contrato documental congelado)
 
 O portfólio é paralelo às fases 05–08 e bloqueia a fase 09. A etapa de 2026-07-29 foi somente

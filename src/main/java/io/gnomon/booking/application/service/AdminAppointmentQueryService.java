@@ -44,7 +44,8 @@ public class AdminAppointmentQueryService implements AdminAppointmentQueryUseCas
     validatePage(page, size);
     String normalizedStatus = validateStatus(status);
     var access = tenants.requireMember(userId, slug);
-    UUID effectiveCalendar = authorizeCalendar(access.tenantId(), access.role(), userId, calendarId);
+    UUID effectiveCalendar =
+        authorizeCalendar(access.tenantId(), access.role(), userId, calendarId);
     return queries.findPage(
         access.tenantId(), from, to, effectiveCalendar, normalizedStatus, page, size);
   }
@@ -64,7 +65,9 @@ public class AdminAppointmentQueryService implements AdminAppointmentQueryUseCas
         staffCalendars
             .findCalendarIdForStaff(tenantId, userId)
             .orElseThrow(
-                () -> new BookingException("insufficient_role", "staff must be linked to a calendar"));
+                () ->
+                    new BookingException(
+                        "insufficient_role", "staff must be linked to a calendar"));
     if (requested != null && !requested.equals(own))
       throw new BookingException(
           "staff_calendar_mismatch", "staff can only access their own calendar");
