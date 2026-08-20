@@ -1,0 +1,105 @@
+name: gnomon
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?run pnpm local:setup}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run pnpm local:setup}
+      POSTGRES_USER: ${POSTGRES_USER:?run pnpm local:setup}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres17-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    command:
+      [
+        'redis-server',
+        '--appendonly',
+        'yes',
+        '--requirepass',
+        '${REDIS_PASSWORD:?run pnpm local:setup}',
+      ]
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:?run pnpm local:setup}', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.0
+    command: ['start-dev', '--import-realm', '--health-enabled=true']
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:?run pnpm local:setup}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?run pnpm local:setup}
+    ports:
+      - '${KEYCLOAK_PORT:-8180}:8080'
+    volumes:
+      - ./infra/keycloak/gnomon-local-realm.json:/opt/keycloak/data/import/gnomon-local-realm.json:ro
+      - keycloak-data:/opt/keycloak/data
+    restart: unless-stopped
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.140.0
+    profiles: ['observability']
+    command: ['--config=/etc/otelcol-contrib/config.yaml']
+    volumes:
+      - ./infra/otel/collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - '4318:4318'
+
+  migrate:
+    build: .
+    image: gnomon:local
+    profiles: ['app']
+    command:
+      ['node', 'node_modules/typeorm/cli.js', 'migration:run', '-d', 'dist/database/data-source.js']
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_SSL_MODE: disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+  api:
+    build: .
+    image: gnomon:local
+    profiles: ['app']
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 8080
+      LOG_LEVEL: info
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_SSL_MODE: disable
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      KEYCLOAK_ISSUER: http://keycloak:8080/realms/gnomon-local
+      KEYCLOAK_AUDIENCE: gnomon-api
+      OTEL_SERVICE_NAME: gnomon
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    ports:
+      - '8080:8080'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  keycloak-data:
+  postgres17-data:
+  redis-data:

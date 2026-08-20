@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+.cache/
+.eslintcache
+.pnpm-store/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.idea/
+.vscode/

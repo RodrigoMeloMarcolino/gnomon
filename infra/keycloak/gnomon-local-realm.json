@@ -1,0 +1,44 @@
+{
+  "realm": "gnomon-local",
+  "enabled": true,
+  "displayName": "Gnomon Local",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "loginWithEmailAllowed": true,
+  "clients": [
+    {
+      "clientId": "gnomon-api",
+      "name": "Gnomon API",
+      "protocol": "openid-connect",
+      "bearerOnly": true,
+      "enabled": true
+    },
+    {
+      "clientId": "umbra-local",
+      "name": "Umbra Local",
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:3000/*"],
+      "webOrigins": ["http://localhost:3000"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "gnomon-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "gnomon-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": []
+}
